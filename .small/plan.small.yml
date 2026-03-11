@@ -1,0 +1,21 @@
+small_version: "1.0.0"
+owner: agent
+tasks:
+    - id: task-1
+      title: Initial task
+      status: completed
+    - id: task-2
+      title: Bootstrap repo identity and SMALL artifacts
+      status: completed
+    - id: task-3
+      title: Implement domain, validation, and time calculation
+      status: completed
+    - id: task-4
+      title: Implement storage, planner, dispatcher, and executors
+      status: completed
+    - id: task-5
+      title: Implement HTTP API and CLI surfaces
+      status: completed
+    - id: task-6
+      title: Add tests and run verification
+      status: completed

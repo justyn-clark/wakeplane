@@ -1,0 +1,25 @@
+name: nightly-sync
+enabled: true
+timezone: America/Los_Angeles
+
+schedule:
+  kind: cron
+  expr: "0 2 * * *"
+
+target:
+  kind: workflow
+  workflow_id: sync.customers
+  input:
+    source: crm
+
+policy:
+  overlap: forbid
+  misfire: run_once_if_late
+  timeout_seconds: 900
+  max_concurrency: 1
+
+retry:
+  max_attempts: 5
+  strategy: exponential
+  initial_delay_seconds: 30
+  max_delay_seconds: 900

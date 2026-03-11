@@ -1,0 +1,301 @@
+small_version: "1.0.0"
+owner: agent
+entries:
+    - command: small init
+      evidence: Initialized .small workspace and seeded canonical artifacts
+      notes: small init in /Users/justin/Documents/Justyn Clark Network/REPOS/timekeeper
+      status: completed
+      task_id: meta/init
+      timestamp: "2026-03-11T21:54:01.175228000Z"
+    - evidence: Reset plan.small.yml to template
+      notes: small plan --reset
+      status: completed
+      task_id: plan-reset
+      timestamp: "2026-03-11T22:27:04.436594000Z"
+    - evidence: Added task task-2 via small plan --add
+      notes: Bootstrap repo identity and SMALL artifacts
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-2
+      timestamp: "2026-03-11T22:27:04.471702000Z"
+    - evidence: Added task task-3 via small plan --add
+      notes: Implement domain, validation, and time calculation
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-3
+      timestamp: "2026-03-11T22:27:04.505612000Z"
+    - evidence: Added task task-4 via small plan --add
+      notes: Implement storage, planner, dispatcher, and executors
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-4
+      timestamp: "2026-03-11T22:27:04.539424000Z"
+    - evidence: Added task task-5 via small plan --add
+      notes: Implement HTTP API and CLI surfaces
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-5
+      timestamp: "2026-03-11T22:27:04.573670000Z"
+    - evidence: Added task task-6 via small plan --add
+      notes: Add tests and run verification
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-6
+      timestamp: "2026-03-11T22:27:04.607716000Z"
+    - evidence: Accepted draft intent from .small-cache/drafts/intent.small.yml
+      notes: small accept intent
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: meta/accept-intent
+      timestamp: "2026-03-11T22:27:59.170258000Z"
+    - evidence: Accepted draft constraints from .small-cache/drafts/constraints.small.yml
+      notes: small accept constraints
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: meta/accept-constraints
+      timestamp: "2026-03-11T22:27:59.237785000Z"
+    - command: go mod tidy
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T223928.347351000Z.txt
+      command_sha256: 5aebdf7446ebca99f13ca2b455880d5d55233a2d83498cf097922da02828b02f
+      command_summary: go mod tidy
+      evidence: |-
+        exit_code=0 output="go: downloading golang.org/x/sync v0.12.0
+        go: downloading github.com/robfig/cron/v3 v3.0.1
+        go: downloading modernc.org/sqlite v1.38.2
+        go: downloading github.com/oklog/ulid/v2 v2.1.1
+        go: downloading github.com/inconshreveable/mousetrap v1.1.0
+        go: downloading modernc.org/libc v1.66.3
+        go: downloading golang.org/x/sys v0.34.0
+        go: downloading modernc.org/fileutil v1.3.8
+        go: downloading golang.org/x/sync v0.15.0
+        go: downloading modernc.org/ccgo/v4 v4.28.0
+        go: downloading golang.org/x/tools v0.34.0
+        go: downloading modernc.org/cc/v4 v4.26.2
+        go: downloading golang.org/x/mod v0.25.0"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-2
+      timestamp: "2026-03-11T22:39:28.347351000Z"
+    - command: go test ./...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T223940.828466000Z.txt
+      command_sha256: 1bb497e3e13a1105cf24e3359fa3ef75de08b66ff8a2839cd7f9ea97824d9eb3
+      command_summary: go test ./...
+      evidence: |-
+        exit_code=1 output="# github.com/justyn-clark/timekeeper/cmd/timekeeper
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
+        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
+        cmd/timekeeperd/main.go:3:8: import "github.com/justyn-clark/timekeeper/cmd/timekeeper" is a program, not an importable package
+        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/api
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/api [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/app
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/app [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/dispatcher
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/planner
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/planner [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/scheduler
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
+        # github.com/justyn-clark/timekeeper/internal/store
+        internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
+        FAIL	github.com/justyn-clark/timekeeper/internal/store [setup failed]
+        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]
+        FAIL"
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-3
+      timestamp: "2026-03-11T22:39:40.828466000Z"
+    - command: go test ./...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T224153.097785000Z.txt
+      command_sha256: 1bb497e3e13a1105cf24e3359fa3ef75de08b66ff8a2839cd7f9ea97824d9eb3
+      command_summary: go test ./...
+      evidence: |-
+        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/api	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/app	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-3
+      timestamp: "2026-03-11T22:41:53.097785000Z"
+    - command: gofmt -w $(rg --files -g "*.go")
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T224200.222618000Z.txt
+      command_sha256: 0d1fc7bcc273cbe241b0c369d53672f87ff6bbfaf2cfd58dddfe7e5fa0e9337d
+      command_summary: gofmt -w $(rg --files -g "*.go")
+      evidence: exit_code=0
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-11T22:42:00.222618000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T224241.930107000Z.txt
+      command_sha256: 3582ccb83cd803e95871686a6f76e1977d7d7b8130401dfc05ea71371a8bc7d0
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./...
+      evidence: |-
+        exit_code=1 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/api	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/app	0.676s
+        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/domain	0.802s
+        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
+        --- FAIL: TestNextAfterCronInTimezone (0.00s)
+            timecalc_test.go:30: expected 2026-03-12 10:00:00 +0000 UTC, got 2026-03-12 09:00:00 +0000 UTC
+        FAIL
+        FAIL	github.com/justyn-clark/timekeeper/internal/timecalc	0.884s
+        FAIL"
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-6
+      timestamp: "2026-03-11T22:42:41.930107000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T224304.818022000Z.txt
+      command_sha256: 9dc28574d519618f67ed803df6fe59e32e3b4c1cbb65af960559b29cd25d2bfd
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict
+      evidence: |-
+        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/api	0.340s
+        ok  	github.com/justyn-clark/timekeeper/internal/app	(cached)
+        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/domain	(cached)
+        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/timecalc	0.441s
+        Verification passed
+        Check passed"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-11T22:43:04.818022000Z"
+    - evidence: Initial placeholder task superseded by the Timekeeper v1 task set.
+      notes: Closed template task after full repo bootstrap.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-1
+      timestamp: "2026-03-11T22:43:29.802311000Z"
+    - evidence: Repo identity, README, AGENTS, examples, and human-owned SMALL artifacts were aligned with the Timekeeper v1 kickoff.
+      notes: Bootstrap slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-2
+      timestamp: "2026-03-11T22:43:29.844614000Z"
+    - evidence: Implemented domain types, validation, IDs/cursors, and timezone-aware next-fire calculation with tests.
+      notes: Core contracts slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-3
+      timestamp: "2026-03-11T22:43:29.882328000Z"
+    - evidence: Implemented embedded SQLite migrations, repository layer, planner loop, dispatcher loop, lease handling, retries, and executor registry.
+      notes: Durable runtime slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-4
+      timestamp: "2026-03-11T22:43:29.921245000Z"
+    - evidence: Implemented HTTP JSON API routes, Prometheus-style metrics endpoint, and Cobra CLI surfaces for schedules and runs.
+      notes: Operator surface slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-5
+      timestamp: "2026-03-11T22:43:29.960933000Z"
+    - evidence: Formatted code, added validation/timecalc/service/API tests, and passed go test ./... plus small check --strict.
+      notes: Verification slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-11T22:43:30.000198000Z"
+    - command: go test ./... && small check --strict
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260311T225305.528536000Z.txt
+      command_sha256: 9752a65c22908b34eed999c2b7889062775a5d47f4404850966ef4b96b5f2733
+      command_summary: go test ./... && small check --strict
+      evidence: |-
+        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/api	(cached)
+        ok  	github.com/justyn-clark/timekeeper/internal/app	(cached)
+        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/domain	(cached)
+        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
+        ok  	github.com/justyn-clark/timekeeper/internal/timecalc	(cached)
+        Verification passed
+        Check passed"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-11T22:53:05.528536000Z"

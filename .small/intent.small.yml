@@ -1,0 +1,20 @@
+small_version: "1.0.0"
+owner: "human"
+intent: "Build Timekeeper as a standalone, durable scheduling and automated execution engine for long-running systems."
+scope:
+  include:
+    - "Durable schedule definitions for cron, interval, and once execution."
+    - "SQLite-first control plane with append-only run ledger and worker leases."
+    - "HTTP, shell, and in-process workflow executors."
+    - "Operator-facing CLI and HTTP JSON API."
+  exclude:
+    - "UI work."
+    - "DAG orchestration."
+    - "Distributed multi-node consensus."
+    - "Agent-specific logic in the core."
+success_criteria:
+  - "Schedules survive daemon restart and remain timezone-aware."
+  - "Occurrence identity is deterministic and prevents duplicate execution for the same schedule slot."
+  - "Every execution attempt is recorded with explicit run state and artifacts."
+  - "Retry, timeout, misfire, and overlap behavior is policy-driven and test-covered."
+  - "SQLite-backed local deployment is stable and Postgres-ready at the storage boundary."

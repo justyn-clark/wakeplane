@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/app"
-	"github.com/justyn-clark/timekeeper/internal/config"
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/app"
+	"github.com/justyn-clark/wakeplane/internal/config"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
 func TestCreateScheduleRoute(t *testing.T) {
 	service, err := app.New(context.Background(), config.Config{
-		DatabasePath:       filepath.Join(t.TempDir(), "timekeeper.db"),
+		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
 		HTTPAddress:        "127.0.0.1:0",
 		SchedulerInterval:  time.Second,
 		DispatcherInterval: time.Second,

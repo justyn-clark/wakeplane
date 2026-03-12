@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/config"
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/config"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
 func TestServiceCreateTriggerAndInspectRun(t *testing.T) {
-	dbPath := filepath.Join(t.TempDir(), "timekeeper.db")
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
 	service, err := New(context.Background(), config.Config{
 		DatabasePath:       dbPath,
 		HTTPAddress:        "127.0.0.1:0",

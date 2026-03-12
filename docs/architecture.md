@@ -1,6 +1,6 @@
-# Timekeeper Architecture
+# Wakeplane Architecture
 
-Timekeeper is built as a single-process control plane with explicit runtime boundaries:
+Wakeplane is built as a single-process control plane with explicit runtime boundaries:
 
 - planner loop
 - dispatcher loop

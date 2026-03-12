@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
-	"github.com/justyn-clark/timekeeper/internal/store"
-	"github.com/justyn-clark/timekeeper/internal/timecalc"
+	"github.com/justyn-clark/wakeplane/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/store"
+	"github.com/justyn-clark/wakeplane/internal/timecalc"
 )
 
 type Planner struct {

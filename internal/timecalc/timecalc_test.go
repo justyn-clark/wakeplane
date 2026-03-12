@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
 func TestNextAfterCronInTimezone(t *testing.T) {

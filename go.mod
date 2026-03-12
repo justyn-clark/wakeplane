@@ -1,4 +1,4 @@
-module github.com/justyn-clark/timekeeper
+module github.com/justyn-clark/wakeplane
 
 go 1.25.0
 

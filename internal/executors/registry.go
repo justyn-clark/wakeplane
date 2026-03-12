@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
 type Receipt struct {

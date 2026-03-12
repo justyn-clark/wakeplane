@@ -2,7 +2,7 @@
 
 Project role
 
-Timekeeper is a scheduling control plane, not a toy reminder feature and not a thin cron wrapper.
+Wakeplane is a scheduling control plane, not a toy reminder feature and not a thin cron wrapper.
 
 Agents working in this repo must preserve the core boundary:
 

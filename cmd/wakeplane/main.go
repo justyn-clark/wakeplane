@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/justyn-clark/timekeeper/internal/cli"
+	"github.com/justyn-clark/wakeplane/internal/cli"
 )
 
 const version = "0.1.0"

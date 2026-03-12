@@ -299,3 +299,104 @@ entries:
       status: completed
       task_id: task-6
       timestamp: "2026-03-11T22:53:05.528536000Z"
+    - evidence: Accepted draft intent from .small-cache/drafts/intent.small.yml
+      notes: small accept intent
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: meta/accept-intent
+      timestamp: "2026-03-12T20:51:32.172996000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small.yml"
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T205330.267516000Z.txt
+      command_sha256: f031dfe9f559a3eb525e1698b1130a91cf9a950b67251d2c9b6c4842e62e1a16
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small.yml"
+      evidence: |-
+        exit_code=1 output="?   	github.com/justyn-clark/wakeplane/cmd/wakeplane	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/cmd/wakeplaned	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/api	0.411s
+        ok  	github.com/justyn-clark/wakeplane/internal/app	0.498s
+        ?   	github.com/justyn-clark/wakeplane/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/config	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/dispatcher	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/domain	0.458s
+        ?   	github.com/justyn-clark/wakeplane/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/store	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/timecalc	0.547s
+        Verification passed
+        Check passed"
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-6
+      timestamp: "2026-03-12T20:53:30.267516000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && ! rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small....
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T205350.393719000Z.txt
+      command_sha256: dfa8e2c4d20d9a8002668e9180afbe171b4c978f3abe9cc545d4b0e141f7e6c0
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && ! rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small....
+      evidence: |-
+        exit_code=0 output="?   	github.com/justyn-clark/wakeplane/cmd/wakeplane	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/cmd/wakeplaned	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/api	(cached)
+        ok  	github.com/justyn-clark/wakeplane/internal/app	(cached)
+        ?   	github.com/justyn-clark/wakeplane/internal/cli	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/config	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/dispatcher	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/domain	(cached)
+        ?   	github.com/justyn-clark/wakeplane/internal/executors	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/http	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/shell	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/executors/workflow	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/leases	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/logging	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/planner	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/policy	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/receipts	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/scheduler	[no test files]
+        ?   	github.com/justyn-clark/wakeplane/internal/store	[no test files]
+        ok  	github.com/justyn-clark/wakeplane/internal/timecalc	(cached)
+        Verification passed
+        Check passed
+        6:      notes: small init in /Users/justin/Documents/Justyn Clark Network/REPOS/timekeeper
+        85:        exit_code=1 output="# github.com/justyn-clark/timekeeper/cmd/timekeeper
+        87:        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
+        88:        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
+        90:        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
+        91:        cmd/timekeeperd/main.go:3:8: import "github.com/justyn-clark/timekeeper/cmd/timekeeper" is a program, not an importable package
+        92:        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
+        93:        # github.com/justyn-clark/timekeeper/internal/api
+        95:        FAIL	github.com/justyn-clark/timekeeper/internal/api [setup failed]
+        96:        # github.com/justyn-clark/timekeeper/internal/app
+        98:        FAIL	github.com/justyn-clark/timekeeper/internal/app [setup failed]
+        99:        # github.com/justyn-clark/timekeeper/internal/dispatcher
+        101:        FAIL	github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
+        102:        # github.com/justyn-clark/timekeeper/internal/planner
+        104:        FAIL	github.com/justyn-clark/timekeeper/internal/planner [setup failed]
+        105:        # github.com/justyn-clark/timekeeper/internal/scheduler
+        107:        FAIL	github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
+        108:        # github.com/justyn-clark/timekeeper/internal/store
+        110:        FAIL	github.com/justyn-clark/timekeeper/internal/store [setup failed]
+        111:        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
+        112:        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
+        113:        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
+        114:        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
+        115:        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
+        116:        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
+        117:        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
+        118:        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
+        119:        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
+        120:        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
+        121:        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]
+        133:        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no te" truncated=true limit=4000
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-12T20:53:50.393719000Z"

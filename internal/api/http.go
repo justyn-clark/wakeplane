@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/justyn-clark/timekeeper/internal/app"
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/app"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
 func NewMux(service *app.Service) *http.ServeMux {

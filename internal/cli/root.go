@@ -14,20 +14,20 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/justyn-clark/timekeeper/internal/api"
-	"github.com/justyn-clark/timekeeper/internal/app"
-	"github.com/justyn-clark/timekeeper/internal/config"
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/api"
+	"github.com/justyn-clark/wakeplane/internal/app"
+	"github.com/justyn-clark/wakeplane/internal/config"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 	"github.com/spf13/cobra"
 )
 
 func NewRootCmd(version string) *cobra.Command {
 	baseURL := "http://127.0.0.1:8080"
 	root := &cobra.Command{
-		Use:   "timekeeper",
+		Use:   "wakeplane",
 		Short: "Durable scheduling and automated execution engine",
 	}
-	root.PersistentFlags().StringVar(&baseURL, "addr", baseURL, "Timekeeper HTTP base URL")
+	root.PersistentFlags().StringVar(&baseURL, "addr", baseURL, "Wakeplane HTTP base URL")
 	root.AddCommand(newServeCmd(version))
 	root.AddCommand(newScheduleCmd(&baseURL))
 	root.AddCommand(newRunCmd(&baseURL))
@@ -37,7 +37,7 @@ func NewRootCmd(version string) *cobra.Command {
 func newServeCmd(version string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "serve",
-		Short: "Run the Timekeeper daemon",
+		Short: "Run the Wakeplane daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()

@@ -9,9 +9,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
-	"github.com/justyn-clark/timekeeper/internal/executors"
-	"github.com/justyn-clark/timekeeper/internal/store"
+	"github.com/justyn-clark/wakeplane/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/executors"
+	"github.com/justyn-clark/wakeplane/internal/store"
 )
 
 type Dispatcher struct {

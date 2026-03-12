@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
-	"github.com/justyn-clark/timekeeper/internal/executors"
+	"github.com/justyn-clark/wakeplane/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/executors"
 )
 
 type Executor struct {

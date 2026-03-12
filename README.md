@@ -1,6 +1,6 @@
-# Timekeeper
+# Wakeplane
 
-Timekeeper is a durable scheduling and automated execution engine for long-running systems.
+Wakeplane is a durable scheduling and automated execution engine for long-running systems.
 
 It defines when work should happen, records what happened, and safely dispatches execution across local and remote runtimes.
 
@@ -18,7 +18,7 @@ Cron is only one scheduling input. The real product is the control plane above i
 - pluggable executors
 - reusable API and CLI surface
 
-Timekeeper is designed as a standalone primitive that can be embedded across JCN systems.
+Wakeplane is designed as a standalone primitive that can be embedded across JCN systems.
 
 ## Design goals
 
@@ -87,19 +87,19 @@ Durability and audit
 ## CLI
 
 ```text
-timekeeper serve
-timekeeper schedule create -f ./examples/nightly-sync.yaml
-timekeeper schedule list
-timekeeper schedule get <id>
-timekeeper schedule pause <id>
-timekeeper schedule resume <id>
-timekeeper schedule delete <id>
-timekeeper schedule trigger <id>
-timekeeper run list
-timekeeper run get <id>
+wakeplane serve
+wakeplane schedule create -f ./examples/nightly-sync.yaml
+wakeplane schedule list
+wakeplane schedule get <id>
+wakeplane schedule pause <id>
+wakeplane schedule resume <id>
+wakeplane schedule delete <id>
+wakeplane schedule trigger <id>
+wakeplane run list
+wakeplane run get <id>
 ```
 
-Both `timekeeper` and `timekeeperd` currently expose the same command surface.
+Both `wakeplane` and `wakeplaned` currently expose the same command surface.
 
 ## HTTP API
 
@@ -127,12 +127,12 @@ GET    /v1/metrics
 
 The daemon reads configuration from environment variables:
 
-- `TIMEKEEPER_HTTP_ADDR` default `:8080`
-- `TIMEKEEPER_DB_PATH` default `./timekeeper.db`
-- `TIMEKEEPER_SCHEDULER_INTERVAL_SECONDS` default `5`
-- `TIMEKEEPER_DISPATCHER_INTERVAL_SECONDS` default `2`
-- `TIMEKEEPER_LEASE_TTL_SECONDS` default `30`
-- `TIMEKEEPER_WORKER_ID` default `wrk_local`
+- `WAKEPLANE_HTTP_ADDR` default `:8080`
+- `WAKEPLANE_DB_PATH` default `./wakeplane.db`
+- `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS` default `5`
+- `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` default `2`
+- `WAKEPLANE_LEASE_TTL_SECONDS` default `30`
+- `WAKEPLANE_WORKER_ID` default `wrk_local`
 
 ## Development
 

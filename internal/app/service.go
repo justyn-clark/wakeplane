@@ -7,18 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/config"
-	"github.com/justyn-clark/timekeeper/internal/dispatcher"
-	"github.com/justyn-clark/timekeeper/internal/domain"
-	"github.com/justyn-clark/timekeeper/internal/executors"
-	httpExec "github.com/justyn-clark/timekeeper/internal/executors/http"
-	shellExec "github.com/justyn-clark/timekeeper/internal/executors/shell"
-	workflowExec "github.com/justyn-clark/timekeeper/internal/executors/workflow"
-	"github.com/justyn-clark/timekeeper/internal/logging"
-	"github.com/justyn-clark/timekeeper/internal/planner"
-	"github.com/justyn-clark/timekeeper/internal/scheduler"
-	"github.com/justyn-clark/timekeeper/internal/store"
-	"github.com/justyn-clark/timekeeper/internal/timecalc"
+	"github.com/justyn-clark/wakeplane/internal/config"
+	"github.com/justyn-clark/wakeplane/internal/dispatcher"
+	"github.com/justyn-clark/wakeplane/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/executors"
+	httpExec "github.com/justyn-clark/wakeplane/internal/executors/http"
+	shellExec "github.com/justyn-clark/wakeplane/internal/executors/shell"
+	workflowExec "github.com/justyn-clark/wakeplane/internal/executors/workflow"
+	"github.com/justyn-clark/wakeplane/internal/logging"
+	"github.com/justyn-clark/wakeplane/internal/planner"
+	"github.com/justyn-clark/wakeplane/internal/scheduler"
+	"github.com/justyn-clark/wakeplane/internal/store"
+	"github.com/justyn-clark/wakeplane/internal/timecalc"
 )
 
 type Service struct {
@@ -284,7 +284,7 @@ func (s *Service) Ready(ctx context.Context) map[string]any {
 
 func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 	resp := domain.StatusResponse{
-		Service:   "timekeeper",
+		Service:   "wakeplane",
 		Version:   s.cfg.Version,
 		StartedAt: s.startedAt.Format(time.RFC3339),
 	}

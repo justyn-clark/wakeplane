@@ -1,6 +1,6 @@
 small_version: "1.0.0"
 owner: "human"
-intent: "Build Timekeeper as a standalone, durable scheduling and automated execution engine for long-running systems."
+intent: "Build Wakeplane as a standalone, durable scheduling and automated execution engine for long-running systems."
 scope:
   include:
     - "Durable schedule definitions for cron, interval, and once execution."

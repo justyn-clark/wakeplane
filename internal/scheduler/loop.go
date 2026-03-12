@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/planner"
+	"github.com/justyn-clark/wakeplane/internal/planner"
 )
 
 type Loop struct {

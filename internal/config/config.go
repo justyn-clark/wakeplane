@@ -19,12 +19,12 @@ type Config struct {
 
 func FromEnv(version string) Config {
 	cfg := Config{
-		HTTPAddress:        envOrDefault("TIMEKEEPER_HTTP_ADDR", ":8080"),
-		DatabasePath:       envOrDefault("TIMEKEEPER_DB_PATH", "./timekeeper.db"),
-		SchedulerInterval:  durationEnv("TIMEKEEPER_SCHEDULER_INTERVAL_SECONDS", 5),
-		DispatcherInterval: durationEnv("TIMEKEEPER_DISPATCHER_INTERVAL_SECONDS", 2),
-		LeaseTTL:           durationEnv("TIMEKEEPER_LEASE_TTL_SECONDS", 30),
-		WorkerID:           envOrDefault("TIMEKEEPER_WORKER_ID", "wrk_local"),
+		HTTPAddress:        envOrDefault("WAKEPLANE_HTTP_ADDR", ":8080"),
+		DatabasePath:       envOrDefault("WAKEPLANE_DB_PATH", "./wakeplane.db"),
+		SchedulerInterval:  durationEnv("WAKEPLANE_SCHEDULER_INTERVAL_SECONDS", 5),
+		DispatcherInterval: durationEnv("WAKEPLANE_DISPATCHER_INTERVAL_SECONDS", 2),
+		LeaseTTL:           durationEnv("WAKEPLANE_LEASE_TTL_SECONDS", 30),
+		WorkerID:           envOrDefault("WAKEPLANE_WORKER_ID", "wrk_local"),
 		Version:            version,
 	}
 	return cfg

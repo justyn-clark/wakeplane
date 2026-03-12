@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/justyn-clark/timekeeper/internal/domain"
+	"github.com/justyn-clark/wakeplane/internal/domain"
 	cronlib "github.com/robfig/cron/v3"
 )
 

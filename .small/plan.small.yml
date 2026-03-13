@@ -25,3 +25,6 @@ tasks:
     - id: task-8
       title: Coordinate dispatcher shutdown and add restart coverage for blocking executors
       status: completed
+    - id: task-9
+      title: Harden daemon serve lifecycle and add shutdown coverage
+      status: completed

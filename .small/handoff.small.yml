@@ -1,6 +1,6 @@
 small_version: "1.0.0"
 owner: agent
-summary: Run complete. strict check passed. Added coordinated dispatcher shutdown and blocking-executor restart coverage. All plan tasks completed.
+summary: Run complete. strict check passed. Added daemon serve lifecycle coordination and shutdown coverage. All plan tasks completed.
 resume:
     next_steps: []
 links: []

@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 
 	"github.com/justyn-clark/wakeplane/internal/api"
@@ -43,32 +45,52 @@ func newServeCmd(version string) *cobra.Command {
 			defer cancel()
 
 			cfg := config.FromEnv(version)
-			service, err := app.New(ctx, cfg)
-			if err != nil {
-				return err
-			}
-			defer service.Close()
-
-			server := &http.Server{
-				Addr:    cfg.HTTPAddress,
-				Handler: api.NewMux(service),
-			}
-			go func() {
-				<-ctx.Done()
-				shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				_ = server.Shutdown(shutdownCtx)
-			}()
-			go func() {
-				_ = service.Run(ctx)
-			}()
-
-			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				return err
-			}
-			return nil
+			return runServe(ctx, cfg, app.New, serveHooks{})
 		},
 	}
+}
+
+type serveHooks struct {
+	onListening func(addr string)
+}
+
+func runServe(ctx context.Context, cfg config.Config, newService func(context.Context, config.Config) (*app.Service, error), hooks serveHooks) error {
+	service, err := newService(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer service.Close()
+
+	listener, err := net.Listen("tcp", cfg.HTTPAddress)
+	if err != nil {
+		return err
+	}
+	server := &http.Server{Handler: api.NewMux(service)}
+	if hooks.onListening != nil {
+		hooks.onListening(listener.Addr().String())
+	}
+
+	group, groupCtx := errgroup.WithContext(ctx)
+	group.Go(func() error {
+		<-groupCtx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutdownCtx)
+		return nil
+	})
+	group.Go(func() error {
+		if err := service.Run(groupCtx); err != nil && err != context.Canceled {
+			return err
+		}
+		return nil
+	})
+	group.Go(func() error {
+		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	})
+	return group.Wait()
 }
 
 func newScheduleCmd(baseURL *string) *cobra.Command {

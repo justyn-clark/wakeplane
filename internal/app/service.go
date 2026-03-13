@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/justyn-clark/wakeplane/internal/config"
 	"github.com/justyn-clark/wakeplane/internal/dispatcher"
@@ -30,9 +33,16 @@ type Service struct {
 	schedulerLoop    *scheduler.Loop
 	workflowRegistry *executors.WorkflowRegistry
 	startedAt        time.Time
+	runMu            sync.Mutex
+	runCancel        context.CancelFunc
+	runDone          chan struct{}
 }
 
 func New(ctx context.Context, cfg config.Config) (*Service, error) {
+	return NewWithOptions(ctx, cfg)
+}
+
+func NewWithOptions(ctx context.Context, cfg config.Config, opts ...Option) (*Service, error) {
 	logger := logging.New()
 	st, err := store.Open(cfg.DatabasePath)
 	if err != nil {
@@ -41,14 +51,11 @@ func New(ctx context.Context, cfg config.Config) (*Service, error) {
 	if err := st.Migrate(ctx); err != nil {
 		return nil, err
 	}
-	workflowRegistry := executors.NewWorkflowRegistry()
-	workflowRegistry.Register("sync.customers", func(ctx context.Context, input map[string]any) (map[string]any, error) {
-		return map[string]any{
-			"workflow_id": "sync.customers",
-			"input":       input,
-			"status":      "completed",
-		}, nil
-	})
+	cfgOpts := options{workflowRegistry: defaultWorkflowRegistry()}
+	for _, opt := range opts {
+		opt(&cfgOpts)
+	}
+	workflowRegistry := cfgOpts.workflowRegistry
 	registry := executors.NewRegistry(
 		httpExec.New(),
 		shellExec.New(),
@@ -68,13 +75,56 @@ func New(ctx context.Context, cfg config.Config) (*Service, error) {
 	}, nil
 }
 
+func (s *Service) RegisterWorkflow(id string, handler executors.WorkflowHandler) {
+	s.workflowRegistry.Register(id, handler)
+}
+
 func (s *Service) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return s.CloseContext(ctx)
+}
+
+func (s *Service) CloseContext(ctx context.Context) error {
+	cancel, done := s.runtimeHandle()
+	if cancel != nil {
+		cancel()
+	}
+	if done != nil {
+		select {
+		case <-done:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	if err := s.dispatcher.Shutdown(ctx); err != nil {
+		return err
+	}
 	return s.store.Close()
 }
 
 func (s *Service) Run(ctx context.Context) error {
-	go s.runDispatcher(ctx)
-	return s.schedulerLoop.Run(ctx)
+	runCtx, cancel, done, err := s.beginRun(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		cancel()
+		close(done)
+		s.clearRunState(done)
+	}()
+	group, groupCtx := errgroup.WithContext(runCtx)
+	group.Go(func() error {
+		return s.schedulerLoop.Run(groupCtx)
+	})
+	group.Go(func() error {
+		s.runDispatcher(groupCtx)
+		return nil
+	})
+	if err := group.Wait(); err != nil && err != context.Canceled {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) runDispatcher(ctx context.Context) {
@@ -89,6 +139,34 @@ func (s *Service) runDispatcher(ctx context.Context) {
 			return
 		case <-ticker.C:
 		}
+	}
+}
+
+func (s *Service) beginRun(parent context.Context) (context.Context, context.CancelFunc, chan struct{}, error) {
+	s.runMu.Lock()
+	defer s.runMu.Unlock()
+	if s.runDone != nil {
+		return nil, nil, nil, fmt.Errorf("service already running")
+	}
+	runCtx, cancel := context.WithCancel(parent)
+	done := make(chan struct{})
+	s.runCancel = cancel
+	s.runDone = done
+	return runCtx, cancel, done, nil
+}
+
+func (s *Service) runtimeHandle() (context.CancelFunc, chan struct{}) {
+	s.runMu.Lock()
+	defer s.runMu.Unlock()
+	return s.runCancel, s.runDone
+}
+
+func (s *Service) clearRunState(done chan struct{}) {
+	s.runMu.Lock()
+	defer s.runMu.Unlock()
+	if s.runDone == done {
+		s.runDone = nil
+		s.runCancel = nil
 	}
 }
 
@@ -136,12 +214,19 @@ func (s *Service) ListSchedules(ctx context.Context, enabled *bool, limit int, c
 }
 
 func (s *Service) GetSchedule(ctx context.Context, id string) (domain.Schedule, error) {
-	return s.store.GetSchedule(ctx, id)
+	schedule, err := s.store.GetSchedule(ctx, id)
+	if err == store.ErrNotFound {
+		return domain.Schedule{}, domain.NewNotFoundError("schedule", id)
+	}
+	return schedule, err
 }
 
 func (s *Service) ReplaceSchedule(ctx context.Context, id string, req domain.UpdateScheduleRequest) (domain.Schedule, []domain.ValidationError, error) {
 	current, err := s.store.GetSchedule(ctx, id)
 	if err != nil {
+		if err == store.ErrNotFound {
+			return domain.Schedule{}, nil, domain.NewNotFoundError("schedule", id)
+		}
 		return domain.Schedule{}, nil, err
 	}
 	req = withDefaults(req)
@@ -174,6 +259,9 @@ func (s *Service) ReplaceSchedule(ctx context.Context, id string, req domain.Upd
 func (s *Service) PatchSchedule(ctx context.Context, id string, patch domain.PatchScheduleRequest) (domain.Schedule, []domain.ValidationError, error) {
 	current, err := s.store.GetSchedule(ctx, id)
 	if err != nil {
+		if err == store.ErrNotFound {
+			return domain.Schedule{}, nil, domain.NewNotFoundError("schedule", id)
+		}
 		return domain.Schedule{}, nil, err
 	}
 	next := domain.ApplyPatch(current, patch)
@@ -195,12 +283,21 @@ func (s *Service) PatchSchedule(ctx context.Context, id string, patch domain.Pat
 }
 
 func (s *Service) DeleteSchedule(ctx context.Context, id string) error {
-	return s.store.DeleteSchedule(ctx, id)
+	if err := s.store.DeleteSchedule(ctx, id); err != nil {
+		if err == store.ErrNotFound {
+			return domain.NewNotFoundError("schedule", id)
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *Service) PauseSchedule(ctx context.Context, id string) (domain.Schedule, error) {
 	schedule, err := s.store.GetSchedule(ctx, id)
 	if err != nil {
+		if err == store.ErrNotFound {
+			return domain.Schedule{}, domain.NewNotFoundError("schedule", id)
+		}
 		return domain.Schedule{}, err
 	}
 	now := time.Now().UTC()
@@ -216,6 +313,9 @@ func (s *Service) PauseSchedule(ctx context.Context, id string) (domain.Schedule
 func (s *Service) ResumeSchedule(ctx context.Context, id string) (domain.Schedule, error) {
 	schedule, err := s.store.GetSchedule(ctx, id)
 	if err != nil {
+		if err == store.ErrNotFound {
+			return domain.Schedule{}, domain.NewNotFoundError("schedule", id)
+		}
 		return domain.Schedule{}, err
 	}
 	now := time.Now().UTC()
@@ -235,10 +335,13 @@ func (s *Service) ResumeSchedule(ctx context.Context, id string) (domain.Schedul
 
 func (s *Service) TriggerSchedule(ctx context.Context, id, reason string) (domain.Run, error) {
 	if err := domain.ValidateTriggerReason(reason); err != nil {
-		return domain.Run{}, err
+		return domain.Run{}, domain.NewBadRequestError(err.Error())
 	}
 	schedule, err := s.store.GetSchedule(ctx, id)
 	if err != nil {
+		if err == store.ErrNotFound {
+			return domain.Run{}, domain.NewNotFoundError("schedule", id)
+		}
 		return domain.Run{}, err
 	}
 	now := time.Now().UTC()
@@ -263,11 +366,19 @@ func (s *Service) ListRuns(ctx context.Context, scheduleID *string, status *doma
 }
 
 func (s *Service) GetRun(ctx context.Context, id string) (domain.Run, error) {
-	return s.store.GetRun(ctx, id)
+	run, err := s.store.GetRun(ctx, id)
+	if err == store.ErrNotFound {
+		return domain.Run{}, domain.NewNotFoundError("run", id)
+	}
+	return run, err
 }
 
 func (s *Service) ListReceipts(ctx context.Context, runID string) ([]domain.Receipt, error) {
-	return s.store.ListReceipts(ctx, runID)
+	items, err := s.store.ListReceipts(ctx, runID)
+	if err == store.ErrNotFound {
+		return nil, domain.NewNotFoundError("run", runID)
+	}
+	return items, err
 }
 
 func (s *Service) Health(context.Context) map[string]bool {
@@ -295,6 +406,44 @@ func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 		resp.Scheduler.LastTickAt = last.Format(time.RFC3339)
 	}
 	resp.Workers.Active = s.dispatcher.ActiveWorkers()
+	dueRuns, err := s.store.DueRunCount(ctx, time.Now().UTC())
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	retryQueued, err := s.store.RetryQueuedCount(ctx)
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	running, err := s.store.CountStatus(ctx, "schedule_runs", "status", string(domain.RunRunning))
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	failed, err := s.store.CountStatus(ctx, "schedule_runs", "status", string(domain.RunFailed))
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	deadLetters, err := s.store.CountTable(ctx, "dead_letters")
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	expiredClaims, err := s.store.ClaimedExpiredCount(ctx, time.Now().UTC())
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	resp.Scheduler.DueRuns = dueRuns
+	resp.Workers.ClaimedButExpired = expiredClaims
+	resp.Runs.Running = running
+	resp.Runs.Failed = failed
+	resp.Runs.RetryQueued = retryQueued
+	resp.Runs.DeadLetter = deadLetters
+	nextDue, err := s.store.NextDueSchedule(ctx, time.Now().UTC())
+	if err != nil {
+		return domain.StatusResponse{}, err
+	}
+	if nextDue != nil {
+		resp.Scheduler.NextDueScheduleID = nextDue.ScheduleID
+		resp.Scheduler.NextDueRunAt = nextDue.DueTime.Format(time.RFC3339)
+	}
 	return resp, nil
 }
 
@@ -335,18 +484,50 @@ func (s *Service) Metrics(ctx context.Context) (string, error) {
 	if tick := s.planner.LastTick(); !tick.IsZero() {
 		lastTick = tick.Unix()
 	}
+	dueRuns, err := s.store.DueRunCount(ctx, time.Now().UTC())
+	if err != nil {
+		return "", err
+	}
+	retryQueued, err := s.store.RetryQueuedCount(ctx)
+	if err != nil {
+		return "", err
+	}
+	expiredClaims, err := s.store.ClaimedExpiredCount(ctx, time.Now().UTC())
+	if err != nil {
+		return "", err
+	}
+	executorOutcomes, err := s.store.ExecutorOutcomeCounts(ctx)
+	if err != nil {
+		return "", err
+	}
+	executorDurations, err := s.store.ExecutorDurationStats(ctx)
+	if err != nil {
+		return "", err
+	}
 	metrics := fmt.Sprintf(
-		"schedules_total %d\nschedules_enabled_total %d\nruns_total %d\nruns_running %d\nruns_failed_total %d\nruns_succeeded_total %d\ndead_letters_total %d\nworker_leases_active %d\nscheduler_last_tick_unix %d\n",
+		"schedules_total %d\nschedules_enabled_total %d\nruns_total %d\nruns_due %d\nruns_running %d\nruns_failed_total %d\nruns_succeeded_total %d\nruns_retry_queued %d\ndead_letters_total %d\nworker_leases_active %d\nclaimed_but_expired_total %d\nscheduler_last_tick_unix %d\n",
 		schedulesTotal,
 		schedulesEnabled,
 		runsTotal,
+		dueRuns,
 		runsRunning,
 		runsFailed,
 		runsSucceeded,
+		retryQueued,
 		deadLetters,
 		leases,
+		expiredClaims,
 		lastTick,
 	)
+	for kind, statuses := range executorOutcomes {
+		for status, count := range statuses {
+			metrics += fmt.Sprintf("executor_runs_total{executor=\"%s\",status=\"%s\"} %d\n", kind, status, count)
+		}
+	}
+	for kind, stat := range executorDurations {
+		metrics += fmt.Sprintf("executor_execution_duration_seconds_count{executor=\"%s\"} %d\n", kind, stat.Count)
+		metrics += fmt.Sprintf("executor_execution_duration_seconds_sum{executor=\"%s\"} %.6f\n", kind, stat.SumSeconds)
+	}
 	return metrics, nil
 }
 

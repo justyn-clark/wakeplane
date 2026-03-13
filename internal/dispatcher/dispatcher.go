@@ -23,6 +23,7 @@ type Dispatcher struct {
 	now       func() time.Time
 	activeMu  sync.Mutex
 	active    map[string]context.CancelFunc
+	activeWG  sync.WaitGroup
 	lastError error
 }
 
@@ -48,7 +49,7 @@ func (d *Dispatcher) ActiveWorkers() int {
 
 func (d *Dispatcher) Tick(ctx context.Context) error {
 	now := d.now()
-	if err := d.store.RecoverExpiredClaims(ctx, now); err != nil {
+	if err := d.recoverExpiredLeases(ctx, now); err != nil {
 		return err
 	}
 	candidates, err := d.store.ListCandidateRuns(ctx, now, 64)
@@ -69,14 +70,47 @@ func (d *Dispatcher) Tick(ctx context.Context) error {
 		if !claimable {
 			continue
 		}
-		claimed, err := d.store.ClaimRun(ctx, run.ID, d.workerID, now, d.leaseTTL)
+		claimed, err := d.store.ClaimRun(ctx, schedule, run.ID, d.workerID, now, d.leaseTTL)
 		if err != nil || !claimed {
 			continue
 		}
 		run.ClaimedByWorkerID = &d.workerID
 		expires := now.Add(d.leaseTTL)
 		run.ClaimExpiresAt = &expires
-		go d.executeRun(context.Background(), schedule, run)
+		d.activeWG.Add(1)
+		go func(schedule domain.Schedule, run domain.Run) {
+			defer d.activeWG.Done()
+			d.executeRun(ctx, schedule, run)
+		}(schedule, run)
+	}
+	return nil
+}
+
+func (d *Dispatcher) recoverExpiredLeases(ctx context.Context, now time.Time) error {
+	expired, err := d.store.ListExpiredLeases(ctx, now)
+	if err != nil {
+		return err
+	}
+	for _, item := range expired {
+		switch item.Run.Status {
+		case domain.RunClaimed:
+			if err := d.store.ResetClaimedRun(ctx, item.Run.ID, now); err != nil {
+				return err
+			}
+		case domain.RunRunning:
+			d.cancelRun(item.Run.ID)
+			result := executors.Result{
+				ErrorText: "worker lease expired during execution",
+			}
+			d.completeFailureWithResult(ctx, item.Schedule, item.Run, result)
+			if err := d.store.ClearLease(ctx, item.Run.ID); err != nil {
+				return err
+			}
+		default:
+			if err := d.store.ClearLease(ctx, item.Run.ID); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -332,6 +366,29 @@ func (d *Dispatcher) cancelRun(runID string) {
 	d.activeMu.Unlock()
 	if ok {
 		cancel()
+	}
+}
+
+func (d *Dispatcher) Shutdown(ctx context.Context) error {
+	d.activeMu.Lock()
+	cancels := make([]context.CancelFunc, 0, len(d.active))
+	for _, cancel := range d.active {
+		cancels = append(cancels, cancel)
+	}
+	d.activeMu.Unlock()
+	for _, cancel := range cancels {
+		cancel()
+	}
+	done := make(chan struct{})
+	go func() {
+		d.activeWG.Wait()
+		close(done)
+	}()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
+		return nil
 	}
 }
 

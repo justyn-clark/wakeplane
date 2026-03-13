@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -21,7 +22,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("GET /v1/status", func(w http.ResponseWriter, r *http.Request) {
 		status, err := service.Status(r.Context())
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, status)
@@ -29,7 +30,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("GET /v1/metrics", func(w http.ResponseWriter, r *http.Request) {
 		metrics, err := service.Metrics(r.Context())
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
@@ -38,16 +39,16 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("POST /v1/schedules", func(w http.ResponseWriter, r *http.Request) {
 		var req domain.CreateScheduleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, err)
+			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
 		schedule, errs, err := service.CreateSchedule(r.Context(), req)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		if len(errs) > 0 {
-			writeJSON(w, http.StatusBadRequest, domain.ErrorResponse{Error: "validation failed", Details: errs})
+			writeAPIError(w, domain.NewValidationError(errs))
 			return
 		}
 		writeJSON(w, http.StatusCreated, schedule)
@@ -62,7 +63,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 		cursor := r.URL.Query().Get("cursor")
 		items, nextCursor, err := service.ListSchedules(r.Context(), enabled, limit, cursor)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, domain.ListResponse[domain.ScheduleSummary]{Items: items, NextCursor: nextCursor})
@@ -70,7 +71,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("GET /v1/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
 		schedule, err := service.GetSchedule(r.Context(), r.PathValue("id"))
 		if err != nil {
-			writeError(w, http.StatusNotFound, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, schedule)
@@ -78,16 +79,16 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("PUT /v1/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
 		var req domain.UpdateScheduleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, err)
+			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
 		schedule, errs, err := service.ReplaceSchedule(r.Context(), r.PathValue("id"), req)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		if len(errs) > 0 {
-			writeJSON(w, http.StatusBadRequest, domain.ErrorResponse{Error: "validation failed", Details: errs})
+			writeAPIError(w, domain.NewValidationError(errs))
 			return
 		}
 		writeJSON(w, http.StatusOK, schedule)
@@ -95,23 +96,23 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("PATCH /v1/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
 		var req domain.PatchScheduleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, err)
+			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
 		schedule, errs, err := service.PatchSchedule(r.Context(), r.PathValue("id"), req)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		if len(errs) > 0 {
-			writeJSON(w, http.StatusBadRequest, domain.ErrorResponse{Error: "validation failed", Details: errs})
+			writeAPIError(w, domain.NewValidationError(errs))
 			return
 		}
 		writeJSON(w, http.StatusOK, schedule)
 	})
 	mux.HandleFunc("DELETE /v1/schedules/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if err := service.DeleteSchedule(r.Context(), r.PathValue("id")); err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"deleted": true, "id": r.PathValue("id")})
@@ -119,7 +120,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("POST /v1/schedules/{id}/pause", func(w http.ResponseWriter, r *http.Request) {
 		schedule, err := service.PauseSchedule(r.Context(), r.PathValue("id"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"id": schedule.ID, "paused_at": schedule.PausedAt, "enabled": schedule.Enabled})
@@ -127,7 +128,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("POST /v1/schedules/{id}/resume", func(w http.ResponseWriter, r *http.Request) {
 		schedule, err := service.ResumeSchedule(r.Context(), r.PathValue("id"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"id": schedule.ID, "paused_at": schedule.PausedAt, "enabled": schedule.Enabled, "next_run_at": schedule.NextRunAt})
@@ -135,12 +136,12 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("POST /v1/schedules/{id}/trigger", func(w http.ResponseWriter, r *http.Request) {
 		var req domain.TriggerRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, err)
+			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
 		run, err := service.TriggerSchedule(r.Context(), r.PathValue("id"), req.Reason)
 		if err != nil {
-			writeError(w, http.StatusBadRequest, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"run_id": run.ID, "schedule_id": run.ScheduleID, "occurrence_key": run.OccurrenceKey, "status": run.Status, "created_at": run.CreatedAt})
@@ -150,7 +151,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 		status := parseStatus(r)
 		items, nextCursor, err := service.ListRuns(r.Context(), &scheduleID, status, parseLimit(r), r.URL.Query().Get("cursor"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, domain.ListResponse[domain.RunSummary]{Items: items, NextCursor: nextCursor})
@@ -163,7 +164,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 		status := parseStatus(r)
 		items, nextCursor, err := service.ListRuns(r.Context(), scheduleID, status, parseLimit(r), r.URL.Query().Get("cursor"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, domain.ListResponse[domain.RunSummary]{Items: items, NextCursor: nextCursor})
@@ -171,7 +172,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("GET /v1/runs/{id}", func(w http.ResponseWriter, r *http.Request) {
 		run, err := service.GetRun(r.Context(), r.PathValue("id"))
 		if err != nil {
-			writeError(w, http.StatusNotFound, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, run)
@@ -179,7 +180,7 @@ func NewMux(service *app.Service) *http.ServeMux {
 	mux.HandleFunc("GET /v1/runs/{id}/receipts", func(w http.ResponseWriter, r *http.Request) {
 		items, err := service.ListReceipts(r.Context(), r.PathValue("id"))
 		if err != nil {
-			writeError(w, http.StatusNotFound, err)
+			writeError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, domain.ListResponse[domain.Receipt]{Items: items})
@@ -215,6 +216,15 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	_ = json.NewEncoder(w).Encode(value)
 }
 
-func writeError(w http.ResponseWriter, status int, err error) {
-	writeJSON(w, status, domain.ErrorResponse{Error: err.Error()})
+func writeError(w http.ResponseWriter, err error) {
+	var apiErr *domain.APIError
+	if errors.As(err, &apiErr) {
+		writeAPIError(w, apiErr)
+		return
+	}
+	writeJSON(w, http.StatusInternalServerError, domain.ErrorResponse{Code: "internal_error", Error: err.Error()})
+}
+
+func writeAPIError(w http.ResponseWriter, err *domain.APIError) {
+	writeJSON(w, err.Status, domain.ErrorResponse{Code: err.Code, Error: err.Message, Details: err.Details})
 }

@@ -22,6 +22,16 @@ type Store struct {
 	db *sql.DB
 }
 
+type ExpiredLease struct {
+	Run      domain.Run
+	Schedule domain.Schedule
+}
+
+type NextDue struct {
+	ScheduleID string
+	DueTime    time.Time
+}
+
 func Open(path string) (*Store, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -35,6 +45,8 @@ func Open(path string) (*Store, error) {
 }
 
 func (s *Store) Close() error { return s.db.Close() }
+
+func (s *Store) DB() *sql.DB { return s.db }
 
 func (s *Store) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
@@ -138,12 +150,26 @@ func (s *Store) GetSchedule(ctx context.Context, id string) (domain.Schedule, er
 		       paused_at, next_run_at, last_run_at, created_at, updated_at
 		FROM schedules WHERE id = ?
 	`, id)
-	return scanSchedule(row)
+	schedule, err := scanSchedule(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.Schedule{}, ErrNotFound
+	}
+	return schedule, err
 }
 
 func (s *Store) DeleteSchedule(ctx context.Context, id string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM schedules WHERE id = ?`, id)
-	return err
+	res, err := s.db.ExecContext(ctx, `DELETE FROM schedules WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cursor string) ([]domain.ScheduleSummary, *string, error) {
@@ -279,6 +305,9 @@ func (s *Store) GetRun(ctx context.Context, id string) (domain.Run, error) {
 	`, id)
 	run, err := scanRun(row)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Run{}, ErrNotFound
+		}
 		return domain.Run{}, err
 	}
 	receipts, err := s.ListReceipts(ctx, id)
@@ -353,6 +382,9 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 }
 
 func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receipt, error) {
+	if err := s.ensureRunExists(ctx, runID); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, receipt_kind, content_type, body, created_at
 		FROM execution_receipts
@@ -421,12 +453,41 @@ func (s *Store) ListCandidateRuns(ctx context.Context, now time.Time, limit int)
 	return runs, nil
 }
 
-func (s *Store) ClaimRun(ctx context.Context, runID, workerID string, now time.Time, ttl time.Duration) (bool, error) {
+func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, workerID string, now time.Time, ttl time.Duration) (bool, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, err
 	}
 	defer func() { _ = tx.Rollback() }()
+	var (
+		status     domain.RunStatus
+		scheduleID string
+	)
+	if err := tx.QueryRowContext(ctx, `SELECT schedule_id, status FROM schedule_runs WHERE id = ?`, runID).Scan(&scheduleID, &status); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, ErrNotFound
+		}
+		return false, err
+	}
+	if scheduleID != schedule.ID {
+		return false, ErrConflict
+	}
+	if status != domain.RunPending && status != domain.RunRetryScheduled {
+		return false, nil
+	}
+	var activeCount int
+	if err := tx.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM schedule_runs
+		WHERE schedule_id = ? AND id <> ? AND status IN ('claimed', 'running')
+	`, schedule.ID, runID).Scan(&activeCount); err != nil {
+		return false, err
+	}
+	if activeCount >= schedule.Policy.MaxConcurrency {
+		return false, nil
+	}
+	if activeCount > 0 && schedule.Policy.Overlap != domain.OverlapAllow {
+		return false, nil
+	}
 	expires := now.Add(ttl)
 	res, err := tx.ExecContext(ctx, `
 		UPDATE schedule_runs
@@ -504,6 +565,122 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 		}
 	}
 	return tx.Commit()
+}
+
+func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]ExpiredLease, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT sr.id, sr.schedule_id, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt, sr.claimed_by_worker_id,
+		       sr.claim_expires_at, sr.started_at, sr.finished_at, sr.http_status_code, sr.exit_code, sr.result_json, sr.error_text,
+		       sr.retry_available_at, sr.created_at, sr.updated_at,
+		       s.id, s.name, s.enabled, s.schedule_kind, s.schedule_spec_json, s.timezone, s.target_kind, s.target_spec_json,
+		       s.overlap_policy, s.misfire_policy, s.timeout_seconds, s.max_concurrency, s.retry_max_attempts, s.retry_strategy,
+		       s.retry_initial_delay_seconds, s.retry_max_delay_seconds, s.start_at, s.end_at, s.paused_at, s.next_run_at,
+		       s.last_run_at, s.created_at, s.updated_at
+		FROM worker_leases wl
+		JOIN schedule_runs sr ON sr.id = wl.run_id
+		JOIN schedules s ON s.id = sr.schedule_id
+		WHERE wl.expires_at <= ?
+	`, timeString(now))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ExpiredLease
+	for rows.Next() {
+		var (
+			run domain.Run
+			sch domain.Schedule
+
+			claimedByWorker  sql.NullString
+			claimExpiresAt   sql.NullString
+			startedAt        sql.NullString
+			finishedAt       sql.NullString
+			httpStatusCode   sql.NullInt64
+			exitCode         sql.NullInt64
+			resultJSON       sql.NullString
+			errorText        sql.NullString
+			retryAvailableAt sql.NullString
+			nominalTimeRaw   string
+			dueTimeRaw       string
+			runCreatedAtRaw  string
+			runUpdatedAtRaw  string
+
+			enabledInt   int
+			specJSON     string
+			targetJSON   string
+			startAt      sql.NullString
+			endAt        sql.NullString
+			pausedAt     sql.NullString
+			nextRunAt    sql.NullString
+			lastRunAt    sql.NullString
+			schCreatedAt string
+			schUpdatedAt string
+		)
+		if err := rows.Scan(
+			&run.ID, &run.ScheduleID, &run.OccurrenceKey, &nominalTimeRaw, &dueTimeRaw, &run.Status, &run.Attempt, &claimedByWorker,
+			&claimExpiresAt, &startedAt, &finishedAt, &httpStatusCode, &exitCode, &resultJSON, &errorText, &retryAvailableAt, &runCreatedAtRaw, &runUpdatedAtRaw,
+			&sch.ID, &sch.Name, &enabledInt, &sch.Schedule.Kind, &specJSON, &sch.Timezone, &sch.Target.Kind, &targetJSON,
+			&sch.Policy.Overlap, &sch.Policy.Misfire, &sch.Policy.TimeoutSeconds, &sch.Policy.MaxConcurrency, &sch.Retry.MaxAttempts, &sch.Retry.Strategy,
+			&sch.Retry.InitialDelaySeconds, &sch.Retry.MaxDelaySeconds, &startAt, &endAt, &pausedAt, &nextRunAt, &lastRunAt, &schCreatedAt, &schUpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		run.NominalTime = mustParseTime(nominalTimeRaw)
+		run.DueTime = mustParseTime(dueTimeRaw)
+		run.ClaimedByWorkerID = parseNullString(claimedByWorker)
+		run.ClaimExpiresAt = parseNullTime(claimExpiresAt)
+		run.StartedAt = parseNullTime(startedAt)
+		run.FinishedAt = parseNullTime(finishedAt)
+		if httpStatusCode.Valid {
+			v := int(httpStatusCode.Int64)
+			run.HTTPStatusCode = &v
+		}
+		if exitCode.Valid {
+			v := int(exitCode.Int64)
+			run.ExitCode = &v
+		}
+		if resultJSON.Valid {
+			run.ResultJSON = json.RawMessage(resultJSON.String)
+		}
+		run.ErrorText = parseNullString(errorText)
+		run.RetryAvailableAt = parseNullTime(retryAvailableAt)
+		run.CreatedAt = mustParseTime(runCreatedAtRaw)
+		run.UpdatedAt = mustParseTime(runUpdatedAtRaw)
+		sch.Enabled = enabledInt == 1
+		if err := json.Unmarshal([]byte(specJSON), &sch.Schedule); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(targetJSON), &sch.Target); err != nil {
+			return nil, err
+		}
+		sch.StartAt = parseNullTime(startAt)
+		sch.EndAt = parseNullTime(endAt)
+		sch.PausedAt = parseNullTime(pausedAt)
+		sch.NextRunAt = parseNullTime(nextRunAt)
+		sch.LastRunAt = parseNullTime(lastRunAt)
+		sch.CreatedAt = mustParseTime(schCreatedAt)
+		sch.UpdatedAt = mustParseTime(schUpdatedAt)
+		items = append(items, ExpiredLease{Run: run, Schedule: sch})
+	}
+	return items, nil
+}
+
+func (s *Store) ResetClaimedRun(ctx context.Context, runID string, now time.Time) error {
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE schedule_runs
+		SET status = 'pending', claimed_by_worker_id = NULL, claim_expires_at = NULL, updated_at = ?
+		WHERE id = ? AND status = 'claimed'
+	`, timeString(now), runID)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
+	return err
+}
+
+func (s *Store) ClearLease(ctx context.Context, runID string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
+	return err
 }
 
 func (s *Store) MarkRunRunning(ctx context.Context, runID string, now time.Time) error {
@@ -636,7 +813,124 @@ func (s *Store) ScheduleEnabledCount(ctx context.Context) (int, error) {
 	return n, row.Scan(&n)
 }
 
+func (s *Store) ensureRunExists(ctx context.Context, runID string) error {
+	var id string
+	err := s.db.QueryRowContext(ctx, `SELECT id FROM schedule_runs WHERE id = ?`, runID).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	return err
+}
+
 var ErrAlreadyExists = errors.New("already exists")
+var ErrNotFound = errors.New("not found")
+var ErrConflict = errors.New("conflict")
+
+func (s *Store) DueRunCount(ctx context.Context, now time.Time) (int, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM schedule_runs
+		WHERE (status = 'pending' AND due_time <= ?)
+		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND retry_available_at <= ?)
+	`, timeString(now), timeString(now))
+	var n int
+	return n, row.Scan(&n)
+}
+
+func (s *Store) RetryQueuedCount(ctx context.Context) (int, error) {
+	return s.CountStatus(ctx, "schedule_runs", "status", "retry_scheduled")
+}
+
+func (s *Store) ClaimedExpiredCount(ctx context.Context, now time.Time) (int, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM schedule_runs
+		WHERE status IN ('claimed', 'running') AND claim_expires_at IS NOT NULL AND claim_expires_at <= ?
+	`, timeString(now))
+	var n int
+	return n, row.Scan(&n)
+}
+
+func (s *Store) NextDueSchedule(ctx context.Context, _ time.Time) (*NextDue, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT schedule_id,
+		       MIN(CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END)
+		FROM schedule_runs
+		WHERE status IN ('pending', 'retry_scheduled')
+		GROUP BY schedule_id
+		ORDER BY MIN(CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END) ASC
+		LIMIT 1
+	`)
+	var scheduleID, dueTimeRaw string
+	if err := row.Scan(&scheduleID, &dueTimeRaw); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &NextDue{ScheduleID: scheduleID, DueTime: mustParseTime(dueTimeRaw)}, nil
+}
+
+func (s *Store) ExecutorOutcomeCounts(ctx context.Context) (map[string]map[string]int, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT s.target_kind, sr.status, COUNT(*)
+		FROM schedule_runs sr
+		JOIN schedules s ON s.id = sr.schedule_id
+		WHERE sr.status IN ('succeeded', 'failed', 'dead_lettered', 'cancelled')
+		GROUP BY s.target_kind, sr.status
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]map[string]int{}
+	for rows.Next() {
+		var kind, status string
+		var count int
+		if err := rows.Scan(&kind, &status, &count); err != nil {
+			return nil, err
+		}
+		if out[kind] == nil {
+			out[kind] = map[string]int{}
+		}
+		out[kind][status] = count
+	}
+	return out, nil
+}
+
+func (s *Store) ExecutorDurationStats(ctx context.Context) (map[string]struct {
+	Count      int
+	SumSeconds float64
+}, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT s.target_kind,
+		       COUNT(*),
+		       COALESCE(SUM((julianday(sr.finished_at) - julianday(sr.started_at)) * 86400.0), 0)
+		FROM schedule_runs sr
+		JOIN schedules s ON s.id = sr.schedule_id
+		WHERE sr.started_at IS NOT NULL AND sr.finished_at IS NOT NULL
+		GROUP BY s.target_kind
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]struct {
+		Count      int
+		SumSeconds float64
+	}{}
+	for rows.Next() {
+		var kind string
+		var count int
+		var sum float64
+		if err := rows.Scan(&kind, &count, &sum); err != nil {
+			return nil, err
+		}
+		out[kind] = struct {
+			Count      int
+			SumSeconds float64
+		}{Count: count, SumSeconds: sum}
+	}
+	return out, nil
+}
 
 func scanSchedule(scanner interface{ Scan(dest ...any) error }) (domain.Schedule, error) {
 	var (

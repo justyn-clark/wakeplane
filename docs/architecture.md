@@ -34,10 +34,11 @@ The scheduler decides what is due. The dispatcher decides what can run now. Exec
 ## Actual v1 behavior
 
 - The service runs as a single process with one SQLite connection writer (`SetMaxOpenConns(1)`).
-- The workflow executor is an in-process registry. v1 does not load workflows dynamically or out-of-process.
+- The workflow executor is an in-process registry. Handlers are registered explicitly; v1 does not load workflows dynamically or out-of-process.
 - Manual triggers create `manual:<run_id>` occurrence keys outside the scheduled occurrence identity space.
 - Metrics are exposed in Prometheus text format.
-- The default service bootstrap registers a sample `sync.customers` workflow so the workflow path is runnable immediately.
+- `/v1/status` exposes scheduler tick timing plus due/running/failed/retry/dead-letter and expired-claim counts.
+- Expired `claimed` leases are returned to `pending`. Expired `running` leases transition the current attempt to failure and schedule retry/dead-letter handling through the normal retry policy.
 
 ## Current limits
 

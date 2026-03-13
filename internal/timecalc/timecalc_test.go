@@ -52,3 +52,32 @@ func TestNextAfterInterval(t *testing.T) {
 		t.Fatalf("expected %s, got %v", expected, next)
 	}
 }
+
+func TestNextAfterCronAcrossDSTBackwardTransition(t *testing.T) {
+	createdAt := time.Date(2026, 11, 1, 7, 0, 0, 0, time.UTC)
+	schedule := domain.Schedule{
+		Timezone:  "America/Los_Angeles",
+		CreatedAt: createdAt,
+		Schedule: domain.ScheduleSpec{
+			Kind: domain.ScheduleKindCron,
+			Expr: "30 1 * * *",
+		},
+	}
+	firstBase := time.Date(2026, 11, 1, 8, 0, 0, 0, time.UTC)
+	first, err := NextAfter(schedule, firstBase)
+	if err != nil {
+		t.Fatalf("first NextAfter returned error: %v", err)
+	}
+	expectedFirst := time.Date(2026, 11, 1, 8, 30, 0, 0, time.UTC)
+	if first == nil || !first.Equal(expectedFirst) {
+		t.Fatalf("expected first occurrence %s, got %v", expectedFirst, first)
+	}
+	second, err := NextAfter(schedule, *first)
+	if err != nil {
+		t.Fatalf("second NextAfter returned error: %v", err)
+	}
+	expectedSecond := time.Date(2026, 11, 1, 9, 30, 0, 0, time.UTC)
+	if second == nil || !second.Equal(expectedSecond) {
+		t.Fatalf("expected second occurrence %s, got %v", expectedSecond, second)
+	}
+}

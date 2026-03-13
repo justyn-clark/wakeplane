@@ -5,17 +5,23 @@ tasks:
       title: Initial task
       status: completed
     - id: task-2
-      title: Bootstrap repo identity and SMALL artifacts
+      title: Finish Wakeplane repo/path identity cleanup
       status: completed
     - id: task-3
-      title: Implement domain, validation, and time calculation
+      title: Harden schedule semantics and document exact behavior
       status: completed
     - id: task-4
-      title: Implement storage, planner, dispatcher, and executors
+      title: Harden claim, lease, retry, and stale-recovery correctness
       status: completed
     - id: task-5
-      title: Implement HTTP API and CLI surfaces
+      title: Add restart and concurrency torture tests
       status: completed
     - id: task-6
-      title: Add tests and run verification
+      title: Improve metrics, status, and API contract consistency
+      status: completed
+    - id: task-7
+      title: Clean up workflow registry boundary and update docs
+      status: completed
+    - id: task-8
+      title: Coordinate dispatcher shutdown and add restart coverage for blocking executors
       status: completed

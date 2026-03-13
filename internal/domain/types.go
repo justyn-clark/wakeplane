@@ -207,10 +207,20 @@ type StatusResponse struct {
 	Scheduler struct {
 		LoopIntervalSeconds int    `json:"loop_interval_seconds"`
 		LastTickAt          string `json:"last_tick_at"`
+		DueRuns             int    `json:"due_runs"`
+		NextDueScheduleID   string `json:"next_due_schedule_id,omitempty"`
+		NextDueRunAt        string `json:"next_due_run_at,omitempty"`
 	} `json:"scheduler"`
 	Workers struct {
-		Active int `json:"active"`
+		Active            int `json:"active"`
+		ClaimedButExpired int `json:"claimed_but_expired"`
 	} `json:"workers"`
+	Runs struct {
+		Running     int `json:"running"`
+		Failed      int `json:"failed"`
+		RetryQueued int `json:"retry_queued"`
+		DeadLetter  int `json:"dead_letter"`
+	} `json:"runs"`
 }
 
 type ListResponse[T any] struct {
@@ -250,6 +260,7 @@ type ValidationError struct {
 }
 
 type ErrorResponse struct {
+	Code    string            `json:"code,omitempty"`
 	Error   string            `json:"error"`
 	Details []ValidationError `json:"details,omitempty"`
 }

@@ -41,6 +41,7 @@ This repository contains a working v1 bootstrap implementation:
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
 - operator-facing metrics, health, and status endpoints
+- restart, stale-lease, and contention-focused tests
 
 ## Implemented v1 surface
 
@@ -58,6 +59,7 @@ Execution
 - HTTP executor
 - shell executor
 - in-process workflow executor backed by a registry
+- explicit workflow registration boundary with no default business handlers
 - durable claim before execution
 - execution receipts for stdout, stderr, HTTP response summary, and workflow result
 - retry with exponential backoff
@@ -76,12 +78,14 @@ Durability and audit
 - worker leases with stale-claim recovery
 - dead-letter capture for exhausted failures
 - Prometheus text metrics at `/v1/metrics`
+- operational status counts for due, running, failed, retry-queued, and expired-claim work
 
 ## Current implementation notes
 
 - The daemon is single-process and SQLite-first. It is designed to be Postgres-ready at the storage boundary, but Postgres is not implemented yet.
-- Workflow targets are in-process only in v1. The service currently registers a default sample workflow handler for `sync.customers`.
+- Workflow targets are in-process only in v1. Handlers must be registered explicitly by the embedding application or tests.
 - `replace` overlap is best-effort cooperative cancellation. If the active execution cannot be interrupted cleanly, behavior degrades toward `queue_latest`.
+- Expired `claimed` runs are returned to `pending`; expired `running` runs are marked failed and retried or dead-lettered according to retry policy.
 - There is no auth, UI, distributed coordination, or plugin loading in the current implementation.
 
 ## CLI

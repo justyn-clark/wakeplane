@@ -84,41 +84,41 @@ entries:
       evidence: |-
         exit_code=1 output="# github.com/justyn-clark/timekeeper/cmd/timekeeper
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
         # github.com/justyn-clark/timekeeper/cmd/timekeeperd
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
         # github.com/justyn-clark/timekeeper/cmd/timekeeperd
         cmd/timekeeperd/main.go:3:8: import "github.com/justyn-clark/timekeeper/cmd/timekeeper" is a program, not an importable package
-        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
         # github.com/justyn-clark/timekeeper/internal/api
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/api [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/internal/api [setup failed]
         # github.com/justyn-clark/timekeeper/internal/app
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/app [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/internal/app [setup failed]
         # github.com/justyn-clark/timekeeper/internal/dispatcher
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
         # github.com/justyn-clark/timekeeper/internal/planner
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/planner [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/internal/planner [setup failed]
         # github.com/justyn-clark/timekeeper/internal/scheduler
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
+        FAIL        github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
         # github.com/justyn-clark/timekeeper/internal/store
         internal/store/store.go:18:12: pattern ../migrations/*.sql: invalid pattern syntax
-        FAIL	github.com/justyn-clark/timekeeper/internal/store [setup failed]
-        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]
+        FAIL        github.com/justyn-clark/timekeeper/internal/store [setup failed]
+        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/domain        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/timecalc        [no test files]
         FAIL"
       notes: 'apply: exit code 1'
       replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
@@ -130,26 +130,26 @@ entries:
       command_sha256: 1bb497e3e13a1105cf24e3359fa3ef75de08b66ff8a2839cd7f9ea97824d9eb3
       command_summary: go test ./...
       evidence: |-
-        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/api	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/app	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]"
+        exit_code=0 output="?           github.com/justyn-clark/timekeeper/cmd/timekeeper        [no test files]
+        ?           github.com/justyn-clark/timekeeper/cmd/timekeeperd        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/api        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/app        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/cli        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/dispatcher        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/domain        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/planner        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/store        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/timecalc        [no test files]"
       notes: 'apply: exit code 0'
       replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
       status: completed
@@ -170,29 +170,29 @@ entries:
       command_sha256: 3582ccb83cd803e95871686a6f76e1977d7d7b8130401dfc05ea71371a8bc7d0
       command_summary: gofmt -w $(rg --files -g "*.go") && go test ./...
       evidence: |-
-        exit_code=1 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/api	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/app	0.676s
-        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/domain	0.802s
-        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
+        exit_code=1 output="?           github.com/justyn-clark/timekeeper/cmd/timekeeper        [no test files]
+        ?           github.com/justyn-clark/timekeeper/cmd/timekeeperd        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/api        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/app        0.676s
+        ?           github.com/justyn-clark/timekeeper/internal/cli        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/dispatcher        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/domain        0.802s
+        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/planner        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/store        [no test files]
         --- FAIL: TestNextAfterCronInTimezone (0.00s)
             timecalc_test.go:30: expected 2026-03-12 10:00:00 +0000 UTC, got 2026-03-12 09:00:00 +0000 UTC
         FAIL
-        FAIL	github.com/justyn-clark/timekeeper/internal/timecalc	0.884s
+        FAIL        github.com/justyn-clark/timekeeper/internal/timecalc        0.884s
         FAIL"
       notes: 'apply: exit code 1'
       replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
@@ -204,26 +204,26 @@ entries:
       command_sha256: 9dc28574d519618f67ed803df6fe59e32e3b4c1cbb65af960559b29cd25d2bfd
       command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict
       evidence: |-
-        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/api	0.340s
-        ok  	github.com/justyn-clark/timekeeper/internal/app	(cached)
-        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/domain	(cached)
-        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/timecalc	0.441s
+        exit_code=0 output="?           github.com/justyn-clark/timekeeper/cmd/timekeeper        [no test files]
+        ?           github.com/justyn-clark/timekeeper/cmd/timekeeperd        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/api        0.340s
+        ok          github.com/justyn-clark/timekeeper/internal/app        (cached)
+        ?           github.com/justyn-clark/timekeeper/internal/cli        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/dispatcher        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/domain        (cached)
+        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/planner        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/store        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/timecalc        0.441s
         Verification passed
         Check passed"
       notes: 'apply: exit code 0'
@@ -272,26 +272,26 @@ entries:
       command_sha256: 9752a65c22908b34eed999c2b7889062775a5d47f4404850966ef4b96b5f2733
       command_summary: go test ./... && small check --strict
       evidence: |-
-        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/cmd/timekeeperd	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/api	(cached)
-        ok  	github.com/justyn-clark/timekeeper/internal/app	(cached)
-        ?   	github.com/justyn-clark/timekeeper/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/dispatcher	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/domain	(cached)
-        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/timekeeper/internal/store	[no test files]
-        ok  	github.com/justyn-clark/timekeeper/internal/timecalc	(cached)
+        exit_code=0 output="?           github.com/justyn-clark/timekeeper/cmd/timekeeper        [no test files]
+        ?           github.com/justyn-clark/timekeeper/cmd/timekeeperd        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/api        (cached)
+        ok          github.com/justyn-clark/timekeeper/internal/app        (cached)
+        ?           github.com/justyn-clark/timekeeper/internal/cli        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/dispatcher        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/domain        (cached)
+        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/planner        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/timekeeper/internal/store        [no test files]
+        ok          github.com/justyn-clark/timekeeper/internal/timecalc        (cached)
         Verification passed
         Check passed"
       notes: 'apply: exit code 0'
@@ -310,26 +310,26 @@ entries:
       command_sha256: f031dfe9f559a3eb525e1698b1130a91cf9a950b67251d2c9b6c4842e62e1a16
       command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small.yml"
       evidence: |-
-        exit_code=1 output="?   	github.com/justyn-clark/wakeplane/cmd/wakeplane	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/cmd/wakeplaned	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/api	0.411s
-        ok  	github.com/justyn-clark/wakeplane/internal/app	0.498s
-        ?   	github.com/justyn-clark/wakeplane/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/config	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/dispatcher	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/domain	0.458s
-        ?   	github.com/justyn-clark/wakeplane/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/store	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/timecalc	0.547s
+        exit_code=1 output="?           github.com/justyn-clark/wakeplane/cmd/wakeplane        [no test files]
+        ?           github.com/justyn-clark/wakeplane/cmd/wakeplaned        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/api        0.411s
+        ok          github.com/justyn-clark/wakeplane/internal/app        0.498s
+        ?           github.com/justyn-clark/wakeplane/internal/cli        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/config        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/dispatcher        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/domain        0.458s
+        ?           github.com/justyn-clark/wakeplane/internal/executors        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/leases        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/logging        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/planner        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/policy        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        0.547s
         Verification passed
         Check passed"
       notes: 'apply: exit code 1'
@@ -342,61 +342,523 @@ entries:
       command_sha256: dfa8e2c4d20d9a8002668e9180afbe171b4c978f3abe9cc545d4b0e141f7e6c0
       command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && ! rg -n "Timekeeper|timekeeper|TIMEKEEPER" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small....
       evidence: |-
-        exit_code=0 output="?   	github.com/justyn-clark/wakeplane/cmd/wakeplane	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/cmd/wakeplaned	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/api	(cached)
-        ok  	github.com/justyn-clark/wakeplane/internal/app	(cached)
-        ?   	github.com/justyn-clark/wakeplane/internal/cli	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/config	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/dispatcher	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/domain	(cached)
-        ?   	github.com/justyn-clark/wakeplane/internal/executors	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/http	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/shell	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/executors/workflow	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/leases	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/logging	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/planner	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/policy	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/receipts	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/scheduler	[no test files]
-        ?   	github.com/justyn-clark/wakeplane/internal/store	[no test files]
-        ok  	github.com/justyn-clark/wakeplane/internal/timecalc	(cached)
+        exit_code=0 output="?           github.com/justyn-clark/wakeplane/cmd/wakeplane        [no test files]
+        ?           github.com/justyn-clark/wakeplane/cmd/wakeplaned        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/api        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/app        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/cli        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/config        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/dispatcher        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/domain        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/executors        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/leases        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/logging        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/planner        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/policy        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        (cached)
         Verification passed
         Check passed
         6:      notes: small init in /Users/justin/Documents/Justyn Clark Network/REPOS/timekeeper
         85:        exit_code=1 output="# github.com/justyn-clark/timekeeper/cmd/timekeeper
-        87:        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
+        87:        FAIL        github.com/justyn-clark/timekeeper/cmd/timekeeper [setup failed]
         88:        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
         90:        # github.com/justyn-clark/timekeeper/cmd/timekeeperd
         91:        cmd/timekeeperd/main.go:3:8: import "github.com/justyn-clark/timekeeper/cmd/timekeeper" is a program, not an importable package
-        92:        FAIL	github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
+        92:        FAIL        github.com/justyn-clark/timekeeper/cmd/timekeeperd [setup failed]
         93:        # github.com/justyn-clark/timekeeper/internal/api
-        95:        FAIL	github.com/justyn-clark/timekeeper/internal/api [setup failed]
+        95:        FAIL        github.com/justyn-clark/timekeeper/internal/api [setup failed]
         96:        # github.com/justyn-clark/timekeeper/internal/app
-        98:        FAIL	github.com/justyn-clark/timekeeper/internal/app [setup failed]
+        98:        FAIL        github.com/justyn-clark/timekeeper/internal/app [setup failed]
         99:        # github.com/justyn-clark/timekeeper/internal/dispatcher
-        101:        FAIL	github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
+        101:        FAIL        github.com/justyn-clark/timekeeper/internal/dispatcher [setup failed]
         102:        # github.com/justyn-clark/timekeeper/internal/planner
-        104:        FAIL	github.com/justyn-clark/timekeeper/internal/planner [setup failed]
+        104:        FAIL        github.com/justyn-clark/timekeeper/internal/planner [setup failed]
         105:        # github.com/justyn-clark/timekeeper/internal/scheduler
-        107:        FAIL	github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
+        107:        FAIL        github.com/justyn-clark/timekeeper/internal/scheduler [setup failed]
         108:        # github.com/justyn-clark/timekeeper/internal/store
-        110:        FAIL	github.com/justyn-clark/timekeeper/internal/store [setup failed]
-        111:        ?   	github.com/justyn-clark/timekeeper/internal/config	[no test files]
-        112:        ?   	github.com/justyn-clark/timekeeper/internal/domain	[no test files]
-        113:        ?   	github.com/justyn-clark/timekeeper/internal/executors	[no test files]
-        114:        ?   	github.com/justyn-clark/timekeeper/internal/executors/http	[no test files]
-        115:        ?   	github.com/justyn-clark/timekeeper/internal/executors/shell	[no test files]
-        116:        ?   	github.com/justyn-clark/timekeeper/internal/executors/workflow	[no test files]
-        117:        ?   	github.com/justyn-clark/timekeeper/internal/leases	[no test files]
-        118:        ?   	github.com/justyn-clark/timekeeper/internal/logging	[no test files]
-        119:        ?   	github.com/justyn-clark/timekeeper/internal/policy	[no test files]
-        120:        ?   	github.com/justyn-clark/timekeeper/internal/receipts	[no test files]
-        121:        ?   	github.com/justyn-clark/timekeeper/internal/timecalc	[no test files]
-        133:        exit_code=0 output="?   	github.com/justyn-clark/timekeeper/cmd/timekeeper	[no te" truncated=true limit=4000
+        110:        FAIL        github.com/justyn-clark/timekeeper/internal/store [setup failed]
+        111:        ?           github.com/justyn-clark/timekeeper/internal/config        [no test files]
+        112:        ?           github.com/justyn-clark/timekeeper/internal/domain        [no test files]
+        113:        ?           github.com/justyn-clark/timekeeper/internal/executors        [no test files]
+        114:        ?           github.com/justyn-clark/timekeeper/internal/executors/http        [no test files]
+        115:        ?           github.com/justyn-clark/timekeeper/internal/executors/shell        [no test files]
+        116:        ?           github.com/justyn-clark/timekeeper/internal/executors/workflow        [no test files]
+        117:        ?           github.com/justyn-clark/timekeeper/internal/leases        [no test files]
+        118:        ?           github.com/justyn-clark/timekeeper/internal/logging        [no test files]
+        119:        ?           github.com/justyn-clark/timekeeper/internal/policy        [no test files]
+        120:        ?           github.com/justyn-clark/timekeeper/internal/receipts        [no test files]
+        121:        ?           github.com/justyn-clark/timekeeper/internal/timecalc        [no test files]
+        133:        exit_code=0 output="?           github.com/justyn-clark/timekeeper/cmd/timekeeper        [no te" truncated=true limit=4000
       notes: 'apply: exit code 0'
       replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
       status: completed
       task_id: task-6
       timestamp: "2026-03-12T20:53:50.393719000Z"
+    - evidence: Reset plan.small.yml to template
+      notes: small plan --reset
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: meta/historical/unknown/plan-reset
+      timestamp: "2026-03-12T21:46:59.711077000Z"
+    - evidence: Added task task-2 via small plan --add
+      notes: Finish Wakeplane repo/path identity cleanup
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-2
+      timestamp: "2026-03-12T21:46:59.721691000Z"
+    - evidence: Added task task-3 via small plan --add
+      notes: Harden schedule semantics and document exact behavior
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-3
+      timestamp: "2026-03-12T21:46:59.731560000Z"
+    - evidence: Added task task-4 via small plan --add
+      notes: Harden claim, lease, retry, and stale-recovery correctness
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-4
+      timestamp: "2026-03-12T21:46:59.740103000Z"
+    - evidence: Added task task-5 via small plan --add
+      notes: Add restart and concurrency torture tests
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-5
+      timestamp: "2026-03-12T21:46:59.748442000Z"
+    - evidence: Added task task-6 via small plan --add
+      notes: Improve metrics, status, and API contract consistency
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-6
+      timestamp: "2026-03-12T21:46:59.756314000Z"
+    - evidence: Added task task-7 via small plan --add
+      notes: Clean up workflow registry boundary and update docs
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-7
+      timestamp: "2026-03-12T21:46:59.764425000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215257.155116000Z.txt
+      command_sha256: 3582ccb83cd803e95871686a6f76e1977d7d7b8130401dfc05ea71371a8bc7d0
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./...
+      evidence: |-
+        exit_code=1 output="# github.com/justyn-clark/wakeplane/internal/api
+        internal/api/http.go:25:50: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        internal/api/http.go:33:50: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        internal/api/http.go:42:41: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        internal/api/http.go:82:41: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        internal/api/http.go:99:41: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        internal/api/http.go:139:41: too many arguments in call to writeError
+                have ("net/http".ResponseWriter, number, error)
+                want ("net/http".ResponseWriter, error)
+        FAIL        github.com/justyn-clark/wakeplane/cmd/wakeplane [build failed]
+        FAIL        github.com/justyn-clark/wakeplane/cmd/wakeplaned [build failed]
+        FAIL        github.com/justyn-clark/wakeplane/internal/api [build failed]
+        runtime: goroutine stack exceeds 1000000000-byte limit
+        runtime: sp=0x1402060e390 stack=[0x1402060e000, 0x1404060e000]
+        fatal error: stack overflow
+
+        runtime stack:
+        runtime.throw({0x10338d30f?, 0x16d27edf0?})
+                /usr/local/go/src/runtime/panic.go:1094 +0x34 fp=0x16d27eda0 sp=0x16d27ed70 pc=0x10304fac4
+        runtime.newstack()
+                /usr/local/go/src/runtime/stack.go:1159 +0x44c fp=0x16d27eed0 sp=0x16d27eda0 pc=0x10303594c
+        runtime.morestack()
+                /usr/local/go/src/runtime/asm_arm64.s:392 +0x70 fp=0x16d27eed0 sp=0x16d27eed0 pc=0x1030552f0
+
+        goroutine 11 gp=0x14000082e00 m=8 mp=0x14000680008 [running]:
+        modernc.org/sqlite/lib._sqlite3DbRealloc(0x140004a64e0?, 0x10a6f0828?, 0x0?, 0x3f0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:19933 +0xac fp=0x1402060e390 sp=0x1402060e390 pc=0x1031bd92c
+        modernc.org/sqlite/lib._growOpArray(0x140004a64e0, 0x10304fe70?, 0x0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65827 +0x6c fp=0x1402060e3e0 sp=0x1402060e390 pc=0x1032146cc
+        modernc.org/sqlite/lib._growOp3(0x140004a64e0, 0x10a746bf8, 0x8, 0x0, 0x1, 0x0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65849 +0x38 fp=0x1402060e410 sp=0x1402060e3e0 pc=0x1032147b8
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp3(0x1402060e4a8?, 0x1032aa3c4?, 0x2060e488?, 0x140?, 0x30530a0?, 0x1?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65900 +0x2c fp=0x1402060e440 sp=0x1402060e410 pc=0x1032149cc
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp2(...)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65891
+        modernc.org/sqlite/lib._sqlite3VdbeCreate(0x140004a64e0, 0x10a6b0060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65712 +0xc0 fp=0x1402060e490 sp=0x1402060e440 pc=0x103214380
+        modernc.org/sqlite/lib._sqlite3GetVdbe(0x8?, 0x10a6b0480?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:126945 +0x4c fp=0x1402060e4b0 sp=0x1402060e490 pc=0x10329e32c
+        modernc.org/sqlite/lib._sqlite3Select(0x140004a64e0, 0x10a6b0060, 0x10a74b1c8, 0x10a6b0bf0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:132134 +0x90 fp=0x1402060e7a0 sp=0x1402060e4b0 pc=0x1032aa410
+        modernc.org/sqlite/lib._yy_reduce(0x140004a64e0, 0x10a6b0228, 0x54, 0x140?, {0x1032e635c?, 0x2060e968?}, 0x10a6b0060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:165095 +0xd9c fp=0x1402060e920 sp=0x1402060e7a0 pc=0x1032e063c
+        modernc.org/sqlite/lib._sqlite3Parser(0x140004a64e0, 0x10a6b0228, 0x1, {0x10a6ff938?, 0x2060e9f8?})
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:166508 +0x8c fp=0x1402060e9a0 sp=0x1402060e920 pc=0x1032e4bdc
+        modernc.org/" truncated=true limit=4000
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-4
+      timestamp: "2026-03-12T21:52:57.155116000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./internal/api ./internal/app ./internal/dispatcher ./internal/store ./internal/planner
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215340.649703000Z.txt
+      command_sha256: dc0e1470d07c7bf3d6a2199479706b98d524dcd5948b30b6e288cc68aecdd52c
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./internal/api ./internal/app ./internal/dispatcher ./internal/store ./internal/planner
+      evidence: |-
+        exit_code=1 output="ok          github.com/justyn-clark/wakeplane/internal/api        0.559s
+        runtime: goroutine stack exceeds 1000000000-byte limit
+        runtime: sp=0x1402068e390 stack=[0x1402068e000, 0x1404068e000]
+        fatal error: stack overflow
+
+        runtime stack:
+        runtime.throw({0x10536130f?, 0x16b192df0?})
+                /usr/local/go/src/runtime/panic.go:1094 +0x34 fp=0x16b192da0 sp=0x16b192d70 pc=0x105023ac4
+        runtime.newstack()
+                /usr/local/go/src/runtime/stack.go:1159 +0x44c fp=0x16b192ed0 sp=0x16b192da0 pc=0x10500994c
+        runtime.morestack()
+                /usr/local/go/src/runtime/asm_arm64.s:392 +0x70 fp=0x16b192ed0 sp=0x16b192ed0 pc=0x1050292f0
+
+        goroutine 23 gp=0x140000036c0 m=6 mp=0x14000580008 [running]:
+        modernc.org/sqlite/lib._sqlite3DbRealloc(0x140000d84e0?, 0x12c6c0828?, 0x0?, 0x3f0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:19933 +0xac fp=0x1402068e390 sp=0x1402068e390 pc=0x10519192c
+        modernc.org/sqlite/lib._growOpArray(0x140000d84e0, 0x105023e70?, 0x0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65827 +0x6c fp=0x1402068e3e0 sp=0x1402068e390 pc=0x1051e86cc
+        modernc.org/sqlite/lib._growOp3(0x140000d84e0, 0x12c716bf8, 0x8, 0x0, 0x1, 0x0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65849 +0x38 fp=0x1402068e410 sp=0x1402068e3e0 pc=0x1051e87b8
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp3(0x1402068e4a8?, 0x10527e3c4?, 0x2068e488?, 0x140?, 0x50270a0?, 0x1?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65900 +0x2c fp=0x1402068e440 sp=0x1402068e410 pc=0x1051e89cc
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp2(...)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65891
+        modernc.org/sqlite/lib._sqlite3VdbeCreate(0x140000d84e0, 0x12c680060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65712 +0xc0 fp=0x1402068e490 sp=0x1402068e440 pc=0x1051e8380
+        modernc.org/sqlite/lib._sqlite3GetVdbe(0x8?, 0x12c680480?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:126945 +0x4c fp=0x1402068e4b0 sp=0x1402068e490 pc=0x10527232c
+        modernc.org/sqlite/lib._sqlite3Select(0x140000d84e0, 0x12c680060, 0x12c71b1c8, 0x12c680bf0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:132134 +0x90 fp=0x1402068e7a0 sp=0x1402068e4b0 pc=0x10527e410
+        modernc.org/sqlite/lib._yy_reduce(0x140000d84e0, 0x12c680228, 0x54, 0x140?, {0x1052ba35c?, 0x2068e968?}, 0x12c680060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:165095 +0xd9c fp=0x1402068e920 sp=0x1402068e7a0 pc=0x1052b463c
+        modernc.org/sqlite/lib._sqlite3Parser(0x140000d84e0, 0x12c680228, 0x1, {0x12c6cf938?, 0x2068e9f8?})
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:166508 +0x8c fp=0x1402068e9a0 sp=0x1402068e920 pc=0x1052b8bdc
+        modernc.org/sqlite/lib._sqlite3RunParser(0x140000d84e0, 0x12c680060, 0x12c6efc20)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:169188 +0x2f0 fp=0x1402068ea90 sp=0x1402068e9a0 pc=0x1052ba610
+        modernc.org/sqlite/lib._sqlite3Prepare(0x140000d84e0, 0x12c6c0828, 0x12c6efc20, 0xffffffff, 0x80, 0x0, 0x12c69ffc0, 0x12c69ffe0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124297 +0x2e4 fp=0x1402068eb30 sp=0x1402068ea90 pc=0x10526b8a4
+        modernc.org/sqlite/lib._sqlite3LockAndPrepare(0x140000d84e0, 0x12c6c0828, 0x12c6efc20, 0xffffffff, 0x80, 0x0, 0x12c69ffc0, 0x12c69ffe0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124356 +0x128 fp=0x1402068ebb0 sp=0x1402068eb30 pc=0x10526bd98
+        modernc.org/sqlite/lib.Xsqlite3_prepare_v2(...)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124448
+        modernc.org/sqlite.(*conn).prepareV2(0x140000cb7c0, 0x1402068ec98)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/sqlite.go:1316 +0x108 fp=0x1402068ec50 sp=0x1402068ebb0 pc=0x10532fef8
+        modernc.org/sqlite.(*stmt).query(0x1401452f140, {0x10549216" truncated=true limit=4000
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-4
+      timestamp: "2026-03-12T21:53:40.649703000Z"
+    - command: go test -run TestServiceCreateTriggerAndInspectRun -v ./internal/app
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215356.496242000Z.txt
+      command_sha256: f2534c435de49d34da33cade014d24a3e9946c9159dfb20831d0d637468bb7df
+      command_summary: go test -run TestServiceCreateTriggerAndInspectRun -v ./internal/app
+      evidence: |-
+        exit_code=1 output="=== RUN   TestServiceCreateTriggerAndInspectRun
+        runtime: goroutine stack exceeds 1000000000-byte limit
+        runtime: sp=0x14020696390 stack=[0x14020696000, 0x14040696000]
+        fatal error: stack overflow
+
+        runtime stack:
+        runtime.throw({0x10285130f?, 0x16d95de40?})
+                /usr/local/go/src/runtime/panic.go:1094 +0x34 fp=0x16d95ddf0 sp=0x16d95ddc0 pc=0x102513ac4
+        runtime.newstack()
+                /usr/local/go/src/runtime/stack.go:1159 +0x44c fp=0x16d95df20 sp=0x16d95ddf0 pc=0x1024f994c
+        runtime.morestack()
+                /usr/local/go/src/runtime/asm_arm64.s:392 +0x70 fp=0x16d95df20 sp=0x16d95df20 pc=0x1025192f0
+
+        goroutine 11 gp=0x14000082c40 m=0 mp=0x102c72c20 [running]:
+        modernc.org/sqlite/lib._sqlite3DbRealloc(0x140004a84e0?, 0x149bb0828?, 0x0?, 0x3f0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:19933 +0xac fp=0x14020696390 sp=0x14020696390 pc=0x10268192c
+        modernc.org/sqlite/lib._growOpArray(0x140004a84e0, 0x102513e70?, 0x0?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65827 +0x6c fp=0x140206963e0 sp=0x14020696390 pc=0x1026d86cc
+        modernc.org/sqlite/lib._growOp3(0x140004a84e0, 0x149c06bf8, 0x8, 0x0, 0x1, 0x0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65849 +0x38 fp=0x14020696410 sp=0x140206963e0 pc=0x1026d87b8
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp3(0x140206964a8?, 0x10276e3c4?, 0x20696488?, 0x140?, 0x25170a0?, 0x1?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65900 +0x2c fp=0x14020696440 sp=0x14020696410 pc=0x1026d89cc
+        modernc.org/sqlite/lib._sqlite3VdbeAddOp2(...)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65891
+        modernc.org/sqlite/lib._sqlite3VdbeCreate(0x140004a84e0, 0x149b70060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:65712 +0xc0 fp=0x14020696490 sp=0x14020696440 pc=0x1026d8380
+        modernc.org/sqlite/lib._sqlite3GetVdbe(0x8?, 0x149b70480?)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:126945 +0x4c fp=0x140206964b0 sp=0x14020696490 pc=0x10276232c
+        modernc.org/sqlite/lib._sqlite3Select(0x140004a84e0, 0x149b70060, 0x149c0b1c8, 0x149b70bf0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:132134 +0x90 fp=0x140206967a0 sp=0x140206964b0 pc=0x10276e410
+        modernc.org/sqlite/lib._yy_reduce(0x140004a84e0, 0x149b70228, 0x54, 0x140?, {0x1027aa35c?, 0x20696968?}, 0x149b70060)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:165095 +0xd9c fp=0x14020696920 sp=0x140206967a0 pc=0x1027a463c
+        modernc.org/sqlite/lib._sqlite3Parser(0x140004a84e0, 0x149b70228, 0x1, {0x149bbf938?, 0x206969f8?})
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:166508 +0x8c fp=0x140206969a0 sp=0x14020696920 pc=0x1027a8bdc
+        modernc.org/sqlite/lib._sqlite3RunParser(0x140004a84e0, 0x149b70060, 0x149bdfc20)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:169188 +0x2f0 fp=0x14020696a90 sp=0x140206969a0 pc=0x1027aa610
+        modernc.org/sqlite/lib._sqlite3Prepare(0x140004a84e0, 0x149bb0828, 0x149bdfc20, 0xffffffff, 0x80, 0x0, 0x149b8ffc0, 0x149b8ffe0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124297 +0x2e4 fp=0x14020696b30 sp=0x14020696a90 pc=0x10275b8a4
+        modernc.org/sqlite/lib._sqlite3LockAndPrepare(0x140004a84e0, 0x149bb0828, 0x149bdfc20, 0xffffffff, 0x80, 0x0, 0x149b8ffc0, 0x149b8ffe0)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124356 +0x128 fp=0x14020696bb0 sp=0x14020696b30 pc=0x10275bd98
+        modernc.org/sqlite/lib.Xsqlite3_prepare_v2(...)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/lib/sqlite_darwin_arm64.go:124448
+        modernc.org/sqlite.(*conn).prepareV2(0x1400049b740, 0x14020696c98)
+                /Users/justin/go/pkg/mod/modernc.org/sqlite@v1.38.2/sqlite.go:1316 +0x108 fp=0x14020696c50 sp=0x14020696bb0 pc=0x10281fef8
+        modernc.org/sqlite.(*stmt).query(0x14014881430, {0x102982168, 0x102c98e6" truncated=true limit=4000
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-4
+      timestamp: "2026-03-12T21:53:56.496242000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test -run TestServiceCreateTriggerAndInspectRun -v ./internal/app && go test ./internal/api ./internal/app ./internal/dispatcher ./internal/store ./internal/p...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215414.337674000Z.txt
+      command_sha256: eedce5ffc31bb214d2c34c993597185eda093a1b6b05693c76c442535ed60a57
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test -run TestServiceCreateTriggerAndInspectRun -v ./internal/app && go test ./internal/api ./internal/app ./internal/dispatcher ./internal/store ./internal/p...
+      evidence: |-
+        exit_code=0 output="=== RUN   TestServiceCreateTriggerAndInspectRun
+        --- PASS: TestServiceCreateTriggerAndInspectRun (0.01s)
+        PASS
+        ok          github.com/justyn-clark/wakeplane/internal/app        0.335s
+        ok          github.com/justyn-clark/wakeplane/internal/api        0.429s
+        ok          github.com/justyn-clark/wakeplane/internal/app        0.613s
+        ?           github.com/justyn-clark/wakeplane/internal/dispatcher        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/planner        [no test files]"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-4
+      timestamp: "2026-03-12T21:54:14.337674000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215558.149012000Z.txt
+      command_sha256: 76fb45f5f7d93b5227e1fe7a19c5136fb7ab7358a524e48cd66bb90976749ab6
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      evidence: |-
+        exit_code=1 output="# github.com/justyn-clark/wakeplane/internal/dispatcher [github.com/justyn-clark/wakeplane/internal/dispatcher.test]
+        internal/dispatcher/dispatcher_test.go:90:18: st.DB undefined (type *store.Store has no field or method DB)
+        ok          github.com/justyn-clark/wakeplane/internal/planner        0.980s
+        FAIL        github.com/justyn-clark/wakeplane/internal/dispatcher [build failed]
+        --- FAIL: TestStatusIncludesOperationalCounts (0.00s)
+            service_test.go:103: expected next due schedule id to be populated
+        FAIL
+        FAIL        github.com/justyn-clark/wakeplane/internal/app        0.433s
+        --- FAIL: TestGetMissingScheduleReturnsErrorEnvelope (0.01s)
+            http_test.go:73: expected 404, got 500
+        FAIL
+        FAIL        github.com/justyn-clark/wakeplane/internal/api        0.723s
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        (cached)
+        FAIL"
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-5
+      timestamp: "2026-03-12T21:55:58.149012000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215629.039757000Z.txt
+      command_sha256: 76fb45f5f7d93b5227e1fe7a19c5136fb7ab7358a524e48cd66bb90976749ab6
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      evidence: |-
+        exit_code=0 output="ok          github.com/justyn-clark/wakeplane/internal/planner        0.338s
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        0.600s
+        ok          github.com/justyn-clark/wakeplane/internal/app        1.110s
+        ok          github.com/justyn-clark/wakeplane/internal/api        0.854s
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        (cached)"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-5
+      timestamp: "2026-03-12T21:56:29.039757000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215733.451998000Z.txt
+      command_sha256: 76fb45f5f7d93b5227e1fe7a19c5136fb7ab7358a524e48cd66bb90976749ab6
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./internal/planner ./internal/dispatcher ./internal/app ./internal/api ./internal/timecalc
+      evidence: |-
+        exit_code=0 output="ok          github.com/justyn-clark/wakeplane/internal/planner        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        0.400s
+        ok          github.com/justyn-clark/wakeplane/internal/app        0.901s
+        ok          github.com/justyn-clark/wakeplane/internal/api        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        0.610s"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-5
+      timestamp: "2026-03-12T21:57:33.451998000Z"
+    - command: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && ! rg -n "/REPOS/timekeeper|Timekeeper|timekeeper" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress...
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215804.592947000Z.txt
+      command_sha256: 64718d83bf494439646e5bf386f0b3e5c7433c6bdcbfa5a69d691b1ec87e969e
+      command_summary: gofmt -w $(rg --files -g "*.go") && go test ./... && small check --strict && ! rg -n "/REPOS/timekeeper|Timekeeper|timekeeper" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress...
+      evidence: |-
+        exit_code=1 output="?           github.com/justyn-clark/wakeplane/cmd/wakeplane        [no test files]
+        ?           github.com/justyn-clark/wakeplane/cmd/wakeplaned        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/api        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/app        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/cli        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/config        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/domain        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/executors        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/leases        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/logging        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/planner        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/policy        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        (cached)
+        Strict S2 failed (current run only)
+          ReplayId scope: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+          Why: progress entries reference task_ids not present in the current plan.
+
+          Unknown task_ids:
+            operational (0): none
+            historical (0): none
+            unknown (1): plan-reset
+
+          Fix:
+          small fix --orphan-progress
+          small check --strict"
+      notes: 'apply: exit code 1'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-6
+      timestamp: "2026-03-12T21:58:04.592947000Z"
+    - evidence: Rewrote orphan progress task_ids for replayId scope c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182 (operational=0 historical=0 unknown=1)
+      notes: 'original hashes: plan-reset:765b4b93250600fbb39c2fe4f3e6f858c38ced6add2a226872562814c56a4260'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: meta/reconcile-plan
+      timestamp: "2026-03-12T21:58:17.164409000Z"
+    - command: go test ./... && small check --strict && ! rg -n "/REPOS/timekeeper|Timekeeper|timekeeper" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small.yml"
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260312T215835.103727000Z.txt
+      command_sha256: d737f9ca335be1665ede7b8568689e4d2511b274036f8b7707d2665055fa5929
+      command_summary: go test ./... && small check --strict && ! rg -n "/REPOS/timekeeper|Timekeeper|timekeeper" . --glob "!.git/**" --glob "!.small-cache/**" --glob "!.small/progress.small.yml"
+      evidence: |-
+        exit_code=0 output="?           github.com/justyn-clark/wakeplane/cmd/wakeplane        [no test files]
+        ?           github.com/justyn-clark/wakeplane/cmd/wakeplaned        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/api        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/app        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/cli        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/config        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/domain        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/executors        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/leases        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/logging        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/planner        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/policy        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        (cached)
+        Verification passed
+        Check passed"
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-12T21:58:35.103727000Z"
+    - evidence: Initial template task superseded by the phase-2 hardening task set.
+      notes: Closed placeholder task after plan reset.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-1
+      timestamp: "2026-03-12T21:58:51.090127000Z"
+    - evidence: Renamed the live repo path to .../REPOS/wakeplane, removed the temporary old-name alias, and eliminated live path confusion outside append-only history.
+      notes: Filesystem identity cleanup completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-2
+      timestamp: "2026-03-12T21:58:51.111595000Z"
+    - evidence: Documented and test-covered explicit misfire behavior, once semantics, manual trigger identity separation, and DST forward/backward schedule calculation behavior.
+      notes: Schedule semantics hardened.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-3
+      timestamp: "2026-03-12T21:58:51.129053000Z"
+    - evidence: Hardened claim/lease handling with policy-aware claim checks, explicit expired-running recovery into retry/dead-letter flow, and contention tests for single-claim correctness.
+      notes: Lease and stale-recovery hardening completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-4
+      timestamp: "2026-03-12T21:58:51.144956000Z"
+    - evidence: Added automated restart/concurrency-focused tests covering misfire policies, paused-state persistence, stale claimed/running recovery, manual trigger identity separation, and contention on claims.
+      notes: Torture-test slice completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-5
+      timestamp: "2026-03-12T21:58:51.160153000Z"
+    - evidence: Expanded status and metrics with due/running/failed/retry/dead-letter/expired-claim visibility, tightened API error envelopes, repaired SMALL strict-mode state, and passed full verification.
+      notes: Operator and API hardening completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-6
+      timestamp: "2026-03-12T21:58:51.175567000Z"
+    - evidence: Removed hidden default workflow handlers, introduced explicit workflow registration options, and updated docs to match the new boundary.
+      notes: Workflow boundary cleanup completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-7
+      timestamp: "2026-03-12T21:58:51.191001000Z"
+    - command: go test ./internal/app ./internal/dispatcher
+      evidence: |-
+        exit_code=0 output="ok          github.com/justyn-clark/wakeplane/internal/app        0.421s
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        (cached)"
+      notes: Focused lifecycle verification after coordinated shutdown changes.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-8
+      timestamp: "2026-03-12T22:09:22.000000001Z"
+    - command: go test ./...
+      evidence: |-
+        exit_code=0 output="?           github.com/justyn-clark/wakeplane/cmd/wakeplane        [no test files]
+        ?           github.com/justyn-clark/wakeplane/cmd/wakeplaned        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/api        0.578s
+        ok          github.com/justyn-clark/wakeplane/internal/app        (cached)
+        ?           github.com/justyn-clark/wakeplane/internal/cli        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/config        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/dispatcher        (cached)
+        ok          github.com/justyn-clark/wakeplane/internal/domain        0.305s
+        ?           github.com/justyn-clark/wakeplane/internal/executors        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/http        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/shell        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/executors/workflow        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/leases        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/logging        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/planner        0.660s
+        ?           github.com/justyn-clark/wakeplane/internal/policy        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/receipts        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/scheduler        [no test files]
+        ?           github.com/justyn-clark/wakeplane/internal/store        [no test files]
+        ok          github.com/justyn-clark/wakeplane/internal/timecalc        0.889s"
+      notes: Full repository verification after coordinated shutdown and restart coverage work.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-8
+      timestamp: "2026-03-12T22:09:22.000000002Z"
+    - command: small check --strict
+      evidence: exit_code=0 output="Verification passed\nCheck passed"
+      notes: STRICT SMALL verification after task-8 completion.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-8
+      timestamp: "2026-03-12T22:09:22.000000003Z"
+    - evidence: Added coordinated service and dispatcher shutdown so active executions are cancelled and drained before store close, and covered restart recovery with a blocking workflow execution test.
+      notes: Runtime shutdown and restart-path hardening completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-8
+      timestamp: "2026-03-12T22:09:22.000000004Z"

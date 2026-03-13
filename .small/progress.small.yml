@@ -962,3 +962,179 @@ entries:
       status: completed
       task_id: task-10
       timestamp: "2026-03-13T20:16:48.222782000Z"
+    - evidence: Added task task-11 via small plan --add
+      notes: Fix canonical git remote hygiene
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-11
+      timestamp: "2026-03-13T20:51:47.983714000Z"
+    - evidence: Added task task-12 via small plan --add
+      notes: Add non-cooperative executor shutdown coverage
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-12
+      timestamp: "2026-03-13T20:51:48.029649000Z"
+    - evidence: Added task task-13 via small plan --add
+      notes: Harden operator signaling for shutdown/drain states
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-13
+      timestamp: "2026-03-13T20:51:48.077617000Z"
+    - evidence: Added task task-14 via small plan --add
+      notes: Add phase-specific restart/recovery crash tests
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-14
+      timestamp: "2026-03-13T20:51:48.225792000Z"
+    - evidence: Added task task-15 via small plan --add
+      notes: Write explicit embedding contract doc
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-15
+      timestamp: "2026-03-13T20:51:48.282101000Z"
+    - evidence: Added task task-16 via small plan --add
+      notes: Expand reference embedding examples
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-16
+      timestamp: "2026-03-13T20:51:48.328754000Z"
+    - evidence: Added task task-17 via small plan --add
+      notes: Add embedding smoke test or walkthrough script
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-17
+      timestamp: "2026-03-13T20:51:48.394986000Z"
+    - evidence: Added task task-18 via small plan --add
+      notes: Document run-state transition model
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-18
+      timestamp: "2026-03-13T20:51:48.442199000Z"
+    - evidence: Added task task-19 via small plan --add
+      notes: Document API error and pagination guarantees
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-19
+      timestamp: "2026-03-13T20:51:48.483496000Z"
+    - evidence: Added task task-20 via small plan --add
+      notes: Clarify replace overlap semantics
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-20
+      timestamp: "2026-03-13T20:51:48.524609000Z"
+    - evidence: Added task task-21 via small plan --add
+      notes: Audit SQLite-specific assumptions
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-21
+      timestamp: "2026-03-13T20:51:48.567407000Z"
+    - evidence: Added task task-22 via small plan --add
+      notes: Define storage interface for dialect portability
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-22
+      timestamp: "2026-03-13T20:51:48.609263000Z"
+    - evidence: Added task task-23 via small plan --add
+      notes: Add storage portability doc
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-23
+      timestamp: "2026-03-13T20:51:48.652273000Z"
+    - evidence: Added task task-24 via small plan --add
+      notes: Decide CLI binary boundary
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-24
+      timestamp: "2026-03-13T20:51:48.693991000Z"
+    - evidence: Added task task-25 via small plan --add
+      notes: Add release discipline docs
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-25
+      timestamp: "2026-03-13T20:51:48.734229000Z"
+    - evidence: Added task task-26 via small plan --add
+      notes: Add operator runbook skeleton
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-26
+      timestamp: "2026-03-13T20:51:48.772744000Z"
+    - evidence: Updated origin remote from https://github.com/justyn-clark/timekeeper.git to https://github.com/justyn-clark/wakeplane.git. git fetch origin succeeds with no redirect warnings. git remote -v confirms canonical URL.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-11
+      timestamp: "2026-03-13T20:52:13.648268000Z"
+    - evidence: 'Added TestCloseContextTimesOutWithNonCooperativeExecutor: workflow ignores ctx.Done() entirely, only unblocks on test-controlled release channel. CloseContext returns DeadlineExceeded, store remains open, run stays RunRunning. go test PASS.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-12
+      timestamp: "2026-03-13T20:54:48.345861000Z"
+    - evidence: 'Added structured shutdown lifecycle logging: CloseContext logs shutdown-requested/draining/run-loop-stopped/dispatcher-draining/timeout/complete. Dispatcher.Shutdown logs active-count/cancelling/timeout/complete. CLI serve logs signal-received/listening/stopped-cleanly. All tests pass.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-13
+      timestamp: "2026-03-13T20:55:54.639581000Z"
+    - evidence: 'Deferred to next run: restart/recovery crash tests'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-14
+      timestamp: "2026-03-13T20:56:22.349800000Z"
+    - evidence: 'Deferred to next run: embedding contract doc'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-15
+      timestamp: "2026-03-13T20:56:22.398429000Z"
+    - evidence: 'Deferred to next run: expand reference examples'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-16
+      timestamp: "2026-03-13T20:56:22.447486000Z"
+    - evidence: 'Deferred to next run: embedding smoke test'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-17
+      timestamp: "2026-03-13T20:56:22.492959000Z"
+    - evidence: 'Deferred to next run: run-state transition model'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-18
+      timestamp: "2026-03-13T20:56:22.538861000Z"
+    - evidence: 'Deferred to next run: API error/pagination docs'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-19
+      timestamp: "2026-03-13T20:56:22.585837000Z"
+    - evidence: 'Deferred to next run: replace overlap semantics'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-20
+      timestamp: "2026-03-13T20:56:22.633667000Z"
+    - evidence: 'Deferred to next run: SQLite assumption audit'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-21
+      timestamp: "2026-03-13T20:56:22.683076000Z"
+    - evidence: 'Deferred to next run: storage interface portability'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-22
+      timestamp: "2026-03-13T20:56:22.730945000Z"
+    - evidence: 'Deferred to next run: storage portability doc'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-23
+      timestamp: "2026-03-13T20:56:22.778646000Z"
+    - evidence: 'Deferred to next run: CLI binary boundary'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-24
+      timestamp: "2026-03-13T20:56:22.827636000Z"
+    - evidence: 'Deferred to next run: release discipline docs'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-25
+      timestamp: "2026-03-13T20:56:22.875951000Z"
+    - evidence: 'Deferred to next run: operator runbook skeleton'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: blocked
+      task_id: task-26
+      timestamp: "2026-03-13T20:56:22.925965000Z"

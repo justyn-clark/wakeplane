@@ -371,11 +371,13 @@ func (d *Dispatcher) cancelRun(runID string) {
 
 func (d *Dispatcher) Shutdown(ctx context.Context) error {
 	d.activeMu.Lock()
-	cancels := make([]context.CancelFunc, 0, len(d.active))
+	active := len(d.active)
+	cancels := make([]context.CancelFunc, 0, active)
 	for _, cancel := range d.active {
 		cancels = append(cancels, cancel)
 	}
 	d.activeMu.Unlock()
+	d.logger.Info("dispatcher shutdown: cancelling active executions", "count", active)
 	for _, cancel := range cancels {
 		cancel()
 	}
@@ -386,8 +388,10 @@ func (d *Dispatcher) Shutdown(ctx context.Context) error {
 	}()
 	select {
 	case <-ctx.Done():
+		d.logger.Warn("dispatcher shutdown timeout: active work did not drain", "remaining", d.ActiveWorkers())
 		return ctx.Err()
 	case <-done:
+		d.logger.Info("dispatcher shutdown complete")
 		return nil
 	}
 }

@@ -1,8 +1,10 @@
 small_version: "1.0.0"
 owner: agent
-summary: Run complete. strict check passed. Added shutdown-timeout coverage and a reference embedding example with explicit workflow registration. All plan tasks completed.
+summary: Run blocked on task-14.
 resume:
-    next_steps: []
+    current_task_id: task-14
+    next_steps:
+        - Unblock task-14
 links: []
 replayId:
     value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

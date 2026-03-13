@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -55,6 +56,7 @@ type serveHooks struct {
 }
 
 func runServe(ctx context.Context, cfg config.Config, newService func(context.Context, config.Config) (*app.Service, error), hooks serveHooks) error {
+	logger := slog.Default()
 	service, err := newService(ctx, cfg)
 	if err != nil {
 		return err
@@ -66,6 +68,7 @@ func runServe(ctx context.Context, cfg config.Config, newService func(context.Co
 		return err
 	}
 	server := &http.Server{Handler: api.NewMux(service)}
+	logger.Info("listening", "addr", listener.Addr().String())
 	if hooks.onListening != nil {
 		hooks.onListening(listener.Addr().String())
 	}
@@ -73,6 +76,7 @@ func runServe(ctx context.Context, cfg config.Config, newService func(context.Co
 	group, groupCtx := errgroup.WithContext(ctx)
 	group.Go(func() error {
 		<-groupCtx.Done()
+		logger.Info("signal received, shutting down HTTP server")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = server.Shutdown(shutdownCtx)
@@ -90,7 +94,12 @@ func runServe(ctx context.Context, cfg config.Config, newService func(context.Co
 		}
 		return nil
 	})
-	return group.Wait()
+	if err := group.Wait(); err != nil {
+		logger.Error("serve exited with error", "error", err)
+		return err
+	}
+	logger.Info("serve stopped cleanly")
+	return nil
 }
 
 func newScheduleCmd(baseURL *string) *cobra.Command {

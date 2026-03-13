@@ -430,6 +430,92 @@ func TestCloseContextTimesOutWhenWorkflowDelaysCancellation(t *testing.T) {
 	}
 }
 
+func TestCloseContextTimesOutWithNonCooperativeExecutor(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+	started := make(chan struct{})
+	release := make(chan struct{})
+	var once sync.Once
+
+	service, err := NewWithOptions(context.Background(), config.Config{
+		DatabasePath:       dbPath,
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  10 * time.Millisecond,
+		DispatcherInterval: 10 * time.Millisecond,
+		LeaseTTL:           200 * time.Millisecond,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+	}, WithWorkflowHandler("noncooperative.workflow", func(ctx context.Context, input map[string]any) (map[string]any, error) {
+		once.Do(func() { close(started) })
+		// Deliberately ignore ctx.Done(); only unblock when the test releases us.
+		<-release
+		return nil, errors.New("released by test teardown")
+	}))
+	if err != nil {
+		t.Fatalf("NewWithOptions returned error: %v", err)
+	}
+	defer func() {
+		close(release)
+		// Allow background goroutines to drain after release.
+		time.Sleep(50 * time.Millisecond)
+	}()
+
+	schedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "noncooperative-workflow",
+		Enabled:  false,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindWorkflow, WorkflowID: "noncooperative.workflow"},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    domain.DefaultRetryPolicy(),
+	})
+	if err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+	run, err := service.TriggerSchedule(context.Background(), schedule.ID, "manual operator trigger")
+	if err != nil {
+		t.Fatalf("TriggerSchedule returned error: %v", err)
+	}
+
+	runCtx, runCancel := context.WithCancel(context.Background())
+	defer runCancel()
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- service.Run(runCtx)
+	}()
+
+	select {
+	case <-started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for workflow execution to start")
+	}
+	if err := waitForRunStatus(service, run.ID, domain.RunRunning, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus running returned error: %v", err)
+	}
+
+	// Use a very short timeout. The workflow will NOT honor cancellation.
+	closeCtx, cancelClose := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancelClose()
+	closeErr := service.CloseContext(closeCtx)
+	if !errors.Is(closeErr, context.DeadlineExceeded) {
+		t.Fatalf("expected CloseContext deadline exceeded for non-cooperative executor, got %v", closeErr)
+	}
+
+	// Store must remain open even though shutdown timed out (store.Close was never reached).
+	ready := service.Ready(context.Background())
+	if ok, _ := ready["ok"].(bool); !ok {
+		t.Fatalf("expected store to remain open after timed-out CloseContext, got %+v", ready)
+	}
+
+	// The run should still show as running since the executor never cooperated.
+	got, err := service.GetRun(context.Background(), run.ID)
+	if err != nil {
+		t.Fatalf("GetRun returned error: %v", err)
+	}
+	if got.Status != domain.RunRunning {
+		t.Fatalf("expected run to remain running after non-cooperative shutdown timeout, got %s", got.Status)
+	}
+}
+
 func waitForRunStatus(service *Service, runID string, want domain.RunStatus, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {

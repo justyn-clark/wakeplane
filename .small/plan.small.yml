@@ -31,3 +31,51 @@ tasks:
     - id: task-10
       title: Add shutdown-timeout coverage and an embedding reference example
       status: completed
+    - id: task-11
+      title: Fix canonical git remote hygiene
+      status: completed
+    - id: task-12
+      title: Add non-cooperative executor shutdown coverage
+      status: completed
+    - id: task-13
+      title: Harden operator signaling for shutdown/drain states
+      status: completed
+    - id: task-14
+      title: Add phase-specific restart/recovery crash tests
+      status: blocked
+    - id: task-15
+      title: Write explicit embedding contract doc
+      status: blocked
+    - id: task-16
+      title: Expand reference embedding examples
+      status: blocked
+    - id: task-17
+      title: Add embedding smoke test or walkthrough script
+      status: blocked
+    - id: task-18
+      title: Document run-state transition model
+      status: blocked
+    - id: task-19
+      title: Document API error and pagination guarantees
+      status: blocked
+    - id: task-20
+      title: Clarify replace overlap semantics
+      status: blocked
+    - id: task-21
+      title: Audit SQLite-specific assumptions
+      status: blocked
+    - id: task-22
+      title: Define storage interface for dialect portability
+      status: blocked
+    - id: task-23
+      title: Add storage portability doc
+      status: blocked
+    - id: task-24
+      title: Decide CLI binary boundary
+      status: blocked
+    - id: task-25
+      title: Add release discipline docs
+      status: blocked
+    - id: task-26
+      title: Add operator runbook skeleton
+      status: blocked

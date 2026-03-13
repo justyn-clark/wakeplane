@@ -86,21 +86,32 @@ func (s *Service) Close() error {
 }
 
 func (s *Service) CloseContext(ctx context.Context) error {
+	s.logger.Info("shutdown requested")
 	cancel, done := s.runtimeHandle()
 	if cancel != nil {
 		cancel()
 	}
 	if done != nil {
+		s.logger.Info("draining: waiting for run loop to stop")
 		select {
 		case <-done:
+			s.logger.Info("run loop stopped")
 		case <-ctx.Done():
+			s.logger.Warn("shutdown timeout: run loop did not stop in time")
 			return ctx.Err()
 		}
 	}
+	s.logger.Info("draining: shutting down dispatcher")
 	if err := s.dispatcher.Shutdown(ctx); err != nil {
+		s.logger.Warn("shutdown timeout: dispatcher drain exceeded deadline", "error", err)
 		return err
 	}
-	return s.store.Close()
+	if err := s.store.Close(); err != nil {
+		s.logger.Error("shutdown: store close failed", "error", err)
+		return err
+	}
+	s.logger.Info("shutdown complete")
+	return nil
 }
 
 func (s *Service) Run(ctx context.Context) error {

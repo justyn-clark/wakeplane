@@ -911,3 +911,54 @@ entries:
       status: completed
       task_id: task-9
       timestamp: "2026-03-13T20:09:46.367384000Z"
+    - command: go test ./internal/app ./internal/cli ./examples/embedded
+      evidence: |-
+        exit_code=0 output="ok   github.com/justyn-clark/wakeplane/internal/app  0.604s
+        ok   github.com/justyn-clark/wakeplane/internal/cli  (cached)
+        ?    github.com/justyn-clark/wakeplane/examples/embedded [no test files]"
+      notes: Focused verification for shutdown-timeout coverage and embedding example compilation.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-10
+      timestamp: "2026-03-13T20:16:48.222779000Z"
+    - command: go test ./...
+      evidence: |-
+        exit_code=0 output="?    github.com/justyn-clark/wakeplane/cmd/wakeplane [no test files]
+        ?    github.com/justyn-clark/wakeplane/cmd/wakeplaned [no test files]
+        ?    github.com/justyn-clark/wakeplane/examples/embedded [no test files]
+        ok   github.com/justyn-clark/wakeplane/internal/api (cached)
+        ok   github.com/justyn-clark/wakeplane/internal/app (cached)
+        ok   github.com/justyn-clark/wakeplane/internal/cli (cached)
+        ?    github.com/justyn-clark/wakeplane/internal/config [no test files]
+        ok   github.com/justyn-clark/wakeplane/internal/dispatcher (cached)
+        ok   github.com/justyn-clark/wakeplane/internal/domain (cached)
+        ?    github.com/justyn-clark/wakeplane/internal/executors [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/executors/http [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/executors/shell [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/executors/workflow [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/leases [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/logging [no test files]
+        ok   github.com/justyn-clark/wakeplane/internal/planner (cached)
+        ?    github.com/justyn-clark/wakeplane/internal/policy [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/receipts [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/scheduler [no test files]
+        ?    github.com/justyn-clark/wakeplane/internal/store [no test files]
+        ok   github.com/justyn-clark/wakeplane/internal/timecalc (cached)"
+      notes: Full repository verification after task-10 completion.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-10
+      timestamp: "2026-03-13T20:16:48.222780000Z"
+    - command: small check --strict
+      evidence: exit_code=0 output="Verification passed\nCheck passed"
+      notes: STRICT SMALL verification after task-10 completion.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-10
+      timestamp: "2026-03-13T20:16:48.222781000Z"
+    - evidence: Added service shutdown-timeout coverage for a slow-to-cancel workflow path and documented a minimal embedding example that explicitly registers workflows with app.NewWithOptions.
+      notes: Timeout-path coverage and embedding reference completed.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-10
+      timestamp: "2026-03-13T20:16:48.222782000Z"

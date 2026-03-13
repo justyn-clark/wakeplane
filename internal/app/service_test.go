@@ -338,6 +338,98 @@ func TestBlockingWorkflowRunIsCancelledAndRecoveredAcrossRestart(t *testing.T) {
 	}
 }
 
+func TestCloseContextTimesOutWhenWorkflowDelaysCancellation(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+	started := make(chan struct{})
+	finished := make(chan struct{})
+	var once sync.Once
+	service, err := NewWithOptions(context.Background(), config.Config{
+		DatabasePath:       dbPath,
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  10 * time.Millisecond,
+		DispatcherInterval: 10 * time.Millisecond,
+		LeaseTTL:           200 * time.Millisecond,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+	}, WithWorkflowHandler("slow.cancel", func(ctx context.Context, input map[string]any) (map[string]any, error) {
+		once.Do(func() { close(started) })
+		time.Sleep(250 * time.Millisecond)
+		close(finished)
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		return map[string]any{"status": "completed"}, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewWithOptions returned error: %v", err)
+	}
+	defer func() {
+		_ = service.Close()
+	}()
+
+	schedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "slow-cancel-workflow",
+		Enabled:  false,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindWorkflow, WorkflowID: "slow.cancel"},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    domain.DefaultRetryPolicy(),
+	})
+	if err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+	run, err := service.TriggerSchedule(context.Background(), schedule.ID, "manual operator trigger")
+	if err != nil {
+		t.Fatalf("TriggerSchedule returned error: %v", err)
+	}
+
+	runCtx, runCancel := context.WithCancel(context.Background())
+	defer runCancel()
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- service.Run(runCtx)
+	}()
+
+	select {
+	case <-started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for workflow execution to start")
+	}
+	if err := waitForRunStatus(service, run.ID, domain.RunRunning, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus running returned error: %v", err)
+	}
+
+	closeCtx, cancelClose := context.WithTimeout(context.Background(), 25*time.Millisecond)
+	defer cancelClose()
+	if err := service.CloseContext(closeCtx); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected CloseContext deadline exceeded, got %v", err)
+	}
+
+	ready := service.Ready(context.Background())
+	if ok, _ := ready["ok"].(bool); !ok {
+		t.Fatalf("expected store to remain open after timed-out CloseContext, got %+v", ready)
+	}
+
+	select {
+	case <-finished:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for delayed workflow completion")
+	}
+	if err := waitForRunStatus(service, run.ID, domain.RunCancelled, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus cancelled returned error: %v", err)
+	}
+
+	select {
+	case err := <-runErr:
+		if err != nil {
+			t.Fatalf("Run returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for service run loop to stop")
+	}
+}
+
 func waitForRunStatus(service *Service, runID string, want domain.RunStatus, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {

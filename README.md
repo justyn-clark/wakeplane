@@ -84,9 +84,31 @@ Durability and audit
 
 - The daemon is single-process and SQLite-first. It is designed to be Postgres-ready at the storage boundary, but Postgres is not implemented yet.
 - Workflow targets are in-process only in v1. Handlers must be registered explicitly by the embedding application or tests.
+- `CloseContext` can return a deadline error if an executor delays or ignores cancellation. In that case Wakeplane keeps the store open rather than closing underneath the active run.
 - `replace` overlap is best-effort cooperative cancellation. If the active execution cannot be interrupted cleanly, behavior degrades toward `queue_latest`.
 - Expired `claimed` runs are returned to `pending`; expired `running` runs are marked failed and retried or dead-lettered according to retry policy.
 - There is no auth, UI, distributed coordination, or plugin loading in the current implementation.
+
+## Embedding
+
+Wakeplane does not ship hidden workflow handlers. Embedding applications must register each workflow explicitly.
+
+See [examples/embedded/main.go](examples/embedded/main.go) for a minimal daemon that:
+
+- constructs `app.NewWithOptions(...)`
+- registers a workflow with `app.WithWorkflowHandler(...)`
+- exposes the HTTP control-plane API with `api.NewMux(...)`
+- coordinates service and HTTP shutdown on process cancellation
+
+Minimal registration shape:
+
+```go
+service, err := app.NewWithOptions(ctx, cfg,
+	app.WithWorkflowHandler("sync.customers", func(ctx context.Context, input map[string]any) (map[string]any, error) {
+		return map[string]any{"status": "completed"}, nil
+	}),
+)
+```
 
 ## CLI
 

@@ -28,3 +28,6 @@ tasks:
     - id: task-9
       title: Harden daemon serve lifecycle and add shutdown coverage
       status: completed
+    - id: task-10
+      title: Add shutdown-timeout coverage and an embedding reference example
+      status: completed

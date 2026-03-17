@@ -41,7 +41,8 @@ This repository contains a working v1 bootstrap implementation:
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
 - operator-facing metrics, health, and status endpoints
-- restart, stale-lease, and contention-focused tests
+- structured shutdown lifecycle logging with drain visibility
+- restart, stale-lease, contention, and non-cooperative shutdown tests
 
 ## Implemented v1 surface
 
@@ -80,11 +81,23 @@ Durability and audit
 - Prometheus text metrics at `/v1/metrics`
 - operational status counts for due, running, failed, retry-queued, and expired-claim work
 
+## Shutdown behavior
+
+The service emits structured lifecycle logs during shutdown so operators can distinguish clean stops from timed-out drains:
+
+1. `shutdown requested` - `CloseContext` or signal received
+2. `draining: waiting for run loop to stop` - scheduler and dispatcher ticker loops stopping
+3. `run loop stopped` - planner and dispatcher loops exited
+4. `dispatcher shutdown: cancelling active executions` - active work contexts cancelled, with count
+5. `dispatcher shutdown complete` or `dispatcher shutdown timeout` - drain outcome
+6. `shutdown complete` - store closed, process can exit
+
+If an executor delays or ignores cancellation, `CloseContext` returns a deadline error and the store remains open rather than closing underneath the active run. Runs that were active at timeout retain their `running` status in the ledger.
+
 ## Current implementation notes
 
 - The daemon is single-process and SQLite-first. It is designed to be Postgres-ready at the storage boundary, but Postgres is not implemented yet.
 - Workflow targets are in-process only in v1. Handlers must be registered explicitly by the embedding application or tests.
-- `CloseContext` can return a deadline error if an executor delays or ignores cancellation. In that case Wakeplane keeps the store open rather than closing underneath the active run.
 - `replace` overlap is best-effort cooperative cancellation. If the active execution cannot be interrupted cleanly, behavior degrades toward `queue_latest`.
 - Expired `claimed` runs are returned to `pending`; expired `running` runs are marked failed and retried or dead-lettered according to retry policy.
 - There is no auth, UI, distributed coordination, or plugin loading in the current implementation.

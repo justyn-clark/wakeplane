@@ -1,0 +1,24 @@
+name: health-check
+enabled: true
+timezone: UTC
+
+schedule:
+  kind: interval
+  every_seconds: 300
+
+target:
+  kind: http
+  method: GET
+  url: https://api.example.com/healthz
+
+policy:
+  overlap: forbid
+  misfire: skip
+  timeout_seconds: 30
+  max_concurrency: 1
+
+retry:
+  max_attempts: 3
+  strategy: exponential
+  initial_delay_seconds: 10
+  max_delay_seconds: 120

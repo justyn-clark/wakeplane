@@ -40,6 +40,19 @@ The scheduler decides what is due. The dispatcher decides what can run now. Exec
 - `/v1/status` exposes scheduler tick timing plus due/running/failed/retry/dead-letter and expired-claim counts.
 - Expired `claimed` leases are returned to `pending`. Expired `running` leases transition the current attempt to failure and schedule retry/dead-letter handling through the normal retry policy.
 
+## Shutdown lifecycle
+
+`CloseContext` drives a structured shutdown sequence:
+
+1. Cancel the run context (scheduler and dispatcher ticker loops stop).
+2. Wait for the run loop goroutine to exit.
+3. Call `dispatcher.Shutdown(ctx)` which cancels all active execution contexts and waits for in-flight goroutines to drain.
+4. Close the SQLite store.
+
+Each phase emits structured logs so operators can trace exactly where shutdown stalled. If the provided context deadline is exceeded at any phase, the operation returns `context.DeadlineExceeded` and the store is left open to avoid closing underneath active work.
+
+Non-cooperative executors (those that ignore `ctx.Done()`) are handled by the timeout boundary: the dispatcher reports remaining active workers and the caller decides whether to wait longer or let process supervision handle the rest.
+
 ## Current limits
 
 - No auth, RBAC, or multi-tenant model.

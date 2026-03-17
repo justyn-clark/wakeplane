@@ -1,0 +1,26 @@
+name: nightly-backup
+enabled: true
+timezone: America/New_York
+
+schedule:
+  kind: cron
+  expr: "0 3 * * *"
+
+target:
+  kind: shell
+  command: /usr/local/bin/backup.sh
+  args:
+    - "--compress"
+    - "--destination=/mnt/backups"
+
+policy:
+  overlap: forbid
+  misfire: run_once_if_late
+  timeout_seconds: 3600
+  max_concurrency: 1
+
+retry:
+  max_attempts: 2
+  strategy: exponential
+  initial_delay_seconds: 60
+  max_delay_seconds: 600

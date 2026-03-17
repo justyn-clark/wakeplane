@@ -3,6 +3,7 @@ package planner
 import (
 	"context"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
@@ -46,13 +47,13 @@ func TestPlannerMisfirePolicies(t *testing.T) {
 			if len(items) != len(tc.wantStatuses) {
 				t.Fatalf("expected %d runs, got %d", len(tc.wantStatuses), len(items))
 			}
+			// Sort by occurrence_key (embeds nominal time in RFC3339) for stable chronological order.
+			sort.Slice(items, func(a, b int) bool {
+				return items[a].OccurrenceKey < items[b].OccurrenceKey
+			})
 			for i, want := range tc.wantStatuses {
-				run, err := st.GetRun(context.Background(), items[len(items)-1-i].ID)
-				if err != nil {
-					t.Fatalf("GetRun returned error: %v", err)
-				}
-				if run.Status != want {
-					t.Fatalf("run %d expected status %s, got %s", i, want, run.Status)
+				if items[i].Status != want {
+					t.Fatalf("run %d (key=%s) expected status %s, got %s", i, items[i].OccurrenceKey, want, items[i].Status)
 				}
 			}
 		})

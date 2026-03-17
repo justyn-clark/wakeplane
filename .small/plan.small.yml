@@ -42,40 +42,46 @@ tasks:
       status: completed
     - id: task-14
       title: Add phase-specific restart/recovery crash tests
-      status: blocked
+      status: completed
     - id: task-15
       title: Write explicit embedding contract doc
-      status: blocked
+      status: completed
     - id: task-16
       title: Expand reference embedding examples
-      status: blocked
+      status: completed
     - id: task-17
       title: Add embedding smoke test or walkthrough script
-      status: blocked
+      status: completed
     - id: task-18
       title: Document run-state transition model
-      status: blocked
+      status: completed
     - id: task-19
       title: Document API error and pagination guarantees
-      status: blocked
+      status: completed
     - id: task-20
       title: Clarify replace overlap semantics
-      status: blocked
+      status: completed
     - id: task-21
       title: Audit SQLite-specific assumptions
-      status: blocked
+      status: completed
     - id: task-22
       title: Define storage interface for dialect portability
-      status: blocked
+      status: completed
     - id: task-23
       title: Add storage portability doc
-      status: blocked
+      status: completed
     - id: task-24
       title: Decide CLI binary boundary
-      status: blocked
+      status: completed
     - id: task-25
       title: Add release discipline docs
-      status: blocked
+      status: completed
     - id: task-26
       title: Add operator runbook skeleton
-      status: blocked
+      status: completed
+    - id: task-27
+      title: Update README and architecture docs for current state
+      status: completed
+    - id: task-28
+      title: Fix planner test flake in TestPlannerMisfirePolicies/run_once_if_late
+      status: completed

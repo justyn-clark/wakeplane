@@ -1,10 +1,8 @@
 small_version: "1.0.0"
 owner: agent
-summary: Run blocked on task-14.
+summary: Run complete. strict check passed. All plan tasks completed.
 resume:
-    current_task_id: task-14
-    next_steps:
-        - Unblock task-14
+    next_steps: []
 links: []
 replayId:
     value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

@@ -1138,3 +1138,168 @@ entries:
       status: blocked
       task_id: task-26
       timestamp: "2026-03-13T20:56:22.925965000Z"
+    - evidence: Updated task task-14 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-14
+      timestamp: "2026-03-17T19:04:55.176757000Z"
+    - evidence: Updated task task-15 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-15
+      timestamp: "2026-03-17T19:04:55.215592000Z"
+    - evidence: Updated task task-16 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-16
+      timestamp: "2026-03-17T19:04:55.252511000Z"
+    - evidence: Updated task task-17 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-17
+      timestamp: "2026-03-17T19:04:55.289072000Z"
+    - evidence: Updated task task-18 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-18
+      timestamp: "2026-03-17T19:04:55.325646000Z"
+    - evidence: Updated task task-19 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-19
+      timestamp: "2026-03-17T19:04:55.362502000Z"
+    - evidence: Updated task task-20 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-20
+      timestamp: "2026-03-17T19:04:55.399823000Z"
+    - evidence: Updated task task-21 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-21
+      timestamp: "2026-03-17T19:04:55.437721000Z"
+    - evidence: Updated task task-22 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-22
+      timestamp: "2026-03-17T19:04:55.476526000Z"
+    - evidence: Updated task task-23 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-23
+      timestamp: "2026-03-17T19:04:55.514339000Z"
+    - evidence: Updated task task-24 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-24
+      timestamp: "2026-03-17T19:04:55.552026000Z"
+    - evidence: Updated task task-25 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-25
+      timestamp: "2026-03-17T19:04:55.589591000Z"
+    - evidence: Updated task task-26 to pending
+      notes: small plan --pending
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-26
+      timestamp: "2026-03-17T19:04:55.626138000Z"
+    - evidence: Added task task-27 via small plan --add
+      notes: Update README and architecture docs for current state
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-27
+      timestamp: "2026-03-17T19:04:59.669528000Z"
+    - evidence: 'Updated README.md: added shutdown behavior section with structured lifecycle log descriptions, updated current status bullet points. Updated docs/architecture.md: added shutdown lifecycle section describing CloseContext sequence and non-cooperative executor handling.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-27
+      timestamp: "2026-03-17T19:05:04.669249000Z"
+    - evidence: Added task task-28 via small plan --add
+      notes: Fix planner test flake in TestPlannerMisfirePolicies/run_once_if_late
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-28
+      timestamp: "2026-03-17T19:18:50.900347000Z"
+    - evidence: 'Root cause: ListRuns orders by (created_at DESC, id DESC) but all runs had identical created_at (frozen test clock). ULID random suffixes made ordering non-deterministic. Fix: sort items by OccurrenceKey (which embeds nominal time in RFC3339) before comparing statuses. 10/10 passes confirmed.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-28
+      timestamp: "2026-03-17T19:20:04.178698000Z"
+    - evidence: 'Added 4 crash-boundary recovery tests with full store close/reopen cycles: (1) TestRecoverClaimedNotRunningAcrossReopen - claimed with expired lease recovers to pending. (2) TestRecoverRunningBeforeFinishAcrossReopen - running with expired lease recovers to failed with retry scheduled. (3) TestRetryScheduledRunIsPickedUpAfterReopen - retry_scheduled run with past retry_available_at is returned as candidate. (4) TestFailedRunWithoutRetryIsStableAfterReopen - documents known gap where crash after FinishRun but before retry InsertRun loses the retry. All tests pass.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-14
+      timestamp: "2026-03-17T19:22:15.348676000Z"
+    - evidence: 'Created docs/embedding.md: covers construction (NewWithOptions, WithWorkflowHandler, WithWorkflowRegistry), lifecycle (Run, Close, CloseContext with timeout behavior), HTTP server coordination pattern, workflow handler contract (ctx/input/return/cancellation), missing workflow behavior, and recovery guarantees table documenting all crash-boundary behaviors including the known retry-insert gap.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-15
+      timestamp: "2026-03-17T19:23:15.604091000Z"
+    - evidence: 'Created docs/run-states.md: complete run-state transition model with status table (9 statuses), ASCII transition diagram, transition rules for every edge (pending→claimed→running→succeeded/failed/cancelled, retry scheduling, dead-lettering, recovery paths), occurrence identity semantics, and lease recovery rules.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-18
+      timestamp: "2026-03-17T19:23:57.451276000Z"
+    - evidence: 'Created docs/api-contract.md: error envelope shape (code/error/details), HTTP status mapping table (400/404/409/500), cursor-based pagination contract with ordering guarantees, filter semantics, content type expectations, endpoint semantics tables for all CRUD/action/inspection/operational routes, and default policy values.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-19
+      timestamp: "2026-03-17T19:24:52.358518000Z"
+    - evidence: 'Created docs/replace-semantics.md: documents exact replace overlap behavior (list active → cancel → enforce queue → claim), degradation path to queue_latest when executor ignores cancellation, operator-visible signals (skipped run error_text), when-to-use and when-not-to-use guidance, comparison table with all four overlap policies.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-20
+      timestamp: "2026-03-17T19:25:32.819889000Z"
+    - evidence: Added examples/health-check-http.yaml (HTTP GET target with interval schedule, skip misfire, 3 retries) and examples/backup-shell.yaml (shell target with cron schedule, args, 1-hour timeout, 2 retries). Together with existing nightly-sync.yaml (workflow target), all three target kinds now have reference manifests.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-16
+      timestamp: "2026-03-17T19:26:03.668969000Z"
+    - evidence: 'Created examples/examples_test.go with two tests: (1) TestExampleManifestsParse validates all YAML manifests parse into CreateScheduleRequest with required fields. (2) TestEmbeddedServiceLifecycle proves the full embed path: NewWithOptions→RegisterWorkflow→CreateSchedule(from YAML)→TriggerSchedule→Status→Close. All pass.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-17
+      timestamp: "2026-03-17T19:26:43.517496000Z"
+    - evidence: 'Created docs/sqlite-audit.md: comprehensive audit of all SQLite-specific assumptions. Covers driver/connection (4 items), time encoding as TEXT/RFC3339Nano (~20 columns), boolean encoding as INTEGER 0/1, JSON as TEXT, SQL dialect (INSERT OR REPLACE, julianday), error detection (string matching), raw DB access. Documents what is already portable and outlines 3-step migration path.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-21
+      timestamp: "2026-03-17T19:27:57.956936000Z"
+    - evidence: 'Created docs/storage-interface.md: defines full Store method contract (lifecycle, schedule/run/claim/lease/overlap/metrics/receipt operations), identifies 6 dialect-specific seams (Open, Migrate, serialization helpers, upsert syntax, date arithmetic, error detection), recommends Dialect config field approach over premature interface extraction.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-22
+      timestamp: "2026-03-17T19:28:47.011886000Z"
+    - evidence: 'Created docs/storage-portability.md: summary of what is already portable (all app logic, schema structure, IDs, pagination, transactions), what is intentionally SQLite-first, and what must change for Postgres (10-item table with effort estimates). Links to sqlite-audit.md and storage-interface.md. Includes implementation order and scope estimate (~200 lines in store.go).'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-23
+      timestamp: "2026-03-17T19:29:13.351150000Z"
+    - evidence: 'Decision: keep both wakeplane and wakeplaned binaries. They are identical today. wakeplaned follows Unix daemon naming convention (sshd, httpd) for process listing and packaging disambiguation. Added package-level doc comment to cmd/wakeplaned/main.go explaining the rationale and noting where they would diverge in a future split.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-24
+      timestamp: "2026-03-17T19:29:43.881006000Z"
+    - evidence: 'Created docs/release.md: semver policy, version source locations (both cmd/ entry points), 7-item release checklist (tests, build, strict check, version update, README, clean tree, docs), tagging instructions, binary build commands with cross-compilation examples, and breaking change definition.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-25
+      timestamp: "2026-03-17T19:30:06.090876000Z"
+    - evidence: 'Created docs/runbook.md: startup with env vars and health check verification, health check endpoint table (liveness/readiness), shutdown log sequence with stall detection, metrics alerting table (5 key metrics), status interpretation, 6 common failure scenarios with cause/recovery/action (stuck running, stuck claimed, dead letters, growing due_runs, db locked, schedule not firing), and SQLite backup procedure.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-26
+      timestamp: "2026-03-17T19:30:44.670269000Z"

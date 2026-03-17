@@ -27,6 +27,12 @@ go.work.sum
 # env file
 .env
 
+# Build output
+dist/
+/wakeplane
+/wakeplaned
+/embedded
+
 # Editor/IDE
 # .idea/
 # .vscode/

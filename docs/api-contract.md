@@ -39,7 +39,7 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 **Request parameters:**
 
 - `limit` — maximum items to return. Default `50`. Invalid or non-positive values fall back to `50`.
-- `cursor` — opaque cursor string from a previous response. Omit for the first page.
+- `cursor` — opaque cursor string from a previous response. Omit for the first page. Malformed cursor values return `400 bad_request`.
 
 **Response shape:**
 
@@ -60,13 +60,13 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 ## Filtering
 
 **`GET /v1/schedules`:**
-- `enabled=true|false` — filter by enabled state. The current implementation treats the literal value `true` as enabled; any other non-empty value is treated as `false`.
+- `enabled=true|false` — filter by enabled state. The value is case-sensitive and strict: `true` filters enabled schedules, `false` filters disabled schedules, and any other value returns `400 bad_request`.
 
 **`GET /v1/runs` and `GET /v1/schedules/{id}/runs`:**
 - `schedule_id=<id>` — filter by schedule (only on `/v1/runs`).
-- `status=<status>` — filter by run status (any of the 9 status values).
+- `status=<status>` — filter by run status. Accepted values are `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
 
-Filters are combined with AND. `status` values are passed through without validation; invalid values typically return empty results. `enabled` is not validated as an enum and is coerced by the handler as described above.
+Filters are combined with AND. `enabled` and `status` are validated strictly by the handler and reject invalid values with `400 bad_request`. Matching is exact and case-sensitive.
 
 ## Content Types
 

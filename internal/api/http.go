@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -54,13 +55,17 @@ func NewMux(service *app.Service) *http.ServeMux {
 		writeJSON(w, http.StatusCreated, schedule)
 	})
 	mux.HandleFunc("GET /v1/schedules", func(w http.ResponseWriter, r *http.Request) {
-		var enabled *bool
-		if raw := r.URL.Query().Get("enabled"); raw != "" {
-			v := raw == "true"
-			enabled = &v
+		enabled, err := parseEnabledFilter(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
 		}
 		limit := parseLimit(r)
-		cursor := r.URL.Query().Get("cursor")
+		cursor, err := parseCursor(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
 		items, nextCursor, err := service.ListSchedules(r.Context(), enabled, limit, cursor)
 		if err != nil {
 			writeError(w, err)
@@ -148,8 +153,17 @@ func NewMux(service *app.Service) *http.ServeMux {
 	})
 	mux.HandleFunc("GET /v1/schedules/{id}/runs", func(w http.ResponseWriter, r *http.Request) {
 		scheduleID := r.PathValue("id")
-		status := parseStatus(r)
-		items, nextCursor, err := service.ListRuns(r.Context(), &scheduleID, status, parseLimit(r), r.URL.Query().Get("cursor"))
+		status, err := parseStatus(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		cursor, err := parseCursor(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		items, nextCursor, err := service.ListRuns(r.Context(), &scheduleID, status, parseLimit(r), cursor)
 		if err != nil {
 			writeError(w, err)
 			return
@@ -161,8 +175,17 @@ func NewMux(service *app.Service) *http.ServeMux {
 		if raw := r.URL.Query().Get("schedule_id"); raw != "" {
 			scheduleID = &raw
 		}
-		status := parseStatus(r)
-		items, nextCursor, err := service.ListRuns(r.Context(), scheduleID, status, parseLimit(r), r.URL.Query().Get("cursor"))
+		status, err := parseStatus(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		cursor, err := parseCursor(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		items, nextCursor, err := service.ListRuns(r.Context(), scheduleID, status, parseLimit(r), cursor)
 		if err != nil {
 			writeError(w, err)
 			return
@@ -201,13 +224,54 @@ func parseLimit(r *http.Request) int {
 	return n
 }
 
-func parseStatus(r *http.Request) *domain.RunStatus {
+func parseStatus(r *http.Request) (*domain.RunStatus, error) {
 	raw := r.URL.Query().Get("status")
 	if raw == "" {
-		return nil
+		return nil, nil
 	}
 	status := domain.RunStatus(raw)
-	return &status
+	switch status {
+	case domain.RunPending,
+		domain.RunClaimed,
+		domain.RunRunning,
+		domain.RunSucceeded,
+		domain.RunFailed,
+		domain.RunRetryScheduled,
+		domain.RunDeadLettered,
+		domain.RunCancelled,
+		domain.RunSkipped:
+		return &status, nil
+	default:
+		return nil, fmt.Errorf("invalid status value %q", raw)
+	}
+}
+
+func parseEnabledFilter(r *http.Request) (*bool, error) {
+	raw := r.URL.Query().Get("enabled")
+	if raw == "" {
+		return nil, nil
+	}
+	switch raw {
+	case "true":
+		v := true
+		return &v, nil
+	case "false":
+		v := false
+		return &v, nil
+	default:
+		return nil, fmt.Errorf("invalid enabled value %q: must be true or false", raw)
+	}
+}
+
+func parseCursor(r *http.Request) (string, error) {
+	cursor := r.URL.Query().Get("cursor")
+	if cursor == "" {
+		return "", nil
+	}
+	if _, _, err := domain.DecodeCursor(cursor); err != nil {
+		return "", fmt.Errorf("invalid cursor")
+	}
+	return cursor, nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

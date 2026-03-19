@@ -1,12 +1,10 @@
 # Wakeplane
 
-Wakeplane is a durable scheduling and automated execution engine for long-running systems.
+Wakeplane is a durable scheduling control plane for long-running systems.
 
-It defines when work should happen, records what happened, and safely dispatches execution across local and remote runtimes.
+It decides when work is due, records the occurrence durably, dispatches execution through typed targets, and keeps an append-only ledger of what happened.
 
-This is not a thin wrapper around cron.
-
-Cron is only one scheduling input. The real product is the control plane above it:
+This is not a thin wrapper around cron. Cron is only one schedule input. The control plane above it is the product:
 
 - durable schedules
 - typed job targets
@@ -18,35 +16,32 @@ Cron is only one scheduling input. The real product is the control plane above i
 - pluggable executors
 - reusable API and CLI surface
 
-Wakeplane is designed as a standalone primitive that can be embedded across JCN systems.
+Wakeplane is designed as a reusable primitive across JCN systems. Nothing here is treated as disposable.
 
-## Design goals
+## Current Status
 
-- durable and restart-safe
-- timezone-aware
-- explicit run records
-- pluggable executors
-- reusable across products
-- operator-friendly
-- SQLite first, Postgres-ready
-- static binary deployment
+Current shipped state:
 
-## Current status
-
-This repository contains a working v1 bootstrap implementation:
-
+- pre-stable `0.1.0`
 - single-process Go daemon and CLI
-- SQLite schema and embedded migrations
+- SQLite-first storage with embedded migrations
 - planner and dispatcher loops
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
-- operator-facing metrics, health, and status endpoints
-- structured shutdown lifecycle logging with drain visibility
-- restart, stale-lease, contention, and non-cooperative shutdown tests
+- metrics, health, readiness, and status endpoints
+- structured shutdown and drain logging
+- restart, stale-lease, contention, and non-cooperative shutdown coverage
 
-## Implemented v1 surface
+Current limits:
 
-Scheduling
+- Postgres is only planned at the storage seam
+- no auth, RBAC, UI, distributed coordination, or plugin loading
+- workflow handlers must be registered explicitly by the embedding application or tests
+- `replace` is cooperative and best-effort, not forceful
+
+## Supported Model
+
+Scheduling:
 
 - cron schedules
 - interval schedules
@@ -55,52 +50,89 @@ Scheduling
 - pause and resume
 - manual trigger-now without changing normal cadence
 
-Execution
+Execution:
 
 - HTTP executor
 - shell executor
 - in-process workflow executor backed by a registry
-- explicit workflow registration boundary with no default business handlers
 - durable claim before execution
 - execution receipts for stdout, stderr, HTTP response summary, and workflow result
 - retry with exponential backoff
 
-Policy
+Policy:
 
 - overlap policies: `allow`, `forbid`, `queue_latest`, `replace`
 - misfire policies: `skip`, `run_once_if_late`, `catch_up`
 - timeout enforcement
 - max concurrency per schedule
 
-Durability and audit
+Durability and audit:
 
-- SQLite-backed durable schedules and runs
+- SQLite-backed schedules and runs
 - append-only attempt history per logical occurrence
 - worker leases with stale-claim recovery
 - dead-letter capture for exhausted failures
 - Prometheus text metrics at `/v1/metrics`
-- operational status counts for due, running, failed, retry-queued, and expired-claim work
+- operational status counts for due, running, failed, retry-queued, dead-lettered, and expired-claim work
 
-## Shutdown behavior
+## How To Use
 
-The service emits structured lifecycle logs during shutdown so operators can distinguish clean stops from timed-out drains:
+1. Start the daemon.
+2. Create schedules from a YAML manifest.
+3. Inspect schedules and runs with the CLI or HTTP API.
+4. Register workflow handlers explicitly if you use workflow targets.
 
-1. `shutdown requested` - `CloseContext` or signal received
-2. `draining: waiting for run loop to stop` - scheduler and dispatcher ticker loops stopping
-3. `run loop stopped` - planner and dispatcher loops exited
-4. `dispatcher shutdown: cancelling active executions` - active work contexts cancelled, with count
-5. `dispatcher shutdown complete` or `dispatcher shutdown timeout` - drain outcome
-6. `shutdown complete` - store closed, process can exit
+Example daemon start:
 
-If an executor delays or ignores cancellation, `CloseContext` returns a deadline error and the store remains open rather than closing underneath the active run. Runs that were active at timeout retain their `running` status in the ledger.
+```bash
+WAKEPLANE_DB_PATH=./wakeplane.db \
+WAKEPLANE_HTTP_ADDR=:8080 \
+WAKEPLANE_WORKER_ID=wrk_local \
+wakeplane serve
+```
 
-## Current implementation notes
+Create a schedule from one of the shipped examples:
 
-- The daemon is single-process and SQLite-first. It is designed to be Postgres-ready at the storage boundary, but Postgres is not implemented yet.
-- Workflow targets are in-process only in v1. Handlers must be registered explicitly by the embedding application or tests.
-- `replace` overlap is best-effort cooperative cancellation. If the active execution cannot be interrupted cleanly, behavior degrades toward `queue_latest`.
-- Expired `claimed` runs are returned to `pending`; expired `running` runs are marked failed and retried or dead-lettered according to retry policy.
-- There is no auth, UI, distributed coordination, or plugin loading in the current implementation.
+```bash
+wakeplane schedule create -f ./examples/nightly-sync.yaml
+```
+
+Common operator commands:
+
+```text
+wakeplane schedule list
+wakeplane schedule get <id>
+wakeplane schedule pause <id>
+wakeplane schedule resume <id>
+wakeplane schedule delete <id>
+wakeplane schedule trigger <id>
+wakeplane run list
+wakeplane run get <id>
+```
+
+Both `wakeplane` and `wakeplaned` currently expose the same command surface.
+
+HTTP surface:
+
+```text
+GET    /healthz
+GET    /readyz
+GET    /v1/status
+POST   /v1/schedules
+GET    /v1/schedules
+GET    /v1/schedules/{id}
+PUT    /v1/schedules/{id}
+PATCH  /v1/schedules/{id}
+DELETE /v1/schedules/{id}
+POST   /v1/schedules/{id}/pause
+POST   /v1/schedules/{id}/resume
+POST   /v1/schedules/{id}/trigger
+GET    /v1/schedules/{id}/runs
+GET    /v1/runs
+GET    /v1/runs/{id}
+GET    /v1/runs/{id}/receipts
+GET    /v1/metrics
+```
 
 ## Embedding
 
@@ -123,46 +155,7 @@ service, err := app.NewWithOptions(ctx, cfg,
 )
 ```
 
-## CLI
-
-```text
-wakeplane serve
-wakeplane schedule create -f ./examples/nightly-sync.yaml
-wakeplane schedule list
-wakeplane schedule get <id>
-wakeplane schedule pause <id>
-wakeplane schedule resume <id>
-wakeplane schedule delete <id>
-wakeplane schedule trigger <id>
-wakeplane run list
-wakeplane run get <id>
-```
-
-Both `wakeplane` and `wakeplaned` currently expose the same command surface.
-
-## HTTP API
-
-```text
-GET    /healthz
-GET    /readyz
-GET    /v1/status
-POST   /v1/schedules
-GET    /v1/schedules
-GET    /v1/schedules/{id}
-PUT    /v1/schedules/{id}
-PATCH  /v1/schedules/{id}
-DELETE /v1/schedules/{id}
-POST   /v1/schedules/{id}/pause
-POST   /v1/schedules/{id}/resume
-POST   /v1/schedules/{id}/trigger
-GET    /v1/schedules/{id}/runs
-GET    /v1/runs
-GET    /v1/runs/{id}
-GET    /v1/runs/{id}/receipts
-GET    /v1/metrics
-```
-
-## Runtime configuration
+## Runtime Configuration
 
 The daemon reads configuration from environment variables:
 
@@ -172,6 +165,19 @@ The daemon reads configuration from environment variables:
 - `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` default `2`
 - `WAKEPLANE_LEASE_TTL_SECONDS` default `30`
 - `WAKEPLANE_WORKER_ID` default `wrk_local`
+
+## Docs Map
+
+- [Architecture](docs/architecture.md)
+- [API Contract](docs/api-contract.md)
+- [Run States](docs/run-states.md)
+- [Embedding Contract](docs/embedding.md)
+- [Operator Runbook](docs/runbook.md)
+- [Storage Interface](docs/storage-interface.md)
+- [Storage Portability](docs/storage-portability.md)
+- [Replace Semantics](docs/replace-semantics.md)
+- [SQLite Audit](docs/sqlite-audit.md)
+- [Release Discipline](docs/release.md)
 
 ## Development
 

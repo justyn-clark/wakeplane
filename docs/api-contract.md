@@ -60,13 +60,13 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 ## Filtering
 
 **`GET /v1/schedules`:**
-- `enabled=true|false` — filter by enabled state.
+- `enabled=true|false` — filter by enabled state. The current implementation treats the literal value `true` as enabled; any other non-empty value is treated as `false`.
 
 **`GET /v1/runs` and `GET /v1/schedules/{id}/runs`:**
 - `schedule_id=<id>` — filter by schedule (only on `/v1/runs`).
 - `status=<status>` — filter by run status (any of the 9 status values).
 
-Filters are combined with AND. Invalid filter values are passed through without validation (they return empty results).
+Filters are combined with AND. `status` values are passed through without validation; invalid values typically return empty results. `enabled` is not validated as an enum and is coerced by the handler as described above.
 
 ## Content Types
 
@@ -106,8 +106,8 @@ Filters are combined with AND. Invalid filter values are passed through without 
 |---|---|---|
 | `GET /healthz` | Always returns `{"ok": true}`. Use for liveness probes. |
 | `GET /readyz` | Returns `{"ok": bool, "storage": "ok\|error"}`. Use for readiness probes. |
-| `GET /v1/status` | Returns full operational status: scheduler state, worker counts, run counts. |
-| `GET /v1/metrics` | Prometheus text metrics. |
+| `GET /v1/status` | Returns full operational status: scheduler state, worker counts, run counts, next-due schedule information, and dead-letter counts. |
+| `GET /v1/metrics` | Prometheus text metrics, including `runs_due`, `runs_retry_queued`, `dead_letters_total`, and `claimed_but_expired_total`. |
 
 ## Default Policy Values
 

@@ -1,5 +1,7 @@
 # Operator Runbook
 
+Wakeplane currently runs as a single-process, SQLite-first daemon. Treat the database file as the operational source of truth and keep one writer per file.
+
 ## Startup
 
 ```
@@ -34,6 +36,7 @@ Send `SIGINT` or `SIGTERM`. The daemon logs a structured shutdown sequence:
 {"level":"INFO","msg":"shutdown requested"}
 {"level":"INFO","msg":"draining: waiting for run loop to stop"}
 {"level":"INFO","msg":"run loop stopped"}
+{"level":"INFO","msg":"draining: shutting down dispatcher"}
 {"level":"INFO","msg":"dispatcher shutdown: cancelling active executions","count":N}
 {"level":"INFO","msg":"dispatcher shutdown complete"}
 {"level":"INFO","msg":"shutdown complete"}
@@ -43,10 +46,11 @@ Send `SIGINT` or `SIGTERM`. The daemon logs a structured shutdown sequence:
 **If shutdown stalls**, you will see:
 
 ```
+{"level":"WARN","msg":"shutdown timeout: run loop did not stop in time"}
 {"level":"WARN","msg":"shutdown timeout: dispatcher drain exceeded deadline","remaining":N}
 ```
 
-This means N active executions did not finish within the 5-second timeout. The process exits, and on next startup, expired leases trigger recovery (claimed → pending, running → failed with retry).
+This means the process did not drain cleanly within the shutdown deadline. The store is left open until the shutdown path finishes, active executions retain their `running` status, and on next startup expired leases trigger recovery (`claimed` → `pending`, `running` → `failed` with retry or dead-letter handling per policy).
 
 ## Metrics
 
@@ -68,9 +72,30 @@ Key metrics to alert on:
 
 ```json
 {
-  "scheduler": {"due_runs": N, "last_tick_at": "..."},
-  "workers": {"active": N, "claimed_but_expired": N},
-  "runs": {"running": N, "failed": N, "retry_queued": N, "dead_letter": N}
+  "service": "wakeplane",
+  "version": "0.1.0",
+  "started_at": "2026-03-19T00:00:00Z",
+  "database": {
+    "driver": "sqlite",
+    "path": "/var/lib/wakeplane/data.db"
+  },
+  "scheduler": {
+    "loop_interval_seconds": 5,
+    "last_tick_at": "2026-03-19T00:00:05Z",
+    "due_runs": 0,
+    "next_due_schedule_id": "sch_...",
+    "next_due_run_at": "2026-03-19T00:05:00Z"
+  },
+  "workers": {
+    "active": 0,
+    "claimed_but_expired": 0
+  },
+  "runs": {
+    "running": 0,
+    "failed": 0,
+    "retry_queued": 0,
+    "dead_letter": 0
+  }
 }
 ```
 
@@ -79,7 +104,7 @@ Key metrics to alert on:
 ### Runs stuck in "running"
 
 **Cause:** Executor did not finish before the process was killed.
-**Recovery:** Automatic on next startup. The dispatcher detects expired leases and marks running runs as failed, scheduling retries per policy.
+**Recovery:** Automatic on next startup. The dispatcher detects expired leases and marks running runs as failed, then retries or dead-letters them per schedule policy.
 **Action:** No manual intervention needed. Check `claimed_but_expired_total` metric.
 
 ### Runs stuck in "claimed"

@@ -193,12 +193,15 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 	}()
 
 	group, heartbeatCtx := errgroup.WithContext(execCtx)
+	execDone := make(chan struct{})
 	group.Go(func() error {
 		ticker := time.NewTicker(d.leaseTTL / 2)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-heartbeatCtx.Done():
+				return nil
+			case <-execDone:
 				return nil
 			case <-ticker.C:
 				if err := d.store.RenewLease(context.Background(), run.ID, d.workerID, d.now(), d.leaseTTL); err != nil {
@@ -216,6 +219,7 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 
 	var result executors.Result
 	group.Go(func() error {
+		defer close(execDone)
 		result = executor.Execute(execCtx, executors.ExecuteRequest{Schedule: schedule, Run: run, Timeout: schedule.Policy.TimeoutSeconds})
 		return nil
 	})

@@ -204,6 +204,287 @@ func TestPausedSchedulePersistsAcrossRestart(t *testing.T) {
 	}
 }
 
+func TestExpiredClaimedRunRecoversAndExecutesAfterRestart(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+	now := time.Now().UTC()
+
+	service, err := New(context.Background(), testConfig(dbPath))
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
+
+	schedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "claimed-restart-recovery",
+		Enabled:  false,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindShell, Command: "/bin/echo", Args: []string{"claimed restart recovery"}},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    domain.DefaultRetryPolicy(),
+	})
+	if err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+
+	workerID := "wrk_crashed"
+	expires := now.Add(-time.Second)
+	run := domain.Run{
+		ID:                domain.NewID("run"),
+		ScheduleID:        schedule.ID,
+		OccurrenceKey:     "manual:" + domain.NewID("occ"),
+		NominalTime:       now,
+		DueTime:           now,
+		Status:            domain.RunClaimed,
+		Attempt:           1,
+		ClaimedByWorkerID: &workerID,
+		ClaimExpiresAt:    &expires,
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}
+	if err := service.store.InsertRun(context.Background(), run); err != nil {
+		t.Fatalf("InsertRun returned error: %v", err)
+	}
+	if _, err := service.store.DB().ExecContext(context.Background(), `
+		INSERT INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, domain.NewID("lease"), workerID, run.ID, run.ID,
+		now.Add(-2*time.Second).Format(time.RFC3339Nano),
+		expires.Format(time.RFC3339Nano),
+		expires.Format(time.RFC3339Nano)); err != nil {
+		t.Fatalf("insert lease returned error: %v", err)
+	}
+	_ = service.Close()
+
+	reopened, err := New(context.Background(), testConfig(dbPath))
+	if err != nil {
+		t.Fatalf("reopened New returned error: %v", err)
+	}
+	defer reopened.Close()
+
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- reopened.Run(runCtx)
+	}()
+	defer func() {
+		cancelRun()
+		select {
+		case err := <-runErr:
+			if err != nil && !errors.Is(err, context.Canceled) {
+				t.Fatalf("Run returned error: %v", err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for run loop shutdown")
+		}
+	}()
+
+	if err := waitForRunStatus(reopened, run.ID, domain.RunSucceeded, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus succeeded returned error: %v", err)
+	}
+
+	got, err := reopened.GetRun(context.Background(), run.ID)
+	if err != nil {
+		t.Fatalf("GetRun returned error: %v", err)
+	}
+	if got.ClaimedByWorkerID == nil || *got.ClaimedByWorkerID != testConfig(dbPath).WorkerID {
+		t.Fatalf("expected recovered run to be reclaimed by restart worker, got %v", got.ClaimedByWorkerID)
+	}
+
+	scheduleID := schedule.ID
+	items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	if err != nil {
+		t.Fatalf("ListRuns returned error: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected only the recovered run to exist, got %d runs", len(items))
+	}
+}
+
+func TestExpiredRunningRunRecoversAndQueuesRetryAfterRestart(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+	now := time.Now().UTC()
+
+	service, err := New(context.Background(), testConfig(dbPath))
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
+
+	retry := domain.DefaultRetryPolicy()
+	retry.MaxAttempts = 2
+	retry.InitialDelaySeconds = 5
+	retry.MaxDelaySeconds = 5
+	schedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "running-restart-recovery",
+		Enabled:  false,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindShell, Command: "/bin/echo", Args: []string{"running restart recovery"}},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    retry,
+	})
+	if err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+
+	workerID := "wrk_crashed"
+	expires := now.Add(-time.Second)
+	startedAt := now.Add(-5 * time.Second)
+	run := domain.Run{
+		ID:                domain.NewID("run"),
+		ScheduleID:        schedule.ID,
+		OccurrenceKey:     "manual:" + domain.NewID("occ"),
+		NominalTime:       now,
+		DueTime:           now,
+		Status:            domain.RunRunning,
+		Attempt:           1,
+		ClaimedByWorkerID: &workerID,
+		ClaimExpiresAt:    &expires,
+		StartedAt:         &startedAt,
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}
+	if err := service.store.InsertRun(context.Background(), run); err != nil {
+		t.Fatalf("InsertRun returned error: %v", err)
+	}
+	if _, err := service.store.DB().ExecContext(context.Background(), `
+		INSERT INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, domain.NewID("lease"), workerID, run.ID, run.ID,
+		startedAt.Format(time.RFC3339Nano),
+		expires.Format(time.RFC3339Nano),
+		expires.Format(time.RFC3339Nano)); err != nil {
+		t.Fatalf("insert lease returned error: %v", err)
+	}
+	_ = service.Close()
+
+	reopened, err := New(context.Background(), testConfig(dbPath))
+	if err != nil {
+		t.Fatalf("reopened New returned error: %v", err)
+	}
+	defer reopened.Close()
+
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- reopened.Run(runCtx)
+	}()
+	defer func() {
+		cancelRun()
+		select {
+		case err := <-runErr:
+			if err != nil && !errors.Is(err, context.Canceled) {
+				t.Fatalf("Run returned error: %v", err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for run loop shutdown")
+		}
+	}()
+
+	if err := waitForRunStatus(reopened, run.ID, domain.RunFailed, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus failed returned error: %v", err)
+	}
+
+	scheduleID := schedule.ID
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+		if err != nil {
+			t.Fatalf("ListRuns returned error: %v", err)
+		}
+		if len(items) == 2 {
+			foundRetry := false
+			for _, item := range items {
+				if item.Status == domain.RunRetryScheduled {
+					foundRetry = true
+				}
+			}
+			if foundRetry {
+				return
+			}
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("timed out waiting for retry_scheduled run after restart recovery")
+}
+
+func TestRetryScheduledRunExecutesAfterRestart(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+	now := time.Now().UTC()
+
+	service, err := New(context.Background(), testConfig(dbPath))
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
+
+	schedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "retry-run-restart",
+		Enabled:  false,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindWorkflow, WorkflowID: "retry.workflow"},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    domain.DefaultRetryPolicy(),
+	})
+	if err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+
+	retryAt := now.Add(-time.Second)
+	run := domain.Run{
+		ID:               domain.NewID("run"),
+		ScheduleID:       schedule.ID,
+		OccurrenceKey:    "manual:" + domain.NewID("occ"),
+		NominalTime:      now,
+		DueTime:          retryAt,
+		Status:           domain.RunRetryScheduled,
+		Attempt:          2,
+		RetryAvailableAt: &retryAt,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	if err := service.store.InsertRun(context.Background(), run); err != nil {
+		t.Fatalf("InsertRun returned error: %v", err)
+	}
+	_ = service.Close()
+
+	reopened, err := NewWithOptions(context.Background(), testConfig(dbPath), WithWorkflowHandler("retry.workflow", func(ctx context.Context, input map[string]any) (map[string]any, error) {
+		return map[string]any{"status": "recovered"}, nil
+	}))
+	if err != nil {
+		t.Fatalf("reopened NewWithOptions returned error: %v", err)
+	}
+	defer reopened.Close()
+
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- reopened.Run(runCtx)
+	}()
+	defer func() {
+		cancelRun()
+		select {
+		case err := <-runErr:
+			if err != nil && !errors.Is(err, context.Canceled) {
+				t.Fatalf("Run returned error: %v", err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for run loop shutdown")
+		}
+	}()
+
+	if err := waitForRunStatus(reopened, run.ID, domain.RunSucceeded, 2*time.Second); err != nil {
+		t.Fatalf("waitForRunStatus succeeded returned error: %v", err)
+	}
+
+	got, err := reopened.GetRun(context.Background(), run.ID)
+	if err != nil {
+		t.Fatalf("GetRun returned error: %v", err)
+	}
+	if got.Attempt != 2 {
+		t.Fatalf("expected retry attempt 2 to execute after restart, got attempt %d", got.Attempt)
+	}
+}
+
 func TestServiceHasNoDefaultWorkflowHandlers(t *testing.T) {
 	service, err := New(context.Background(), config.Config{
 		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
@@ -533,4 +814,16 @@ func waitForRunStatus(service *Service, runID string, want domain.RunStatus, tim
 		return err
 	}
 	return errors.New("last observed run status: " + string(run.Status))
+}
+
+func testConfig(dbPath string) config.Config {
+	return config.Config{
+		DatabasePath:       dbPath,
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  10 * time.Millisecond,
+		DispatcherInterval: 10 * time.Millisecond,
+		LeaseTTL:           200 * time.Millisecond,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+	}
 }

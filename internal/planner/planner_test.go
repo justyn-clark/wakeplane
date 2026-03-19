@@ -60,6 +60,82 @@ func TestPlannerMisfirePolicies(t *testing.T) {
 	}
 }
 
+func TestPlannerMisfirePoliciesAcrossReopenAfterDowntime(t *testing.T) {
+	testCases := []struct {
+		name         string
+		policy       domain.MisfirePolicy
+		wantStatuses []domain.RunStatus
+	}{
+		{name: "skip", policy: domain.MisfireSkip, wantStatuses: []domain.RunStatus{domain.RunSkipped, domain.RunSkipped, domain.RunSkipped}},
+		{name: "run_once_if_late", policy: domain.MisfireRunOnceIfLate, wantStatuses: []domain.RunStatus{domain.RunSkipped, domain.RunSkipped, domain.RunPending}},
+		{name: "catch_up", policy: domain.MisfireCatchUp, wantStatuses: []domain.RunStatus{domain.RunPending, domain.RunPending, domain.RunPending}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dbPath := filepath.Join(t.TempDir(), "wakeplane.db")
+			base := time.Date(2026, 3, 12, 10, 0, 0, 0, time.UTC)
+
+			st, err := store.Open(dbPath)
+			if err != nil {
+				t.Fatalf("store.Open returned error: %v", err)
+			}
+			if err := st.Migrate(context.Background()); err != nil {
+				t.Fatalf("Migrate returned error: %v", err)
+			}
+			schedule := testSchedule(base, tc.policy)
+			schedule.NextRunAt = ptrTime(base.Add(1 * time.Minute))
+			if err := st.CreateSchedule(context.Background(), schedule); err != nil {
+				t.Fatalf("CreateSchedule returned error: %v", err)
+			}
+			_ = st.Close()
+
+			reopened, err := store.Open(dbPath)
+			if err != nil {
+				t.Fatalf("reopen store returned error: %v", err)
+			}
+			defer reopened.Close()
+			if err := reopened.Migrate(context.Background()); err != nil {
+				t.Fatalf("Migrate returned error: %v", err)
+			}
+
+			pl := New(reopened, logging.New())
+			pl.now = func() time.Time { return base.Add(3*time.Minute + 30*time.Second) }
+			if err := pl.Tick(context.Background()); err != nil {
+				t.Fatalf("Tick returned error: %v", err)
+			}
+
+			scheduleID := schedule.ID
+			items, _, err := reopened.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+			if err != nil {
+				t.Fatalf("ListRuns returned error: %v", err)
+			}
+			if len(items) != len(tc.wantStatuses) {
+				t.Fatalf("expected %d runs, got %d", len(tc.wantStatuses), len(items))
+			}
+			sort.Slice(items, func(a, b int) bool {
+				return items[a].OccurrenceKey < items[b].OccurrenceKey
+			})
+			for i, want := range tc.wantStatuses {
+				if items[i].Status != want {
+					t.Fatalf("run %d (key=%s) expected status %s, got %s", i, items[i].OccurrenceKey, want, items[i].Status)
+				}
+			}
+
+			got, err := reopened.GetSchedule(context.Background(), schedule.ID)
+			if err != nil {
+				t.Fatalf("GetSchedule returned error: %v", err)
+			}
+			if got.NextRunAt == nil {
+				t.Fatalf("expected next_run_at to advance after restart tick")
+			}
+			if !got.NextRunAt.After(base.Add(3 * time.Minute)) {
+				t.Fatalf("expected next_run_at to move past downtime window, got %v", got.NextRunAt)
+			}
+		})
+	}
+}
+
 func TestPlannerOnceScheduleMaterializesOnlyOnce(t *testing.T) {
 	st := newTestStore(t)
 	at := time.Date(2026, 3, 12, 10, 0, 0, 0, time.UTC)

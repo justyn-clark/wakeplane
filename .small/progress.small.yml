@@ -1303,3 +1303,30 @@ entries:
       status: completed
       task_id: task-26
       timestamp: "2026-03-17T19:30:44.670269000Z"
+    - evidence: Added task task-29 via small plan --add
+      notes: 'Build public docs: quickstart, concepts, schedules, policies, executors, api, run-states, embedding, storage, runbook, releasing, security'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-29
+      timestamp: "2026-03-25T20:51:56.898957000Z"
+    - evidence: Added task task-30 via small plan --add
+      notes: Repo hardening and deployment pattern alignment for public alpha launch
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: pending
+      task_id: task-30
+      timestamp: "2026-03-25T20:55:36.350931000Z"
+    - command: git status
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260325T205540.210265000Z.txt
+      command_sha256: e62b04aadf39df1a47b771265e4ae5c452df3f1903d5c263ab00f088e86102f6
+      command_summary: git status
+      evidence: Command completed successfully
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-30
+      timestamp: "2026-03-25T20:55:40.210265000Z"
+    - evidence: Added LICENSE (MIT), SECURITY.md (no-auth alpha warning + contact), CONTRIBUTING.md (scope, conventions, versioning), .github/workflows/ci.yml (format/test/build), docs/deployment.md (deployment topology + Terraform pattern doc), infra/terraform/ (Route53 pattern matching smallprotocol.dev and musketeer.dev), README updates (alpha badge, CI badge, security/contributing/license links). Updated .gitignore to exclude Terraform state and tfvars.
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-30
+      timestamp: "2026-03-25T20:55:48.588220000Z"

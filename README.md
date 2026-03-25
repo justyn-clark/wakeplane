@@ -1,5 +1,10 @@
 # Wakeplane
 
+[![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> **Public alpha — pre-stable `0.1.x`.** No authentication. Bind to a trusted network only. See [SECURITY.md](SECURITY.md).
+
 Wakeplane is a durable scheduling control plane for long-running systems.
 
 It decides when work is due, records the occurrence durably, dispatches execution through typed targets, and keeps an append-only ledger of what happened.
@@ -178,6 +183,19 @@ The daemon reads configuration from environment variables:
 - [Replace Semantics](docs/replace-semantics.md)
 - [SQLite Audit](docs/sqlite-audit.md)
 - [Release Discipline](docs/release.md)
+- [Deployment Notes](docs/deployment.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Security
+
+See [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Development
 

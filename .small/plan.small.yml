@@ -87,7 +87,7 @@ tasks:
       status: completed
     - id: task-29
       title: 'Build public docs: quickstart, concepts, schedules, policies, executors, api, run-states, embedding, storage, runbook, releasing, security'
-      status: pending
+      status: completed
     - id: task-30
       title: Repo hardening and deployment pattern alignment for public alpha launch
       status: completed

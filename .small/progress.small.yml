@@ -1330,3 +1330,18 @@ entries:
       status: completed
       task_id: task-30
       timestamp: "2026-03-25T20:55:48.588220000Z"
+    - command: ls docs/public/
+      command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20260325T205839.345929000Z.txt
+      command_sha256: 8ba98a199aa3e07972a69a198dac3e9c4c40f1ad953348901ecc611eb09b8123
+      command_summary: ls docs/public/
+      evidence: Command completed successfully
+      notes: 'apply: exit code 0'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-29
+      timestamp: "2026-03-25T20:58:39.345929000Z"
+    - evidence: 'Created docs/public/ with 13 files: index.md, quickstart.md, concepts.md, schedules.md, policies.md, executors.md, api.md, run-states.md, embedding.md, storage.md, runbook.md, releasing.md, security.md. All normalized from repo internal docs into public-alpha language matching the site handoff IA. Content is honest to 0.1.x scope.'
+      replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+      status: completed
+      task_id: task-29
+      timestamp: "2026-03-25T20:58:57.508308000Z"

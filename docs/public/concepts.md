@@ -114,4 +114,4 @@ Triggering a schedule with `POST /v1/schedules/{id}/trigger` creates a run immed
 
 ## Alpha scope
 
-Wakeplane `0.1.x` has no authentication, no RBAC, no UI, and no distributed coordination. See [Security](security.md) for binding guidance.
+Wakeplane currently has no authentication, no RBAC, no UI, and no distributed coordination. See [Security](security.md) for binding guidance.

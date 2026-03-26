@@ -19,7 +19,7 @@ A reverse proxy or VPN gateway that enforces auth/TLS is the recommended pattern
 
 ## Current scope
 
-The following are **out of scope** in the current release and are not planned for `0.1.x`:
+The following are **out of scope** in the current beta release line:
 
 - HTTP authentication (Bearer tokens, API keys, basic auth)
 - Role-based access control

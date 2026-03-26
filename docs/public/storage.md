@@ -1,10 +1,10 @@
 # Storage
 
-Wakeplane `0.1.x` is SQLite-first. This page explains why, what it means in practice, and where the seam for future storage portability lives.
+Wakeplane is SQLite-first in the current beta line. This page explains why, what it means in practice, and where the seam for future storage portability lives.
 
 ## Why SQLite first
 
-SQLite is the right choice for the alpha phase:
+SQLite is the right choice for the current pre-1.0 phase:
 
 - **Zero infrastructure dependency.** The database is a single file. You do not need to provision, connect to, or manage an external database.
 - **Simple deployment.** Copy the binary and the database file. That is the entire deployment.
@@ -13,7 +13,7 @@ SQLite is the right choice for the alpha phase:
 
 ## Current constraints
 
-- One writer. Wakeplane is a single-process daemon. Distributed or multi-writer deployments are not supported in `0.1.x`.
+- One writer. Wakeplane is a single-process daemon. Distributed or multi-writer deployments are not supported in the current beta line.
 - File-based. The database must be a local file accessible by the daemon process. Network file systems (NFS, EFS) are not recommended.
 - No connection pooling. The single-connection model means read queries also serialize behind the writer. This is fine for single-process workloads.
 

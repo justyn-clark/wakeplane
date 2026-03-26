@@ -11,11 +11,13 @@ rm -f "$out_dir"/checksums.txt
 checksum_file="$out_dir/checksums.txt"
 
 checksum() {
+  local digest
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$1" >>"$checksum_file"
-    return
+    digest="$(sha256sum "$1" | awk '{print $1}')"
+  else
+    digest="$(shasum -a 256 "$1" | awk '{print $1}')"
   fi
-  shasum -a 256 "$1" >>"$checksum_file"
+  printf '%s  %s\n' "$digest" "$(basename "$1")" >>"$checksum_file"
 }
 
 build_target() {

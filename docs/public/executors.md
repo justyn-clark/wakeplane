@@ -1,6 +1,6 @@
 # Executors
 
-An executor performs the actual work for a run. Wakeplane dispatches each run to the appropriate executor based on the schedule's `target.kind`. Three executors ship with Wakeplane `0.1.x`.
+An executor performs the actual work for a run. Wakeplane dispatches each run to the appropriate executor based on the schedule's `target.kind`. Three executors ship with the current public beta line.
 
 ## HTTP executor
 

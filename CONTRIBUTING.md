@@ -1,6 +1,6 @@
 # Contributing
 
-Wakeplane is a pre-stable scheduling control plane (`0.1.x`). Contributions are welcome within the project scope defined below.
+Wakeplane is a pre-stable scheduling control plane in its beta line (`v0.2.0-beta.1`). Contributions are welcome within the project scope defined below.
 
 ## Project scope
 

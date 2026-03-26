@@ -83,7 +83,7 @@ Adding new optional fields, new endpoints, new policy types, or new executor kin
 
 ## Two binaries: `wakeplane` and `wakeplaned`
 
-Both binaries are identical in `0.1.x`. They share the same command surface and configuration.
+Both binaries are identical in `v0.2.0-beta.1`. They share the same command surface and configuration.
 
 `wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking — they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
 

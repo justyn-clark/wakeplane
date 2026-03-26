@@ -1,8 +1,8 @@
 # Wakeplane Docs
 
-Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the current public release line, currently `0.1.x` while the beta gate is being hardened.
+Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the current public beta release, `v0.2.0-beta.1`.
 
-> **Current public state:** no auth, no RBAC, SQLite-first, single-process, and not yet labeled beta on the site until the first tagged beta release is published. See [Security](security.md) and [Status](status.md).
+> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is unchanged: no auth, no RBAC, SQLite-first, single-process, trusted-network-only. See [Security](security.md) and [Status](status.md).
 
 ## Start here
 
@@ -48,7 +48,7 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 
 ## Current scope
 
-Wakeplane `0.1.x` ships as:
+Wakeplane `v0.2.0-beta.1` ships as:
 - Single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations
 - HTTP, shell, and in-process workflow executors
@@ -59,7 +59,7 @@ Wakeplane `0.1.x` ships as:
 
 ## Beta constraints
 
-Wakeplane is close to beta in behavior, but the public label stays conservative until the release discipline is real:
+Wakeplane is beta because the release discipline is now real:
 
 - docs must match code exactly
 - release artifacts and checksums must be published from tags

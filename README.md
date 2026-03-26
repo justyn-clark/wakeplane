@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public alpha — pre-stable `0.1.x`.** No authentication or RBAC. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
+> **Public beta — pre-stable `v0.2.0-beta.1`.** No authentication or RBAC. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 
@@ -27,7 +27,7 @@ Wakeplane is designed as a reusable primitive across JCN systems. Nothing here i
 
 Current shipped state:
 
-- pre-stable `0.1.0`
+- pre-stable `v0.2.0-beta.1`
 - single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations
 - planner and dispatcher loops

@@ -130,4 +130,4 @@ The database enforces a unique constraint on `(occurrence_key, attempt)`. This p
 
 ## Known gap
 
-`FinishRun` and the retry `InsertRun` are not in a single database transaction. If the process is killed between these two writes, the retry is lost. The original run is `failed` with no retry scheduled. This is a known limitation of the current alpha. In practice the window is extremely small (two sequential SQLite writes).
+`FinishRun` and the retry `InsertRun` are not in a single database transaction. If the process is killed between these two writes, the retry is lost. The original run is `failed` with no retry scheduled. This is a known limitation of the current beta line. In practice the window is extremely small (two sequential SQLite writes).

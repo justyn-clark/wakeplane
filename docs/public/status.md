@@ -4,7 +4,16 @@ This page defines what Wakeplane means by alpha, beta, and 1.0. It is intentiona
 
 ## Current public state
 
-Wakeplane is still publicly labeled `0.1.x` until the beta gate is satisfied by a tagged release with published artifacts and verified docs. The codebase is being hardened toward beta, but the label should not move early.
+Wakeplane is publicly labeled beta as of `v0.2.0-beta.1`.
+
+The beta gate is now satisfied:
+
+- the repository is public at `https://github.com/justyn-clark/wakeplane`
+- trust files are present
+- public docs are code-verified
+- release binaries and `checksums.txt` are published
+- install paths were verified against the real public release
+- CI is green for the release cut
 
 ## What beta means here
 
@@ -26,7 +35,7 @@ Beta does **not** mean:
 
 ## Beta gate
 
-Wakeplane can be labeled beta when all of these are true:
+Wakeplane is allowed to claim beta only when all of these are true:
 
 - GitHub link resolves publicly at `https://github.com/justyn-clark/wakeplane`
 - `LICENSE`, `SECURITY.md`, and `CONTRIBUTING.md` exist

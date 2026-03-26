@@ -132,7 +132,7 @@ type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string
 | After finish, before retry insert | `failed`, no retry | **No automatic recovery** — retry is lost |
 | Retry scheduled, before dispatch | `retry_scheduled` | Picked up by next dispatcher tick |
 
-The "after finish, before retry insert" gap is a known limitation of the alpha. `FinishRun` and retry `InsertRun` are not in a single transaction.
+The "after finish, before retry insert" gap is a known limitation of the current beta line. `FinishRun` and retry `InsertRun` are not in a single transaction.
 
 ## Configuration
 

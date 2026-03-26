@@ -3,7 +3,7 @@
 
 This page is generated from the real Cobra command tree in `internal/cli/root.go`.
 
-> **Status:** current public operator surface for Wakeplane `0.1.0`. If a command is not listed here, it is not shipped.
+> **Status:** current public operator surface for Wakeplane `0.2.0-beta.1`. If a command is not listed here, it is not shipped.
 
 ## Root Command
 
@@ -19,6 +19,7 @@ Available Commands:
   run         Inspect runs
   schedule    Manage schedules
   serve       Run the Wakeplane daemon
+  version     Print the Wakeplane version
 
 Flags:
       --addr string   Wakeplane HTTP base URL (default "http://127.0.0.1:8080")

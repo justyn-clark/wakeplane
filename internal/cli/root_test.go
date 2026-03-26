@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -134,6 +135,22 @@ func TestRunServeCancelsBlockingWorkflowOnShutdown(t *testing.T) {
 	}
 	if got.FinishedAt == nil {
 		t.Fatalf("expected finished_at after serve shutdown")
+	}
+}
+
+func TestVersionCommandPrintsVersion(t *testing.T) {
+	cmd := NewRootCmd("0.2.0-beta.1")
+	var stdout bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetErr(&stdout)
+	cmd.SetArgs([]string{"version"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+
+	if got := stdout.String(); got != "0.2.0-beta.1\n" {
+		t.Fatalf("expected version output, got %q", got)
 	}
 }
 

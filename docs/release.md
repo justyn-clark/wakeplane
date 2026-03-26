@@ -14,8 +14,8 @@ The current version is `0.x.y`, indicating pre-stable. During `0.x`, minor versi
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` — `const version = "0.1.0"`
-- `cmd/wakeplaned/main.go` — `const version = "0.1.0"`
+- `cmd/wakeplane/main.go` — `const version = "0.2.0-beta.1"`
+- `cmd/wakeplaned/main.go` — `const version = "0.2.0-beta.1"`
 
 Both must be updated in lockstep. The version is surfaced in:
 

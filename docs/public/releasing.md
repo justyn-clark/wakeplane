@@ -16,8 +16,8 @@ Wakeplane follows [Semantic Versioning](https://semver.org/):
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` — `const version = "0.1.0"`
-- `cmd/wakeplaned/main.go` — `const version = "0.1.0"`
+- `cmd/wakeplane/main.go` — `const version = "0.2.0-beta.1"`
+- `cmd/wakeplaned/main.go` — `const version = "0.2.0-beta.1"`
 
 Both must be updated in lockstep before tagging. The version is surfaced in:
 

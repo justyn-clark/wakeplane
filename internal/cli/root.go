@@ -34,7 +34,19 @@ func NewRootCmd(version string) *cobra.Command {
 	root.AddCommand(newServeCmd(version))
 	root.AddCommand(newScheduleCmd(&baseURL))
 	root.AddCommand(newRunCmd(&baseURL))
+	root.AddCommand(newVersionCmd(version))
 	return root
+}
+
+func newVersionCmd(version string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print the Wakeplane version",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := fmt.Fprintln(cmd.OutOrStdout(), version)
+			return err
+		},
+	}
 }
 
 func newServeCmd(version string) *cobra.Command {

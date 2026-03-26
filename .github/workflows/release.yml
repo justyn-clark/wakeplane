@@ -43,8 +43,8 @@ jobs:
         run: |
           mkdir -p dist/smoke
           tar -C dist/smoke -xzf "dist/releases/wakeplane_${GITHUB_REF_NAME#v}_linux_amd64.tar.gz"
-          ./dist/smoke/wakeplane help >/dev/null
-          ./dist/smoke/wakeplaned help >/dev/null
+          ./dist/smoke/wakeplane version
+          ./dist/smoke/wakeplaned version
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2

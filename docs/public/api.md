@@ -86,7 +86,7 @@ List endpoints use cursor-based pagination with newest-first ordering (`created_
 ```json
 {
   "service": "wakeplane",
-  "version": "0.1.0",
+  "version": "0.2.0-beta.1",
   "started_at": "2026-03-25T12:00:00Z",
   "database": {
     "driver": "sqlite",

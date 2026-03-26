@@ -115,7 +115,7 @@ The planner creates a run with `status=skipped` and `finished_at` set immediatel
 
 Each run has an `occurrence_key`:
 
-- **Scheduled:** `{schedule_id}:{nominal_time_rfc3339}` — e.g., `sch_01HZ123ABC:2026-04-01T02:00:00-07:00`
+- **Scheduled:** `{schedule_id}:{nominal_time_rfc3339}` — e.g., `sch_01HZ123ABC:2026-04-01T09:00:00Z`
 - **Manual:** `manual:{run_id}`
 
 The database enforces a unique constraint on `(occurrence_key, attempt)`. This prevents duplicate execution for the same logical occurrence at the same attempt number.

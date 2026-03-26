@@ -86,7 +86,7 @@ Check operational status:
 curl http://localhost:8080/v1/status
 ```
 
-The status response shows how many runs are due, running, failed, retrying, or dead-lettered.
+The status response shows how many runs are due, running, failed, retry queued, or dead-lettered.
 
 ## 4. Trigger a manual run
 

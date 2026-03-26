@@ -1,8 +1,9 @@
 small_version: "1.0.0"
 owner: agent
-summary: Run complete. strict check passed. All plan tasks completed.
+summary: Beta hardening pass complete locally. Public docs, install/release surfaces, generated references, docs verification, release packaging, and trust templates are in place. The public alpha label should remain until a tagged release with published artifacts is pushed.
 resume:
-    next_steps: []
+    next_steps:
+        - Push the branch and publish a tagged release when ready to cross the beta gate.
 links: []
 replayId:
     value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

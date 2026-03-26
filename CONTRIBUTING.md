@@ -24,7 +24,8 @@ PRs that push the project outside that scope will be declined regardless of impl
 1. **Open an issue first** for non-trivial changes to discuss intent before writing code.
 2. Check that the existing tests pass: `go test ./... -count=1`
 3. Check that the build succeeds: `go build ./...`
-4. If the repo has SMALL: run `small check --strict` before submitting.
+4. Verify generated docs are current: `go run ./tools/docsgen --check`
+5. If the repo has SMALL: run `small check --strict` before submitting.
 
 ## Code conventions
 
@@ -47,7 +48,7 @@ Wakeplane follows [Semantic Versioning](https://semver.org/). During `0.x`, mino
 
 ## Code of conduct
 
-Treat contributors and maintainers professionally. Issues and PRs are for technical work, not arguments about scope or taste.
+Treat contributors and maintainers professionally. Issues and PRs are for technical work, not arguments about scope or taste. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 

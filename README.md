@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public alpha — pre-stable `0.1.x`.** No authentication. Bind to a trusted network only. See [SECURITY.md](SECURITY.md).
+> **Public alpha — pre-stable `0.1.x`.** No authentication or RBAC. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 
@@ -86,6 +86,18 @@ Durability and audit:
 2. Create schedules from a YAML manifest.
 3. Inspect schedules and runs with the CLI or HTTP API.
 4. Register workflow handlers explicitly if you use workflow targets.
+
+## Install
+
+Preferred operator path: download tagged archives and checksums from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases).
+
+Additional install paths:
+
+- `go install github.com/justyn-clark/wakeplane/cmd/wakeplane@latest`
+- `go install github.com/justyn-clark/wakeplane/cmd/wakeplaned@latest`
+- source build with the repo's declared Go version (`go 1.25.0`)
+
+See [docs/public/install.md](docs/public/install.md) for the full install and smoke-test flow.
 
 Example daemon start:
 
@@ -173,6 +185,11 @@ The daemon reads configuration from environment variables:
 
 ## Docs Map
 
+- [Public Docs Home](docs/public/index.md)
+- [Install](docs/public/install.md)
+- [CLI Reference](docs/public/cli.md)
+- [Public API Reference](docs/public/api.md)
+- [Public Status](docs/public/status.md)
 - [Architecture](docs/architecture.md)
 - [API Contract](docs/api-contract.md)
 - [Run States](docs/run-states.md)

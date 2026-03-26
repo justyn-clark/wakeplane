@@ -28,6 +28,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify generated docs
+        run: go run ./tools/docsgen --check
+
       - name: Run tests
         run: go test ./... -count=1 -timeout 120s
 

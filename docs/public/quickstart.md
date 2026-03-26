@@ -2,13 +2,17 @@
 
 Wakeplane is a durable scheduling control plane. This guide gets you from nothing to a running daemon with a real schedule in under five minutes.
 
-> **Alpha notice:** Wakeplane is pre-stable (`0.1.x`). It has no authentication. Bind it to a trusted network only. Do not expose it directly to the public internet.
+> **Operator warning:** Wakeplane currently has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 
 ## What you are setting up
 
 - A single-process daemon that runs the planner and dispatcher loops
 - An SQLite database that stores schedules and run records
 - A CLI client to create and inspect work
+
+## 0. Install a binary or build from source
+
+Use the release, `go install`, or source-build path in [Install](install.md). For source builds, the repo currently declares `go 1.25.0` in `go.mod`.
 
 ## 1. Start the daemon
 
@@ -31,7 +35,7 @@ curl http://localhost:8080/readyz
 
 ## 2. Create a schedule
 
-Save one of the example manifests or write your own:
+Use the shipped HTTP example manifest:
 
 ```yaml
 # health-check.yaml
@@ -64,7 +68,7 @@ retry:
 Register it:
 
 ```bash
-wakeplane schedule create -f health-check.yaml
+wakeplane schedule create -f ./examples/health-check-http.yaml
 ```
 
 ## 3. Inspect schedules and runs
@@ -143,3 +147,4 @@ GET    /readyz
 - [Policies](policies.md) — overlap, misfire, retry, and concurrency
 - [Executors](executors.md) — HTTP, shell, and workflow targets
 - [Embedding](embedding.md) — use Wakeplane as a library in your Go application
+- [Status](status.md) — beta gate, 1.0 gate, and explicit scope boundaries

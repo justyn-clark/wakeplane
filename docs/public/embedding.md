@@ -2,6 +2,8 @@
 
 Wakeplane is designed to be embedded as a library in Go applications. This lets you run the full scheduling control plane inside your process without deploying a separate daemon.
 
+> **Operator warning:** embedding does not change the network boundary. The HTTP API still has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
+
 ## When to embed
 
 Embed Wakeplane when:
@@ -13,29 +15,18 @@ Use the standalone daemon when:
 - You want to schedule work that is independent of any particular application
 - You are calling HTTP or shell targets that do not need application code
 
-## Installation
-
-```bash
-go get github.com/justyn-clark/wakeplane
-```
-
 ## Construction
 
 ```go
-import (
-    "github.com/justyn-clark/wakeplane/internal/app"
-    "github.com/justyn-clark/wakeplane/internal/config"
-)
-
-cfg := config.FromEnv("my-service")
-
+cfg := config.FromEnv("embed-example")
 service, err := app.NewWithOptions(ctx, cfg,
-    app.WithWorkflowHandler("sync.customers", syncCustomersHandler),
-    app.WithWorkflowHandler("generate.report", generateReportHandler),
+	app.WithWorkflowHandler("sync.customers", func(ctx context.Context, input map[string]any) (map[string]any, error) {
+		return map[string]any{
+			"status": "completed",
+			"source": input["source"],
+		}, nil
+	}),
 )
-if err != nil {
-    log.Fatal(err)
-}
 ```
 
 `NewWithOptions` opens the SQLite database, runs migrations, and wires the planner, dispatcher, and executor registry. It does not start any background loops.
@@ -53,9 +44,10 @@ If no handlers are registered, the service starts normally. Schedules targeting 
 
 ```go
 go func() {
-    if err := service.Run(ctx); err != nil && err != context.Canceled {
-        log.Printf("service run: %v", err)
-    }
+	if err := service.Run(ctx); err != nil && err != context.Canceled {
+		log.Printf("service run: %v", err)
+		stop()
+	}
 }()
 ```
 
@@ -64,10 +56,6 @@ go func() {
 ### Stopping
 
 ```go
-// With default 5-second timeout:
-err := service.Close()
-
-// With explicit timeout:
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 err := service.CloseContext(ctx)
@@ -94,29 +82,26 @@ Wakeplane does not manage its own HTTP listener. You wire it:
 
 ```go
 server := &http.Server{
-    Addr:    cfg.HTTPAddress,
-    Handler: api.NewMux(service),
+	Addr:    cfg.HTTPAddress,
+	Handler: api.NewMux(service),
 }
 
-// Shut down HTTP when context cancels
 go func() {
-    <-ctx.Done()
-    shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
-    _ = server.Shutdown(shutdownCtx)
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = server.Shutdown(shutdownCtx)
 }()
 
-// Run the scheduling service
 go func() {
-    if err := service.Run(ctx); err != nil && err != context.Canceled {
-        log.Printf("service run: %v", err)
-        stop() // cancel the root context
-    }
+	if err := service.Run(ctx); err != nil && err != context.Canceled {
+		log.Printf("service run: %v", err)
+		stop()
+	}
 }()
 
-// Block on HTTP
 if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-    log.Fatal(err)
+	log.Fatal(err)
 }
 ```
 
@@ -151,10 +136,4 @@ The "after finish, before retry insert" gap is a known limitation of the alpha. 
 
 ## Configuration
 
-The embedded service reads the same environment variables as the daemon:
-
-```go
-cfg := config.FromEnv("my-service-version")
-```
-
-Override programmatically by modifying `cfg` fields before passing to `NewWithOptions`.
+The embedded service reads the same environment variables as the daemon through `config.FromEnv(version)`. Override fields on `cfg` before passing it to `NewWithOptions`.

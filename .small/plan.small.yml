@@ -91,3 +91,18 @@ tasks:
     - id: task-30
       title: Repo hardening and deployment pattern alignment for public alpha launch
       status: completed
+    - id: task-31
+      title: Beta hardening pass for public trust, docs parity, and release discipline
+      status: completed
+    - id: task-32
+      title: Add generated CLI/API docs and CI-backed public docs verification
+      status: completed
+    - id: task-33
+      title: Add release artifact packaging and tagged release workflow
+      status: completed
+    - id: task-34
+      title: Add public install, status, and release-notes surfaces without overstating stability
+      status: completed
+    - id: task-35
+      title: Add repo community templates and conduct/trust files for public beta readiness
+      status: completed

@@ -1345,3 +1345,28 @@ entries:
       status: completed
       task_id: task-29
       timestamp: "2026-03-25T20:58:57.508308000Z"
+    - evidence: Fast-forwarded local main to upstream ad3c474 so beta hardening started from the latest public-docs and trust-file baseline.
+      notes: git pull --ff-only origin main
+      status: completed
+      task_id: task-31
+      timestamp: "2026-03-26T02:40:13.100000000Z"
+    - evidence: Added internal/docsgen plus tools/docsgen, generated docs/public/cli.md and docs/public/api.md from the real Cobra command tree and API route registrations, and added docs/public_docs_test.go to validate public markdown commands, API paths, and structured snippets.
+      notes: go run ./tools/docsgen; go run ./tools/docsgen --check; go test ./... -count=1
+      status: completed
+      task_id: task-32
+      timestamp: "2026-03-26T02:40:13.200000000Z"
+    - evidence: Added scripts/build-release-artifacts.sh and .github/workflows/release.yml, then built local verification artifacts for darwin arm64, linux amd64, and linux arm64 plus checksums under dist/releases-test.
+      notes: ./scripts/build-release-artifacts.sh v0.1.0-test dist/releases-test
+      status: completed
+      task_id: task-33
+      timestamp: "2026-03-26T02:40:13.300000000Z"
+    - evidence: Added docs/public/install.md, docs/public/status.md, structured release-notes pages, and updated public docs pages to match implemented CLI/API/security behavior without relabeling the site to beta before a tagged public release exists.
+      notes: Updated docs/public/index.md, quickstart.md, schedules.md, executors.md, embedding.md, runbook.md, security.md, and releasing.md.
+      status: completed
+      task_id: task-34
+      timestamp: "2026-03-26T02:40:13.400000000Z"
+    - evidence: Added CODE_OF_CONDUCT.md, issue templates, PR template, and refreshed README, SECURITY.md, and CONTRIBUTING.md for public-repo trust and contribution hygiene.
+      notes: Updated repo trust surfaces and community templates.
+      status: completed
+      task_id: task-35
+      timestamp: "2026-03-26T02:40:13.500000000Z"

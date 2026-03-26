@@ -2,7 +2,7 @@
 
 Operational reference for running Wakeplane in production or staging environments.
 
-> **Alpha notice:** Wakeplane has no authentication. It must be bound to a trusted network. See [Security](security.md) before deploying.
+> **Operator warning:** Wakeplane has no authentication or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md) before deploying.
 
 ## Startup
 

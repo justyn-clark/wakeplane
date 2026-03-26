@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build And Publish Release Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "The following files are not formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: Verify generated docs
+        run: go run ./tools/docsgen --check
+
+      - name: Run tests
+        run: go test ./... -count=1 -timeout 120s
+
+      - name: Build release artifacts
+        run: ./scripts/build-release-artifacts.sh "${GITHUB_REF_NAME}" dist/releases
+
+      - name: Smoke test release archive
+        run: |
+          mkdir -p dist/smoke
+          tar -C dist/smoke -xzf "dist/releases/wakeplane_${GITHUB_REF_NAME#v}_linux_amd64.tar.gz"
+          ./dist/smoke/wakeplane help >/dev/null
+          ./dist/smoke/wakeplaned help >/dev/null
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/releases/*.tar.gz
+            dist/releases/checksums.txt

@@ -2,9 +2,9 @@
 
 ## Current security posture
 
-**Wakeplane `0.1.x` has no authentication.**
+**Wakeplane currently has no authentication or RBAC.**
 
-This is a deliberate and explicit alpha constraint, not an oversight. Every operator who deploys Wakeplane must understand what this means:
+This is a deliberate and explicit constraint in the current release line. Every operator who deploys Wakeplane must understand what this means:
 
 - Any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, and access all run receipts.
 - The HTTP API has no API keys, no tokens, no sessions, and no access control.
@@ -14,28 +14,34 @@ This is a deliberate and explicit alpha constraint, not an oversight. Every oper
 
 **Do not expose Wakeplane directly to the public internet or to untrusted networks.**
 
-Acceptable deployment patterns for `0.1.x`:
+Acceptable deployment patterns right now:
 
 - **Loopback only.** Bind to `127.0.0.1:8080` and access only from the same host.
-- **Internal/private network.** Bind to a private network interface accessible only to trusted services.
+- **Trusted subnet.** Bind to a private network interface accessible only to trusted services and operators.
 - **VPN or overlay network.** Place the daemon behind WireGuard, Tailscale, or an equivalent trusted network boundary.
-- **Reverse proxy with auth.** Place nginx, Caddy, or an API gateway in front and enforce authentication at the proxy layer.
+- **Reverse-proxied private network.** Place nginx, Caddy, or an API gateway in front and enforce authentication at the proxy layer.
 
 Not acceptable:
 
 - Binding to `0.0.0.0` and exposing the port to the internet or any untrusted network
 - Deploying without a network boundary and assuming "it's fine because it's internal"
 
-## What is in scope for alpha
+## Intended use right now
 
-The current alpha provides:
+Wakeplane is intended for:
+
+- embedded or internal operator-controlled systems
+- private control planes
+- trusted environments where network access is already constrained
+
+The current release provides:
 
 - Correct scheduling, dispatch, and run ledger semantics
 - Structured logging of all operations
 - Prometheus metrics and operational status
 - Durable run state with recovery on crash
 
-The current alpha does **not** provide:
+The current release does **not** provide:
 
 - Authentication (API keys, bearer tokens, OAuth, mTLS)
 - Authorization (RBAC, per-schedule access control)
@@ -45,7 +51,7 @@ The current alpha does **not** provide:
 
 ## Planned (not shipped)
 
-Authentication and RBAC are planned for a future release. The timeline is not committed. Do not deploy Wakeplane in a context that requires these properties in its current form.
+Authentication and RBAC are planned for a future release. The timeline is not committed. Do not deploy Wakeplane in a context that requires these properties in the current form.
 
 ## Responsible disclosure
 

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue
+    url: https://github.com/justyn-clark/wakeplane/security/policy
+    about: Report security issues privately according to SECURITY.md.

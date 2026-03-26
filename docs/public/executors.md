@@ -23,7 +23,9 @@ target:
   headers:
     Content-Type: application/json
     X-Worker-ID: wakeplane
-  body: '{"job": "export", "format": "csv"}'
+  body:
+    job: export
+    format: csv
 ```
 
 **Receipt:** The executor writes an HTTP receipt containing the response status code and a summary of the response body.
@@ -45,24 +47,13 @@ target:
     - "--destination=/mnt/backups"
 ```
 
-With environment variables:
-
-```yaml
-target:
-  kind: shell
-  command: python3
-  args:
-    - /opt/scripts/export.py
-  env:
-    EXPORT_TARGET: s3://my-bucket/exports
-    LOG_LEVEL: info
-```
-
 **Receipt:** The executor writes a shell receipt containing `stdout`, `stderr`, and the exit code. A non-zero exit code causes the run to fail.
 
 **Timeout:** The command is started with `exec.CommandContext`. When the timeout fires, the process receives `SIGKILL`.
 
 **Cancellation:** On shutdown or `replace` cancellation, the process receives `SIGKILL` via context. This is a hard stop, not a graceful one.
+
+**Environment:** Wakeplane does not currently support per-target environment injection for shell jobs. Shell commands inherit the daemon process environment.
 
 ## Workflow executor
 
@@ -112,7 +103,7 @@ Receipts for any run are available at:
 GET /v1/runs/{id}/receipts
 ```
 
-The response is an array of receipt objects. Each receipt has a `kind` field (`shell_output`, `http_response`, `workflow_result`) and kind-specific payload.
+The response is an array of receipt objects. Each receipt has a `receipt_kind` field (`shell_output`, `http_response`, `workflow_result`) and kind-specific payload.
 
 ## Executor comparison
 
@@ -125,7 +116,7 @@ The response is an array of receipt objects. Each receipt has a `kind` field (`s
 | Registration | None needed | None needed | Must register explicitly |
 | Alpha limits | No auth headers per-target | Inherits daemon user/env | In-process only, no dynamic loading |
 
-## TODO (not yet in alpha)
+## Not shipped yet
 
 - Per-target credential injection (API keys, bearer tokens)
 - Dynamic workflow handler loading (plugins, out-of-process execution)

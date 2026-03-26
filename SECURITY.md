@@ -1,8 +1,8 @@
 # Security Policy
 
-## Alpha status and no-auth warning
+## Current security posture
 
-**Wakeplane v0.1.x has no authentication, authorization, or RBAC.**
+**Wakeplane currently has no authentication, authorization, or RBAC.**
 
 Any process that can reach the HTTP port can create, modify, delete, trigger, or pause any schedule. Any process that can reach the port can read all run history and receipts.
 
@@ -11,15 +11,15 @@ Any process that can reach the HTTP port can create, modify, delete, trigger, or
 Bind it to a trusted network boundary. Acceptable deployment models for the current release:
 
 - `127.0.0.1:8080` for local development
-- Internal host or container network behind a reverse proxy that enforces auth
-- VPN-protected internal network segment
+- Internal host or trusted subnet behind a reverse proxy that enforces auth
+- VPN-protected or Tailscale-protected internal network segment
 - Private Kubernetes cluster network with pod-level network policy
 
 A reverse proxy or VPN gateway that enforces auth/TLS is the recommended pattern for any multi-user or network-accessible deployment.
 
 ## Current scope
 
-The following are **out of scope** in the current release and are not planned for v0.1.x:
+The following are **out of scope** in the current release and are not planned for `0.1.x`:
 
 - HTTP authentication (Bearer tokens, API keys, basic auth)
 - Role-based access control
@@ -30,6 +30,10 @@ The following are **out of scope** in the current release and are not planned fo
 - Secret injection for HTTP or shell targets
 
 These are planned features for future minor/major versions.
+
+## Intended use
+
+Wakeplane is intended for embedded or internal operator-controlled systems on private networks. It is not intended for direct public-internet exposure in the current release line.
 
 ## Reporting a security issue
 

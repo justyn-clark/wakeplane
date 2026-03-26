@@ -1,6 +1,6 @@
 # Releasing
 
-Release conventions for Wakeplane. This covers versioning policy, the release checklist, artifact expectations, and what constitutes a breaking change.
+Release conventions for Wakeplane. This page covers versioning policy, artifact expectations, docs verification, and what constitutes a breaking change.
 
 ## Versioning
 
@@ -31,33 +31,40 @@ Before tagging a release:
 1. **All tests pass**: `go test ./... -count=1`
 2. **Build succeeds**: `go build ./...`
 3. **SMALL strict check passes**: `small check --strict`
-4. **Version constants updated** in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go`
-5. **README "Current status" section** reflects any new capabilities
-6. **No uncommitted changes**: `git status` is clean
-7. **Docs are current**: `docs/` reflects actual behavior
+4. **Generated docs are current**: `go run ./tools/docsgen --check`
+5. **Public docs validation passes**: docs tests reject unsupported fields, fantasy commands, and unknown API paths
+6. **Version constants updated** in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go`
+7. **Install and release notes updated** under `docs/public/`
+8. **No uncommitted changes**: `git status` is clean
 
-## Tagging
+## Release artifacts
 
-```bash
-git tag -a v0.2.0 -m "v0.2.0: <summary>"
-git push origin v0.2.0
-```
+Tagged releases must publish:
 
-## Binary artifacts
+- `wakeplane_<version>_darwin_arm64.tar.gz`
+- `wakeplane_<version>_linux_amd64.tar.gz`
+- `wakeplane_<version>_linux_arm64.tar.gz`
+- `checksums.txt`
 
-Build both binaries:
+Each archive includes both `wakeplane` and `wakeplaned`.
 
-```bash
-go build -o dist/wakeplane ./cmd/wakeplane
-go build -o dist/wakeplaned ./cmd/wakeplaned
-```
+The release workflow builds artifacts with `scripts/build-release-artifacts.sh` and attaches them to the GitHub release for tagged versions.
 
-For cross-compilation:
+## Release notes
 
-```bash
-GOOS=linux GOARCH=amd64 go build -o dist/wakeplane-linux-amd64 ./cmd/wakeplane
-GOOS=darwin GOARCH=arm64 go build -o dist/wakeplane-darwin-arm64 ./cmd/wakeplane
-```
+Each release page should include:
+
+- version
+- date
+- what changed
+- breaking changes
+- upgrade notes
+- known limitations
+
+Current release notes:
+
+- [v0.1.0](releases/v0.1.0.md)
+- [v0.2.0-beta.1 (planned beta tag)](releases/v0.2.0-beta.1.md)
 
 ## What constitutes a breaking change
 

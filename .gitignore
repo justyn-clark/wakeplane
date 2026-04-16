@@ -37,6 +37,8 @@ dist/
 # .idea/
 # .vscode/
 .small-cache/
+node_modules/
+pnpm-debug.log*
 
 # Terraform
 infra/terraform/.terraform/

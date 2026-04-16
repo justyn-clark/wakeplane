@@ -1,0 +1,19 @@
+{
+	"name": "wakeplane",
+	"private": true,
+	"packageManager": "pnpm@10.33.0",
+	"scripts": {
+		"lint": "biome check .",
+		"format": "pnpm run format:code && pnpm run format:docs",
+		"format:check": "pnpm run format:code:check && pnpm run format:docs:check",
+		"format:code": "biome format --write .",
+		"format:code:check": "biome check .",
+		"format:docs": "prettier --write \"**/*.md\"",
+		"format:docs:check": "prettier --check \"**/*.md\"",
+		"check": "pnpm run format:code:check && pnpm run format:docs:check"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.9",
+		"prettier": "^3.6.2"
+	}
+}

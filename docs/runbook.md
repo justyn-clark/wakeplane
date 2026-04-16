@@ -20,10 +20,10 @@ curl http://localhost:8080/readyz     # {"ok":true,"storage":"ok"}
 
 ## Health Checks
 
-| Endpoint | Purpose | Probe Type |
-|---|---|---|
-| `GET /healthz` | Process is alive | Liveness |
-| `GET /readyz` | Database is reachable | Readiness |
+| Endpoint       | Purpose               | Probe Type |
+| -------------- | --------------------- | ---------- |
+| `GET /healthz` | Process is alive      | Liveness   |
+| `GET /readyz`  | Database is reachable | Readiness  |
 
 If readiness fails (`"storage":"error"`), check SQLite file permissions and disk space.
 
@@ -58,13 +58,13 @@ Scrape `GET /v1/metrics` (Prometheus text format).
 
 Key metrics to alert on:
 
-| Metric | Alert Condition | Meaning |
-|---|---|---|
-| `runs_failed_total` | Increasing | Executions failing |
-| `dead_letters_total` | > 0 | Runs exhausted all retries |
-| `claimed_but_expired_total` | > 0 | Workers dying mid-execution or lease TTL too short |
-| `runs_due` | Growing over time | Dispatcher not keeping up |
-| `runs_retry_queued` | Growing over time | Retries accumulating |
+| Metric                      | Alert Condition   | Meaning                                            |
+| --------------------------- | ----------------- | -------------------------------------------------- |
+| `runs_failed_total`         | Increasing        | Executions failing                                 |
+| `dead_letters_total`        | > 0               | Runs exhausted all retries                         |
+| `claimed_but_expired_total` | > 0               | Workers dying mid-execution or lease TTL too short |
+| `runs_due`                  | Growing over time | Dispatcher not keeping up                          |
+| `runs_retry_queued`         | Growing over time | Retries accumulating                               |
 
 ## Status
 
@@ -132,6 +132,7 @@ Key metrics to alert on:
 
 **Cause:** Schedule is paused, or `next_run_at` is in the future, or misfire policy skipped overdue runs.
 **Action:**
+
 ```
 wakeplane schedule get <id>   # Check enabled, paused_at, next_run_at
 wakeplane run list             # Check for skipped runs

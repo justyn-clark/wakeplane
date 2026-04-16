@@ -42,6 +42,7 @@ If you find a security issue in Wakeplane, please report it privately rather tha
 Contact: **security@justynclark.com**
 
 Include:
+
 - A description of the issue
 - Steps to reproduce
 - Your assessment of impact

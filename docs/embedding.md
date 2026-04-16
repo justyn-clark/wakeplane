@@ -133,11 +133,11 @@ If a schedule targets `workflow_id: X` and no handler is registered for `X`:
 
 On startup, the dispatcher recovers stale state from the previous process:
 
-| Crash point | DB state after crash | Recovery action |
-|---|---|---|
-| After claim, before mark-running | Run is `claimed`, lease exists | Lease expires → run reset to `pending` |
-| After mark-running, before finish | Run is `running`, lease exists | Lease expires → run marked `failed`, retry scheduled |
-| After finish, before retry insert | Run is `failed`, no retry exists | **No automatic recovery** — retry is lost |
-| Retry scheduled, before dispatch | Run is `retry_scheduled` | Picked up by next dispatcher tick when `retry_available_at` passes |
+| Crash point                       | DB state after crash             | Recovery action                                                    |
+| --------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| After claim, before mark-running  | Run is `claimed`, lease exists   | Lease expires → run reset to `pending`                             |
+| After mark-running, before finish | Run is `running`, lease exists   | Lease expires → run marked `failed`, retry scheduled               |
+| After finish, before retry insert | Run is `failed`, no retry exists | **No automatic recovery** — retry is lost                          |
+| Retry scheduled, before dispatch  | Run is `retry_scheduled`         | Picked up by next dispatcher tick when `retry_available_at` passes |
 
 The "after finish, before retry insert" gap is a known limitation. `FinishRun` and retry `InsertRun` are not in a single transaction. In practice, the window is extremely small (two sequential SQLite writes), but embedding code should be aware that a process kill at exactly this moment can lose a retry attempt.

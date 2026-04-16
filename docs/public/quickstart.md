@@ -111,14 +111,14 @@ Pausing sets `enabled=false` on the schedule. The planner stops materializing ne
 
 ## Environment variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `WAKEPLANE_DB_PATH` | `./wakeplane.db` | SQLite database file |
-| `WAKEPLANE_HTTP_ADDR` | `:8080` | HTTP listen address |
-| `WAKEPLANE_WORKER_ID` | `wrk_local` | Worker identity (used in lease records) |
-| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS` | `5` | How often the planner loop ticks |
-| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2` | How often the dispatcher loop ticks |
-| `WAKEPLANE_LEASE_TTL_SECONDS` | `30` | Worker lease TTL for stale-claim recovery |
+| Variable                                | Default          | Description                               |
+| --------------------------------------- | ---------------- | ----------------------------------------- |
+| `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file                      |
+| `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                       |
+| `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity (used in lease records)   |
+| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | How often the planner loop ticks          |
+| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2`              | How often the dispatcher loop ticks       |
+| `WAKEPLANE_LEASE_TTL_SECONDS`           | `30`             | Worker lease TTL for stale-claim recovery |
 
 ## HTTP surface
 

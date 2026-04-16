@@ -66,9 +66,9 @@ Do not use `replace` when:
 
 ## Comparison with Other Overlap Policies
 
-| Policy | Active run exists? | Behavior |
-|---|---|---|
-| `allow` | Ignored | New run starts regardless of active count (up to `max_concurrency`) |
-| `forbid` | Checked | New run is not claimed until active count drops below `max_concurrency` |
-| `queue_latest` | Checked | All pending runs except the most recent are skipped. Active runs finish naturally. |
-| `replace` | Cancelled | Active runs receive cancellation signal. All pending except most recent are skipped. Degrades to `queue_latest` if cancellation is not honored. |
+| Policy         | Active run exists? | Behavior                                                                                                                                        |
+| -------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `allow`        | Ignored            | New run starts regardless of active count (up to `max_concurrency`)                                                                             |
+| `forbid`       | Checked            | New run is not claimed until active count drops below `max_concurrency`                                                                         |
+| `queue_latest` | Checked            | All pending runs except the most recent are skipped. Active runs finish naturally.                                                              |
+| `replace`      | Cancelled          | Active runs receive cancellation signal. All pending except most recent are skipped. Degrades to `queue_latest` if cancellation is not honored. |

@@ -4,17 +4,17 @@ Every execution attempt in Wakeplane is a `Run` record with an explicit status. 
 
 ## Statuses
 
-| Status | Terminal? | Description |
-|---|---|---|
-| `pending` | No | Materialized by planner, waiting for dispatcher |
-| `claimed` | No | Dispatcher has acquired a lease; execution has not started |
-| `running` | No | Executor is actively running the work |
-| `succeeded` | Yes | Execution completed without error |
-| `failed` | Yes | Execution completed with error (retry may follow via a new run) |
-| `retry_scheduled` | No | A retry attempt has been created for this occurrence |
-| `dead_lettered` | Yes | All retry attempts exhausted |
-| `cancelled` | Yes | Execution was interrupted by shutdown or `replace` overlap policy |
-| `skipped` | Yes | Planner skipped this occurrence due to misfire policy |
+| Status            | Terminal? | Description                                                       |
+| ----------------- | --------- | ----------------------------------------------------------------- |
+| `pending`         | No        | Materialized by planner, waiting for dispatcher                   |
+| `claimed`         | No        | Dispatcher has acquired a lease; execution has not started        |
+| `running`         | No        | Executor is actively running the work                             |
+| `succeeded`       | Yes       | Execution completed without error                                 |
+| `failed`          | Yes       | Execution completed with error (retry may follow via a new run)   |
+| `retry_scheduled` | No        | A retry attempt has been created for this occurrence              |
+| `dead_lettered`   | Yes       | All retry attempts exhausted                                      |
+| `cancelled`       | Yes       | Execution was interrupted by shutdown or `replace` overlap policy |
+| `skipped`         | Yes       | Planner skipped this occurrence due to misfire policy             |
 
 Terminal statuses are never updated after they are set.
 
@@ -88,6 +88,7 @@ The executor's context was cancelled (shutdown or `replace` overlap policy). `st
 ### `failed` → new run with `retry_scheduled`
 
 A new run record is created with:
+
 - Same `occurrence_key`
 - `attempt = previous_attempt + 1`
 - `status = retry_scheduled`

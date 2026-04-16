@@ -49,6 +49,7 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 ## Current scope
 
 Wakeplane `v0.2.0-beta.1` ships as:
+
 - Single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations
 - HTTP, shell, and in-process workflow executors
@@ -67,6 +68,7 @@ Wakeplane is beta because the release discipline is now real:
 - example code must be copied from tested source or validated in CI
 
 Not yet shipped:
+
 - Authentication, RBAC, or multi-tenancy
 - Postgres backend
 - UI
@@ -78,6 +80,7 @@ Not yet shipped:
 Wakeplane was born in the OpenCLAW ACE Hermes personal-agent environment on a Mac Mini, and that deployment remains an important proving ground.
 
 That does not change the product boundary. Wakeplane is still intended to run as a standalone scheduler:
+
 - on a personal machine such as a MacBook Air
 - inside a local operator environment
 - in other small internal systems that need durable scheduling without a larger orchestration stack

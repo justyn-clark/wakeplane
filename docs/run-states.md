@@ -4,17 +4,17 @@ Every execution attempt in Wakeplane is tracked as a `Run` record with an explic
 
 ## Statuses
 
-| Status | Terminal? | Description |
-|---|---|---|
-| `pending` | No | Materialized by planner, waiting for dispatcher to claim |
-| `claimed` | No | Dispatcher has acquired a lease, execution has not started |
-| `running` | No | Executor is actively running the work |
-| `succeeded` | Yes | Execution completed without error |
-| `failed` | Yes | Execution completed with error (retry may follow) |
-| `retry_scheduled` | No | A retry attempt has been created for this occurrence |
-| `dead_lettered` | Yes | All retry attempts exhausted |
-| `cancelled` | Yes | Execution was interrupted by shutdown or policy |
-| `skipped` | Yes | Planner skipped this occurrence due to misfire policy |
+| Status            | Terminal? | Description                                                |
+| ----------------- | --------- | ---------------------------------------------------------- |
+| `pending`         | No        | Materialized by planner, waiting for dispatcher to claim   |
+| `claimed`         | No        | Dispatcher has acquired a lease, execution has not started |
+| `running`         | No        | Executor is actively running the work                      |
+| `succeeded`       | Yes       | Execution completed without error                          |
+| `failed`          | Yes       | Execution completed with error (retry may follow)          |
+| `retry_scheduled` | No        | A retry attempt has been created for this occurrence       |
+| `dead_lettered`   | Yes       | All retry attempts exhausted                               |
+| `cancelled`       | Yes       | Execution was interrupted by shutdown or policy            |
+| `skipped`         | Yes       | Planner skipped this occurrence due to misfire policy      |
 
 ## Transition Diagram
 
@@ -85,6 +85,7 @@ The executor's context was cancelled (shutdown or `replace` overlap policy). `st
 ### failed → retry_scheduled (via new run)
 
 When a failed run has remaining retry attempts, the dispatcher inserts a **new** run record with:
+
 - Same `occurrence_key`
 - `attempt = previous_attempt + 1`
 - `status = retry_scheduled`

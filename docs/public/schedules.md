@@ -7,23 +7,23 @@ A schedule is the top-level definition in Wakeplane. It combines a cadence (cron
 Schedules can be created from a YAML file using `wakeplane schedule create -f <file>` or via `POST /v1/schedules` with a JSON body.
 
 ```yaml
-name: nightly-sync           # required, unique identifier for display
-enabled: true                # set false to create paused
+name: nightly-sync # required, unique identifier for display
+enabled: true # set false to create paused
 timezone: America/Los_Angeles
 
 schedule:
-  kind: cron                 # cron | interval | once
-  expr: "0 2 * * *"         # for cron: standard 5-field cron expression
+  kind: cron # cron | interval | once
+  expr: "0 2 * * *" # for cron: standard 5-field cron expression
 
 target:
-  kind: workflow             # http | shell | workflow
+  kind: workflow # http | shell | workflow
   workflow_id: sync.customers
   input:
     source: crm
 
 policy:
-  overlap: forbid            # allow | forbid | queue_latest | replace
-  misfire: run_once_if_late  # skip | run_once_if_late | catch_up
+  overlap: forbid # allow | forbid | queue_latest | replace
+  misfire: run_once_if_late # skip | run_once_if_late | catch_up
   timeout_seconds: 900
   max_concurrency: 1
 
@@ -43,7 +43,7 @@ Uses a standard 5-field cron expression (minute, hour, day-of-month, month, day-
 ```yaml
 schedule:
   kind: cron
-  expr: "0 2 * * *"    # 2am daily
+  expr: "0 2 * * *" # 2am daily
 ```
 
 ```yaml
@@ -59,7 +59,7 @@ Fires every N seconds. The interval is anchored to the previous `next_run_at`, n
 ```yaml
 schedule:
   kind: interval
-  every_seconds: 300   # every 5 minutes
+  every_seconds: 300 # every 5 minutes
 ```
 
 ### once
@@ -130,13 +130,14 @@ POST /v1/schedules/{id}/trigger
 
 See [Executors](executors.md) for full executor details. Brief reference:
 
-| Kind | Required fields | Optional fields |
-|---|---|---|
-| `http` | `url`, `method` | `headers`, `body` |
-| `shell` | `command` | `args` |
-| `workflow` | `workflow_id` | `input` |
+| Kind       | Required fields | Optional fields   |
+| ---------- | --------------- | ----------------- |
+| `http`     | `url`, `method` | `headers`, `body` |
+| `shell`    | `command`       | `args`            |
+| `workflow` | `workflow_id`   | `input`           |
 
 Timeout and concurrency are controlled by `policy.timeout_seconds` and `policy.max_concurrency`, not by target-specific fields.
+
 ## Default policy values
 
 When policy or retry fields are omitted, these defaults apply:

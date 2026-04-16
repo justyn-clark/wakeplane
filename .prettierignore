@@ -1,0 +1,5 @@
+node_modules
+dist
+.small-cache
+docs/public/api.md
+docs/public/cli.md

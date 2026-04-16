@@ -24,18 +24,18 @@ These are deliberate choices for the v1 bootstrap:
 
 See [sqlite-audit.md](sqlite-audit.md) for the full inventory. The critical changes are:
 
-| Change | Effort | Files |
-|---|---|---|
-| Driver and connection config | Small | `store.go:Open()` |
-| Remove PRAGMAs | Trivial | `store.go:Open()` |
-| Timestamp columns → `TIMESTAMPTZ` | Medium | Schema + all time helpers |
-| Boolean columns → `BOOLEAN` | Small | Schema + `boolToInt` removal |
-| JSON columns → `JSONB` | Small | Schema + serialization helpers |
-| `INSERT OR REPLACE` → `ON CONFLICT` | Small | 1 query |
-| `julianday()` → `EXTRACT(EPOCH FROM)` | Small | 2 queries |
-| Error detection → Postgres error codes | Small | 1 helper |
-| Connection pool sizing | Trivial | `store.go:Open()` |
-| Dialect-specific migration files | Medium | New migration file |
+| Change                                 | Effort  | Files                          |
+| -------------------------------------- | ------- | ------------------------------ |
+| Driver and connection config           | Small   | `store.go:Open()`              |
+| Remove PRAGMAs                         | Trivial | `store.go:Open()`              |
+| Timestamp columns → `TIMESTAMPTZ`      | Medium  | Schema + all time helpers      |
+| Boolean columns → `BOOLEAN`            | Small   | Schema + `boolToInt` removal   |
+| JSON columns → `JSONB`                 | Small   | Schema + serialization helpers |
+| `INSERT OR REPLACE` → `ON CONFLICT`    | Small   | 1 query                        |
+| `julianday()` → `EXTRACT(EPOCH FROM)`  | Small   | 2 queries                      |
+| Error detection → Postgres error codes | Small   | 1 helper                       |
+| Connection pool sizing                 | Trivial | `store.go:Open()`              |
+| Dialect-specific migration files       | Medium  | New migration file             |
 
 See [storage-interface.md](storage-interface.md) for the recommended abstraction strategy.
 

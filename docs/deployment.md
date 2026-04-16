@@ -17,6 +17,7 @@ Infrastructure is in `infra/terraform/`. Site source is in a separate `wakeplane
 ## Terraform scope
 
 The `infra/terraform/` directory manages:
+
 - Route53 hosted zone for `wakeplane.dev`
 - Apex A record → Vercel ingress (`216.198.79.1`)
 - `www` CNAME → Vercel project-specific DNS target
@@ -28,6 +29,7 @@ See [infra/terraform/README.md](../infra/terraform/README.md) for usage.
 ## CI
 
 GitHub Actions runs on every push and PR to `main`:
+
 1. Go formatting check
 2. Full test suite (`go test ./... -count=1`)
 3. Binary build check (`cmd/wakeplane` and `cmd/wakeplaned`)
@@ -64,6 +66,7 @@ See [docs/release.md](release.md) for the full release checklist and versioning 
 **v0.1.x has no auth.** See [SECURITY.md](../SECURITY.md).
 
 Recommended deployment topologies:
+
 - Local only: bind to `127.0.0.1:8080`
 - Internal network: bind to private interface, protect with VPN or firewall rules
 - Multi-user / networked: reverse proxy (nginx, Caddy, Traefik) that enforces auth and TLS

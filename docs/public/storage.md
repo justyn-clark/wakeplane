@@ -50,6 +50,7 @@ All timestamps are stored as UTC RFC3339 strings. IDs are application-generated 
 The application logic (domain, planner, dispatcher, API, CLI) has zero dependency on storage internals. If you wanted to add a different storage backend, you would only need to change code inside `internal/store`. Everything above the store package is already portable.
 
 Specifically portable:
+
 - All application logic
 - Schema structure (tables, foreign keys, indices, constraints are standard SQL)
 - IDs (application-generated ULIDs)
@@ -59,18 +60,18 @@ Specifically portable:
 
 ## What must change before Postgres
 
-| Change | Effort |
-|---|---|
-| Driver and connection config | Small |
-| Remove SQLite PRAGMAs | Trivial |
-| Timestamp columns → `TIMESTAMPTZ` | Medium |
-| Boolean columns → `BOOLEAN` | Small |
-| JSON columns → `JSONB` | Small |
-| `INSERT OR REPLACE` → `ON CONFLICT DO UPDATE` | Small |
-| `julianday()` → `EXTRACT(EPOCH FROM ...)` | Small |
-| Error detection → Postgres error codes | Small |
-| Connection pool sizing | Trivial |
-| Dialect-specific migration file | Medium |
+| Change                                        | Effort  |
+| --------------------------------------------- | ------- |
+| Driver and connection config                  | Small   |
+| Remove SQLite PRAGMAs                         | Trivial |
+| Timestamp columns → `TIMESTAMPTZ`             | Medium  |
+| Boolean columns → `BOOLEAN`                   | Small   |
+| JSON columns → `JSONB`                        | Small   |
+| `INSERT OR REPLACE` → `ON CONFLICT DO UPDATE` | Small   |
+| `julianday()` → `EXTRACT(EPOCH FROM ...)`     | Small   |
+| Error detection → Postgres error codes        | Small   |
+| Connection pool sizing                        | Trivial |
+| Dialect-specific migration file               | Medium  |
 
 Total estimated scope: approximately 200 lines of changes in `store.go` and one new migration file. No changes outside the store package.
 

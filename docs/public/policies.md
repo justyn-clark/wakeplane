@@ -11,6 +11,7 @@ The overlap policy controls what happens when a new occurrence becomes due while
 The new run is not claimed until the active count drops below `max_concurrency`. The pending run waits in the queue. Nothing is skipped.
 
 Use `forbid` when:
+
 - Concurrent execution of the same schedule would be unsafe
 - Runs operate on shared state that must be serialized
 
@@ -19,6 +20,7 @@ Use `forbid` when:
 New runs start regardless of how many are already active, up to `max_concurrency`. If `max_concurrency` is `1`, this is equivalent to `forbid`.
 
 Use `allow` when:
+
 - Runs are fully independent and concurrent execution is safe
 - You want to maximize throughput without queuing
 
@@ -27,6 +29,7 @@ Use `allow` when:
 All pending runs except the most recent one are skipped. The active run finishes naturally. Only the latest pending run is dispatched when capacity opens.
 
 Use `queue_latest` when:
+
 - Only the most recent input matters
 - You want to discard stale pending work rather than queue everything
 
@@ -41,28 +44,31 @@ Active runs receive a cancellation signal (`ctx.Done()`). All pending runs excep
 - **Workflow executor**: `ctx.Done()` is closed; the handler must check it and return
 
 If the active executor does not stop promptly:
+
 - The active run retains its `running` status
 - The pending run waits until the active run finishes or its lease expires
 - Skipped runs have `error_text: "replace overlap downgraded to queued latest until current execution exits"`
 
 Use `replace` when:
+
 - The schedule represents a "latest state" computation
 - The executor reliably honors context cancellation
 - Degrading to `queue_latest` behavior is acceptable if cancellation is slow
 
 Do not use `replace` when:
+
 - Cancellation of the active run has destructive side effects
 - You need a hard guarantee that only one run is ever active
 - The executor is known to ignore cancellation
 
 ### Comparison
 
-| Policy | Active run present? | Behavior |
-|---|---|---|
-| `allow` | Ignored | Start new run up to `max_concurrency` |
-| `forbid` | Block | Wait until active count drops |
-| `queue_latest` | Finish naturally | Skip all pending except most recent |
-| `replace` | Cancel signal | Cancel active, skip all pending except most recent |
+| Policy         | Active run present? | Behavior                                           |
+| -------------- | ------------------- | -------------------------------------------------- |
+| `allow`        | Ignored             | Start new run up to `max_concurrency`              |
+| `forbid`       | Block               | Wait until active count drops                      |
+| `queue_latest` | Finish naturally    | Skip all pending except most recent                |
+| `replace`      | Cancel signal       | Cancel active, skip all pending except most recent |
 
 ## Misfire policy
 
@@ -110,8 +116,8 @@ Retry settings define what happens when a run finishes with an error.
 
 ```yaml
 retry:
-  max_attempts: 5           # total attempts including the first (0 = no retries)
-  strategy: exponential     # exponential (only supported strategy currently)
+  max_attempts: 5 # total attempts including the first (0 = no retries)
+  strategy: exponential # exponential (only supported strategy currently)
   initial_delay_seconds: 30
   max_delay_seconds: 900
 ```

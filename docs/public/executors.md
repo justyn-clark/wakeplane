@@ -54,6 +54,7 @@ target:
 **Cancellation:** On shutdown or `replace` cancellation, the process receives `SIGKILL` via context. This is a hard stop, not a graceful one.
 
 **Environment:** Wakeplane does not currently support per-target environment injection for shell jobs. Shell commands inherit the daemon process environment.
+
 ## Workflow executor
 
 Calls an in-process Go function registered by ID. Useful when Wakeplane is embedded in a Go application and the work is application code rather than an external HTTP or shell call.
@@ -106,14 +107,14 @@ The response is an array of receipt objects. Each receipt has a `receipt_kind` f
 
 ## Executor comparison
 
-| Aspect | HTTP | Shell | Workflow |
-|---|---|---|---|
-| Target | URL + method | Command + args | Registered handler by ID |
-| Cancellation | Context → HTTP abort | Context → SIGKILL | Context → ctx.Done() (cooperative) |
-| Timeout enforcement | Via context | Via exec.CommandContext | Via context |
-| Receipt kind | HTTP response summary | stdout/stderr/exit code | Handler return value |
-| Registration | None needed | None needed | Must register explicitly |
-| Alpha limits | Static headers/body only; no secret injection | Inherits daemon user/env | In-process only, no dynamic loading |
+| Aspect              | HTTP                                          | Shell                    | Workflow                            |
+| ------------------- | --------------------------------------------- | ------------------------ | ----------------------------------- |
+| Target              | URL + method                                  | Command + args           | Registered handler by ID            |
+| Cancellation        | Context → HTTP abort                          | Context → SIGKILL        | Context → ctx.Done() (cooperative)  |
+| Timeout enforcement | Via context                                   | Via exec.CommandContext  | Via context                         |
+| Receipt kind        | HTTP response summary                         | stdout/stderr/exit code  | Handler return value                |
+| Registration        | None needed                                   | None needed              | Must register explicitly            |
+| Alpha limits        | Static headers/body only; no secret injection | Inherits daemon user/env | In-process only, no dynamic loading |
 
 ## Not shipped yet
 

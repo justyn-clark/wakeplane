@@ -24,10 +24,10 @@ If readiness fails (`"storage":"error"`), check SQLite file permissions and disk
 
 ## Health endpoints
 
-| Endpoint | Purpose | Probe type |
-|---|---|---|
-| `GET /healthz` | Process is alive | Liveness |
-| `GET /readyz` | Database is reachable | Readiness |
+| Endpoint       | Purpose               | Probe type |
+| -------------- | --------------------- | ---------- |
+| `GET /healthz` | Process is alive      | Liveness   |
+| `GET /readyz`  | Database is reachable | Readiness  |
 
 Use `/healthz` for liveness and `/readyz` for readiness in your container orchestrator or reverse proxy health check configuration.
 
@@ -60,13 +60,13 @@ A stalled shutdown means an executor did not honor context cancellation within t
 
 Scrape `GET /v1/metrics` (Prometheus text format).
 
-| Metric | Alert condition | Meaning |
-|---|---|---|
-| `runs_failed_total` | Increasing | Executions failing |
-| `dead_letters_total` | > 0 | Runs exhausted all retries |
-| `claimed_but_expired_total` | > 0 | Workers dying mid-execution or lease TTL too short |
-| `runs_due` | Growing over time | Dispatcher not keeping up |
-| `runs_retry_queued` | Growing over time | Retries accumulating |
+| Metric                      | Alert condition   | Meaning                                            |
+| --------------------------- | ----------------- | -------------------------------------------------- |
+| `runs_failed_total`         | Increasing        | Executions failing                                 |
+| `dead_letters_total`        | > 0               | Runs exhausted all retries                         |
+| `claimed_but_expired_total` | > 0               | Workers dying mid-execution or lease TTL too short |
+| `runs_due`                  | Growing over time | Dispatcher not keeping up                          |
+| `runs_retry_queued`         | Growing over time | Retries accumulating                               |
 
 ## Status interpretation
 
@@ -149,11 +149,11 @@ Do not copy the file while the daemon is running. Use SQLite's backup API or sto
 
 ## Environment reference
 
-| Variable | Default | Description |
-|---|---|---|
-| `WAKEPLANE_DB_PATH` | `./wakeplane.db` | SQLite database file path |
-| `WAKEPLANE_HTTP_ADDR` | `:8080` | HTTP listen address |
-| `WAKEPLANE_WORKER_ID` | `wrk_local` | Worker identity string in lease records |
-| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS` | `5` | Planner loop tick interval |
-| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2` | Dispatcher loop tick interval |
-| `WAKEPLANE_LEASE_TTL_SECONDS` | `30` | Worker lease TTL for crash recovery |
+| Variable                                | Default          | Description                             |
+| --------------------------------------- | ---------------- | --------------------------------------- |
+| `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file path               |
+| `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                     |
+| `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity string in lease records |
+| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | Planner loop tick interval              |
+| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2`              | Dispatcher loop tick interval           |
+| `WAKEPLANE_LEASE_TTL_SECONDS`           | `30`             | Worker lease TTL for crash recovery     |

@@ -7,11 +7,13 @@ Wakeplane can be embedded inside Go applications so the scheduling control plane
 ## When to embed
 
 Embed Wakeplane when:
+
 - Your application already manages a long-running process (HTTP server, daemon)
 - You want in-process workflow handlers that call your application code directly
 - You do not want to manage a separate daemon deployment
 
 Use the standalone daemon when:
+
 - You want to schedule work that is independent of any particular application
 - You are calling HTTP or shell targets that do not need application code
 
@@ -77,6 +79,7 @@ err := service.CloseContext(ctx)
 Each phase emits structured log lines so you can trace where shutdown stalled.
 
 **If `CloseContext` exceeds its deadline:**
+
 - Returns `context.DeadlineExceeded`
 - The store is **not** closed (it was not reached in the sequence)
 - Active runs retain `running` status
@@ -119,24 +122,24 @@ See [examples/embedded/main.go](../../examples/embedded/main.go) for a complete 
 type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string]any, error)
 ```
 
-| Aspect | Behavior |
-|---|---|
-| `ctx` | Carries a deadline from `policy.timeout_seconds`. Closed on shutdown or `replace` cancellation. |
-| `input` | The `target.input` map from the schedule definition. Nil if not set. |
-| `(result, nil)` | Run succeeds. `result` is stored as a `workflow_result` receipt. |
-| `(nil, err)` | Run fails. `err.Error()` stored as `error_text`. Retry policy applies. |
-| `ctx.Err() != nil` at return | Run marked `cancelled` regardless of returned error. |
+| Aspect                       | Behavior                                                                                        |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `ctx`                        | Carries a deadline from `policy.timeout_seconds`. Closed on shutdown or `replace` cancellation. |
+| `input`                      | The `target.input` map from the schedule definition. Nil if not set.                            |
+| `(result, nil)`              | Run succeeds. `result` is stored as a `workflow_result` receipt.                                |
+| `(nil, err)`                 | Run fails. `err.Error()` stored as `error_text`. Retry policy applies.                          |
+| `ctx.Err() != nil` at return | Run marked `cancelled` regardless of returned error.                                            |
 
 **Cooperative cancellation:** Handlers should check `ctx.Done()` and return promptly. If a handler ignores cancellation, the dispatcher waits until the `CloseContext` deadline, then returns `DeadlineExceeded`. The handler goroutine continues in the background until it returns or the process exits.
 
 ## Recovery guarantees
 
-| Crash point | DB state | Recovery action |
-|---|---|---|
-| After claim, before mark-running | `claimed`, lease exists | Lease expires → reset to `pending` |
+| Crash point                       | DB state                | Recovery action                                |
+| --------------------------------- | ----------------------- | ---------------------------------------------- |
+| After claim, before mark-running  | `claimed`, lease exists | Lease expires → reset to `pending`             |
 | After mark-running, before finish | `running`, lease exists | Lease expires → mark `failed`, retry scheduled |
-| After finish, before retry insert | `failed`, no retry | **No automatic recovery** — retry is lost |
-| Retry scheduled, before dispatch | `retry_scheduled` | Picked up by next dispatcher tick |
+| After finish, before retry insert | `failed`, no retry      | **No automatic recovery** — retry is lost      |
+| Retry scheduled, before dispatch  | `retry_scheduled`       | Picked up by next dispatcher tick              |
 
 The "after finish, before retry insert" gap is a known limitation of the current beta line. `FinishRun` and retry `InsertRun` are not in a single transaction.
 

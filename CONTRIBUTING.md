@@ -5,12 +5,14 @@ Wakeplane is a pre-stable scheduling control plane in its beta line (`v0.2.0-bet
 ## Project scope
 
 Wakeplane is:
+
 - a durable scheduling primitive
 - a control plane above cron/interval/once
 - an embeddable daemon and HTTP/CLI API
 - a typed execution layer with operator visibility
 
 Wakeplane is not:
+
 - a DAG orchestrator
 - a distributed workflow engine
 - a job queue

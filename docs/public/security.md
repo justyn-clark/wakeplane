@@ -65,25 +65,25 @@ Do not open a public GitHub issue for security vulnerabilities.
 
 Wakeplane's runtime dependencies:
 
-| Dependency | Purpose |
-|---|---|
+| Dependency                  | Purpose                                           |
+| --------------------------- | ------------------------------------------------- |
 | `github.com/robfig/cron/v3` | Cron expression parsing and next-fire calculation |
-| `modernc.org/sqlite` | Pure-Go SQLite driver (no CGo) |
-| `github.com/oklog/ulid/v2` | ULID generation for IDs |
-| `github.com/spf13/cobra` | CLI framework |
-| `golang.org/x/sync` | `errgroup` for goroutine coordination |
+| `modernc.org/sqlite`        | Pure-Go SQLite driver (no CGo)                    |
+| `github.com/oklog/ulid/v2`  | ULID generation for IDs                           |
+| `github.com/spf13/cobra`    | CLI framework                                     |
+| `golang.org/x/sync`         | `errgroup` for goroutine coordination             |
 
 Dependency versions are pinned in `go.sum`. Verify with `go mod verify` before deploying in sensitive environments.
 
 ## Summary
 
-| Property | Status |
-|---|---|
-| Authentication | ❌ Not implemented |
-| Authorization / RBAC | ❌ Not implemented |
-| TLS (native) | ❌ Not implemented (use reverse proxy) |
-| Audit logging | ❌ Not implemented |
-| Multi-tenancy | ❌ Not implemented |
-| Trusted-network deployment | ✅ Supported and required |
-| Reverse proxy pattern | ✅ Recommended |
-| Go module integrity | ✅ `go.sum` pinned |
+| Property                   | Status                                 |
+| -------------------------- | -------------------------------------- |
+| Authentication             | ❌ Not implemented                     |
+| Authorization / RBAC       | ❌ Not implemented                     |
+| TLS (native)               | ❌ Not implemented (use reverse proxy) |
+| Audit logging              | ❌ Not implemented                     |
+| Multi-tenancy              | ❌ Not implemented                     |
+| Trusted-network deployment | ✅ Supported and required              |
+| Reverse proxy pattern      | ✅ Recommended                         |
+| Go module integrity        | ✅ `go.sum` pinned                     |

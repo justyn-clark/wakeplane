@@ -14,6 +14,10 @@ Wakeplane is a durable scheduling control plane. This guide gets you from nothin
 
 Use the release, `go install`, or source-build path in [Install](install.md). For source builds, the repo currently declares `go 1.25.0` in `go.mod`.
 
+Wakeplane is designed to work well as a local single-machine scheduler. That includes the Mac Mini deployment where it was born and personal-machine installs such as a MacBook Air.
+
+If you built into `dist/` and did not install into `PATH`, prefix commands below with `./dist/`.
+
 ## 1. Start the daemon
 
 ```bash

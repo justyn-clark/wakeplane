@@ -1,6 +1,6 @@
 # Embedding
 
-Wakeplane is designed to be embedded as a library in Go applications. This lets you run the full scheduling control plane inside your process without deploying a separate daemon.
+Wakeplane can be embedded inside Go applications so the scheduling control plane runs in your process instead of as a separate daemon.
 
 > **Operator warning:** embedding does not change the network boundary. The HTTP API still has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
@@ -14,6 +14,12 @@ Embed Wakeplane when:
 Use the standalone daemon when:
 - You want to schedule work that is independent of any particular application
 - You are calling HTTP or shell targets that do not need application code
+
+## Current boundary
+
+Wakeplane's current embedding surface is source-level and uses `internal/...` packages from this repository. In `v0.2.x`, it should be treated as an internal integration surface for this module or closely related forks, not as a stable public Go package API.
+
+If you want a shareable, stable way to use Wakeplane today, prefer the standalone daemon and HTTP API.
 
 ## Construction
 

@@ -28,6 +28,7 @@ Wakeplane is designed as a reusable primitive across JCN systems. Nothing here i
 Current shipped state:
 
 - pre-stable `v0.2.0-beta.1`
+- core boundary preserved across distinct planner, dispatcher, store, executor, API, and CLI packages
 - single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations
 - planner and dispatcher loops
@@ -43,6 +44,28 @@ Current limits:
 - no auth, RBAC, UI, distributed coordination, or plugin loading
 - workflow handlers must be registered explicitly by the embedding application or tests
 - `replace` is cooperative and best-effort, not forceful
+- shell targets inherit the daemon environment; per-target env or secret injection is not implemented
+- the current embedding surface is source-level and internal-package based, not a stable public library API
+
+Core invariants currently enforced in code:
+
+- execution only starts after a durable run record exists and the dispatcher has claimed it
+- `timezone` is required and validated as an IANA timezone
+- targets are typed as `http`, `shell`, or `workflow`
+- retries append new attempts under the same `occurrence_key`
+- policy enforcement happens at claim time, not inside executors
+
+## Operational Context
+
+Wakeplane was born inside the OpenCLAW ACE Hermes personal-agent environment running on a Mac Mini. That local system remains an important proving ground for the product.
+
+That provenance is operational context, not product lock-in. Wakeplane is still intended to stand on its own:
+
+- as the local scheduler on a personal machine such as a MacBook Air
+- as the control plane for small internal systems
+- as a standalone tool other operators can run without inheriting the ACE-specific environment
+
+Single-machine operation is a first-class use case, not a temporary bootstrap mode. Changes here should not regress the local system Wakeplane was built to support.
 
 ## Supported Model
 
@@ -82,10 +105,20 @@ Durability and audit:
 
 ## How To Use
 
-1. Start the daemon.
-2. Create schedules from a YAML manifest.
-3. Inspect schedules and runs with the CLI or HTTP API.
-4. Register workflow handlers explicitly if you use workflow targets.
+1. Build the binary, or plan to run the daemon directly from source.
+2. Start the daemon.
+3. Create schedules from a YAML manifest.
+4. Inspect schedules and runs with the CLI or HTTP API.
+5. Register workflow handlers explicitly if you use workflow targets.
+
+Build both entry points:
+
+```bash
+go build -o dist/wakeplane ./cmd/wakeplane
+go build -o dist/wakeplaned ./cmd/wakeplaned
+```
+
+If you are running directly from source, use `go run ./cmd/wakeplane serve` in place of the binary invocation below. If you built into `dist/` and did not install into `PATH`, prefix commands with `./dist/`.
 
 ## Install
 
@@ -190,6 +223,7 @@ The daemon reads configuration from environment variables:
 - [CLI Reference](docs/public/cli.md)
 - [Public API Reference](docs/public/api.md)
 - [Public Status](docs/public/status.md)
+- [Current Status](docs/current-status.md)
 - [Architecture](docs/architecture.md)
 - [API Contract](docs/api-contract.md)
 - [Run States](docs/run-states.md)
@@ -201,6 +235,8 @@ The daemon reads configuration from environment variables:
 - [SQLite Audit](docs/sqlite-audit.md)
 - [Release Discipline](docs/release.md)
 - [Deployment Notes](docs/deployment.md)
+
+For the current coherence audit, hardening gaps, and scale path, see [Current Status](docs/current-status.md).
 
 ## Contributing
 

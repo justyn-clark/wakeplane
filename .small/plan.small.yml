@@ -106,3 +106,21 @@ tasks:
     - id: task-35
       title: Add repo community templates and conduct/trust files for public beta readiness
       status: completed
+    - id: task-36
+      title: Audit current project status and product-intent coherence against implementation
+      status: completed
+    - id: task-37
+      title: Correct README and public docs drift to match shipped schema and runtime behavior
+      status: completed
+    - id: task-38
+      title: Record hardening, scale paths, and prioritized next steps in repo docs
+      status: completed
+    - id: task-39
+      title: Add local-system operational context without collapsing product scope into ACE-specific behavior
+      status: completed
+    - id: task-40
+      title: Sync wakeplane.dev Starlight content with source-repo public docs
+      status: completed
+    - id: task-41
+      title: Verify source repo and wakeplane.dev after documentation sync
+      status: completed

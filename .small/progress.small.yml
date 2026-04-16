@@ -1370,3 +1370,44 @@ entries:
       status: completed
       task_id: task-35
       timestamp: "2026-03-26T02:40:13.500000000Z"
+    - evidence: Audited README, architecture, public docs, store, planner, dispatcher, API, and small artifacts against project intent. Core boundary remains intact; drift was limited to documentation examples and field descriptions.
+      notes: Status and coherence audit completed for scheduler/dispatcher/ledger/policy/operator boundaries
+      status: completed
+      task_id: task-36
+      timestamp: "2026-04-15T22:05:56.100000000Z"
+    - evidence: Updated README and public docs to match the actual schema and runtime behavior, including `schedule.at` for once schedules, shell environment support limits, attempt numbering, lease fields, and source-first usage instructions.
+      notes: Edited README.md, docs/public/quickstart.md, docs/public/schedules.md, docs/public/executors.md, docs/public/concepts.md, and docs/public/storage.md
+      status: completed
+      task_id: task-37
+      timestamp: "2026-04-15T22:05:56.200000000Z"
+    - command: go test ./... && small check --strict
+      evidence: |-
+        go test ./... passed
+        small check --strict passed
+      notes: Verified repository after documentation and harness updates
+      status: completed
+      task_id: task-41
+      timestamp: "2026-04-15T22:05:56.300000000Z"
+    - evidence: Added docs/current-status.md with an implementation-backed status summary, coherency assessment, hardening opportunities, scale paths, and recommended next steps.
+      notes: Centralized the project status audit so it exists on disk instead of only in chat
+      status: completed
+      task_id: task-38
+      timestamp: "2026-04-15T22:05:56.400000000Z"
+    - evidence: Added explicit operational context describing Wakeplane's origin in the OpenCLAW ACE Hermes Mac Mini environment while preserving Wakeplane's standalone product boundary and local-machine support expectations.
+      notes: Updated README.md, docs/current-status.md, docs/public/index.md, and docs/public/quickstart.md
+      status: completed
+      task_id: task-39
+      timestamp: "2026-04-15T23:32:57.184435000Z"
+    - evidence: Synchronized wakeplane.dev Starlight content with the source repo's current public docs, corrected stale CLI/API/schema references, and added missing Run States and Security pages.
+      notes: Updated astro.config.mjs and docs content under wakeplane.dev/src/content/docs/
+      status: completed
+      task_id: task-40
+      timestamp: "2026-04-15T23:32:57.284435000Z"
+    - command: pnpm install && pnpm build
+      evidence: |-
+        pnpm install completed successfully
+        pnpm build completed successfully
+      notes: Verified wakeplane.dev after the Starlight content sync
+      status: completed
+      task_id: task-41
+      timestamp: "2026-04-15T23:32:57.384435000Z"

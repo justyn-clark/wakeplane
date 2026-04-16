@@ -72,3 +72,12 @@ Not yet shipped:
 - UI
 - Distributed coordination
 - Dynamic plugin loading
+
+## Operational context
+
+Wakeplane was born in the OpenCLAW ACE Hermes personal-agent environment on a Mac Mini, and that deployment remains an important proving ground.
+
+That does not change the product boundary. Wakeplane is still intended to run as a standalone scheduler:
+- on a personal machine such as a MacBook Air
+- inside a local operator environment
+- in other small internal systems that need durable scheduling without a larger orchestration stack

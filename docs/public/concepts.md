@@ -57,8 +57,8 @@ Manual triggers use `manual:{run_id}` instead. The occurrence key is unique per 
 A run is a durable record of one execution attempt for one occurrence. It tracks:
 
 - `status` — current state in the run state machine
-- `attempt` — which attempt this is (0-indexed)
-- `claimed_at`, `started_at`, `finished_at` — timing
+- `attempt` — which attempt this is (starts at `1`)
+- `claimed_by_worker_id`, `claim_expires_at`, `started_at`, `finished_at` — execution timing and lease ownership
 - `error_text` — set on failure or recovery
 - `result_json` — executor-specific result data
 

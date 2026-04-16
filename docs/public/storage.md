@@ -38,7 +38,7 @@ Do not copy the file while the daemon is running. Use the SQLite backup API or s
 ## What is stored
 
 - **Schedules**: name, enabled, timezone, schedule spec (cron/interval/once), target spec (HTTP/shell/workflow), policy, retry config, `next_run_at`
-- **Runs**: occurrence key, attempt, status, timing (`claimed_at`, `started_at`, `finished_at`), result, error
+- **Runs**: occurrence key, attempt, status, lease ownership (`claimed_by_worker_id`, `claim_expires_at`), timing (`started_at`, `finished_at`), result, error
 - **Leases**: worker ID, run ID, `expires_at`
 - **Dead letters**: occurrence key, reason, payload
 - **Receipts**: executor output attached to a run (stdout, HTTP response, workflow result)

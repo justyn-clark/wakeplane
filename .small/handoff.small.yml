@@ -1,9 +1,12 @@
 small_version: "1.0.0"
 owner: agent
-summary: Beta hardening pass complete locally. Public docs, install/release surfaces, generated references, docs verification, release packaging, and trust templates are in place. The public alpha label should remain until a tagged release with published artifacts is pushed.
+summary: Source docs and wakeplane.dev were resynced onto the shipped beta baseline, including local-system operational context for the Mac Mini / ACE environment and standalone positioning for personal-machine use. Source verification and docsite build both passed locally.
 resume:
     next_steps:
-        - Push the branch and publish a tagged release when ready to cross the beta gate.
+        - Implement retention and size bounds for receipts, runs, and dead letters.
+        - Add authn/authz and HTTP-layer audit logging before broader deployment exposure.
+        - Build and validate the Postgres dialect at the existing store seam.
+        - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.
 links: []
 replayId:
     value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

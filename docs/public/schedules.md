@@ -64,22 +64,24 @@ schedule:
 
 ### once
 
-Fires once at a specific time and disables itself after firing.
+Fires once at a specific time.
 
 ```yaml
 schedule:
   kind: once
-  at: "2026-06-01T09:00:00Z"
+  at: "2026-06-01T09:00:00-07:00"
 ```
 
-The `at` timestamp is stored as an absolute RFC3339 time.
+`schedule.at` is an absolute timestamp. Provide a full RFC3339 value with offset. If you want "9am Los Angeles time", encode that offset in the timestamp itself.
+
+After the occurrence is materialized, `next_run_at` becomes `nil`. In `v0.2.x`, the schedule is not automatically rewritten to `enabled=false`; it simply has no next occurrence left to materialize.
 
 ## Timezone behavior
 
 Every schedule has a `timezone` field (IANA timezone string, e.g. `America/Los_Angeles`, `UTC`, `Europe/Berlin`).
 
 - Cron expressions are evaluated in the schedule's timezone.
-- The `once.at` timestamp must be supplied as an RFC3339 timestamp.
+- The `once.at` timestamp is stored as an absolute instant; include the intended offset in the value.
 - Interval schedules use UTC internally; timezone affects only display.
 - All `next_run_at` values stored in the database are UTC.
 
@@ -135,7 +137,6 @@ See [Executors](executors.md) for full executor details. Brief reference:
 | `workflow` | `workflow_id` | `input` |
 
 Timeout and concurrency are controlled by `policy.timeout_seconds` and `policy.max_concurrency`, not by target-specific fields.
-
 ## Default policy values
 
 When policy or retry fields are omitted, these defaults apply:

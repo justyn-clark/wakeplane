@@ -2,7 +2,7 @@
 
 Use one of these supported install paths for Wakeplane. The canonical repository is [github.com/justyn-clark/wakeplane](https://github.com/justyn-clark/wakeplane).
 
-> **Operator warning:** installability does not change the security model. Wakeplane still has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
+> **Operator warning:** installability does not change the security model. Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
 ## Option 1: GitHub Releases
 

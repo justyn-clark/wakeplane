@@ -30,7 +30,7 @@ Current shipped state:
 - pre-stable public beta release line
 - core boundary preserved across distinct planner, dispatcher, store, executor, API, and CLI packages
 - single-process Go daemon and CLI
-- SQLite-first storage with embedded migrations
+- SQLite-first storage with embedded migrations and a Postgres production backend seam
 - planner and dispatcher loops
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
@@ -40,8 +40,8 @@ Current shipped state:
 
 Current limits:
 
-- Postgres is only planned at the storage seam
-- no auth, RBAC, UI, distributed coordination, or plugin loading
+- native Postgres column types are still conservative/text-compatible in this first production backend slice
+- no RBAC, UI, distributed coordination, or plugin loading
 - workflow handlers must be registered explicitly by the embedding application or tests
 - `replace` is cooperative and best-effort, not forceful
 - shell targets inherit the daemon environment; per-target env or secret injection is not implemented
@@ -97,7 +97,7 @@ Policy:
 
 Durability and audit:
 
-- SQLite-backed schedules and runs
+- SQLite-backed schedules and runs by default; Postgres is selectable for production installs
 - append-only attempt history per logical occurrence
 - worker leases with stale-claim recovery
 - dead-letter capture for exhausted failures
@@ -217,7 +217,9 @@ service, err := app.NewWithOptions(ctx, cfg,
 The daemon reads configuration from environment variables:
 
 - `WAKEPLANE_HTTP_ADDR` default `:8080`
+- `WAKEPLANE_STORE` default `sqlite`; set to `postgres` for the production Postgres backend
 - `WAKEPLANE_DB_PATH` default `./wakeplane.db`
+- `WAKEPLANE_DATABASE_URL` required when `WAKEPLANE_STORE=postgres`
 - `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS` default `5`
 - `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` default `2`
 - `WAKEPLANE_LEASE_TTL_SECONDS` default `30`
@@ -226,6 +228,23 @@ The daemon reads configuration from environment variables:
 - `WAKEPLANE_RUN_RETENTION_DAYS` default `0` (disabled)
 - `WAKEPLANE_AUTH_TOKEN` default unset; when set, `/v1/...` requires `Authorization: Bearer <token>`
 - `WAKEPLANE_REQUEST_AUDIT` default `true`
+
+## SQLite to Postgres Bridge
+
+SQLite remains the default local mode. To move schedules to Postgres, export an import-compatible schedule manifest from the SQLite-backed daemon, start a fresh Postgres-backed daemon, then import it:
+
+```bash
+wakeplane schedule export > schedules.json
+
+WAKEPLANE_STORE=postgres \
+WAKEPLANE_DATABASE_URL=postgres://wakeplane:secret@db.example.com:5432/wakeplane \
+wakeplane serve
+
+wakeplane schedule import --file schedules.json
+wakeplane status
+```
+
+This bridge moves schedule definitions. Run history, receipts, audit logs, leases, and dead letters stay in the source database unless restored with database-native backup tooling.
 
 ## Docs Map
 

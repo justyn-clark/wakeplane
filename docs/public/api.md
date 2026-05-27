@@ -3,7 +3,7 @@
 
 Wakeplane exposes a JSON HTTP API for schedule and run management. The route tables on this page are generated from `internal/api/http.go` so the published surface stays aligned with the server.
 
-> **Operator warning:** Wakeplane currently has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
+> **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 
 ## Health and readiness
 
@@ -16,7 +16,7 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/v1/status` | Operational status including scheduler timing, worker counts, and run counts. |
+| `GET` | `/v1/status` | Operational status including active store dialect, scheduler timing, worker counts, run counts, retention, and security posture. |
 | `GET` | `/v1/metrics` | Prometheus text metrics for schedules, runs, leases, and executor outcomes. |
 
 ## Schedule management

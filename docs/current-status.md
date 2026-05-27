@@ -93,5 +93,5 @@ The main gaps are structural, not semantic:
 
 1. Keep install friction low: maintain the hosted `https://wakeplane.dev/install.sh` path alongside tagged release archives and checksum verification.
 2. Improve operator ergonomics around schedule export/import, update, and fleet inspection.
-3. Build the Postgres backend at the existing store seam, then verify claim and retry behavior against a real Postgres instance.
-4. Add scale-oriented verification: concurrency stress, restart recovery soak tests, and backup/restore drills.
+3. Continue hardening production operations with longer soak windows, more varied executor workloads, and hosted deployment receipts.
+4. Decide whether to promote a stable public Go embedding package or keep embedding source-level only in the current release line.

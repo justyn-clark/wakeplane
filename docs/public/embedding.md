@@ -2,7 +2,7 @@
 
 Wakeplane can be embedded inside Go applications so the scheduling control plane runs in your process instead of as a separate daemon.
 
-> **Operator warning:** embedding does not change the network boundary. The HTTP API still has no auth or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
+> **Operator warning:** embedding does not change the network boundary. The HTTP API supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
 ## When to embed
 

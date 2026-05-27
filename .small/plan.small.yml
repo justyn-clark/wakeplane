@@ -138,7 +138,7 @@ tasks:
     status: completed
   - id: task-46
     title: Add Postgres storage dialect and real-database verification
-    status: pending
+    status: completed
   - id: task-47
     title: Add soak, restart-recovery, and backup-restore verification
-    status: pending
+    status: completed

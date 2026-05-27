@@ -1435,3 +1435,92 @@ entries:
     status: completed
     task_id: task-45
     timestamp: "2026-05-27T20:16:48.300000000Z"
+  - command: go test ./...; scripts/test-postgres-store.sh
+    evidence: |-
+      Added dialect-aware store startup with WAKEPLANE_STORE=sqlite|postgres, WAKEPLANE_DATABASE_URL, per-dialect migrations, Postgres placeholder rebinding, Postgres lease upsert, and Postgres row-lock claim serialization.
+      go test ./... exited 0.
+      scripts/test-postgres-store.sh could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: Postgres integration test and disposable-container script were added, but real-database verification still needs a running Docker daemon or externally supplied WAKEPLANE_POSTGRES_TEST_URL.
+    status: pending
+    task_id: task-46
+    timestamp: "2026-05-27T21:51:57.000000000Z"
+  - command: go test ./... && go run ./tools/docsgen --check && pnpm run check && scripts/test-postgres-store.sh
+    evidence: |-
+      Added reusable SQLite/Postgres store invariant coverage for expired lease reclaim, terminal-run non-claimability, retry attempt uniqueness, candidate filtering, dead letters, receipts, and request audit rows. Added a Postgres service parity test for WAKEPLANE_STORE=postgres startup, schedule creation, manual trigger, status reporting, and credential redaction.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+      scripts/test-postgres-store.sh still could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: The new Postgres tests are wired to run with WAKEPLANE_POSTGRES_TEST_URL or the disposable Docker script; task-46 remains pending until a real Postgres run proves them.
+    status: pending
+    task_id: task-46
+    timestamp: "2026-05-27T21:55:23.751086000Z"
+  - command: go test ./... && go run ./tools/docsgen --check && pnpm run check && bash -n scripts/test-postgres-store.sh && scripts/test-postgres-store.sh
+    evidence: |-
+      Added gated Postgres dispatcher tests for expired claimed-run recovery, expired running-run retry scheduling, final failure dead-lettering, and failure receipt persistence. Updated scripts/test-postgres-store.sh to use WAKEPLANE_POSTGRES_TEST_URL when supplied and to run Postgres packages sequentially so package-level database resets cannot race.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+      bash -n scripts/test-postgres-store.sh exited 0.
+      scripts/test-postgres-store.sh still could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: Real Postgres execution remains the missing task-46 gate; the suite now covers store, app, and dispatcher behavior once WAKEPLANE_POSTGRES_TEST_URL or Docker is available.
+    status: pending
+    task_id: task-46
+    timestamp: "2026-05-27T21:58:28.511573000Z"
+  - command: go test ./... && go run ./tools/docsgen --check && pnpm run check && scripts/test-postgres-store.sh
+    evidence: |-
+      Changed wakeplane schedule export to emit an import-compatible full schedule manifest by fetching each schedule detail, and added CLI coverage proving target, policy, and retry fields survive export. Added SQLite-to-Postgres schedule bridge docs, SQLite/Postgres backup and restore guidance, status/API/CLI doc updates, and corrected stale auth/Postgres public-doc wording.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+      scripts/test-postgres-store.sh still could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: This advances the migration/operator-docs deliverables while task-46 remains pending on real disposable-Postgres execution.
+    status: pending
+    task_id: task-46
+    timestamp: "2026-05-27T22:03:56.754895000Z"
+  - command: WAKEPLANE_SOAK_DURATION_SECONDS=5 scripts/soak-drill.sh && scripts/restart-drill.sh && scripts/backup-restore-drill.sh && go test ./... && go run ./tools/docsgen --check && pnpm run check && scripts/test-postgres-store.sh
+    evidence: |-
+      Added repeatable local production drill scripts: scripts/soak-drill.sh, scripts/restart-drill.sh, and scripts/backup-restore-drill.sh. Each starts an isolated SQLite-backed daemon and writes a JSON receipt with commit, config, counts, status artifacts, and drill-specific evidence. Verified the soak drill with WAKEPLANE_SOAK_DURATION_SECONDS=5, restart drill, and backup/restore drill all exited 0 and emitted receipt paths.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+      scripts/test-postgres-store.sh still could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: This advances task-47 drill artifacts locally while task-46 remains pending on real disposable-Postgres execution.
+    status: pending
+    task_id: task-47
+    timestamp: "2026-05-27T22:09:09.302942000Z"
+  - command: scripts/soak-drill.sh && scripts/restart-drill.sh && scripts/backup-restore-drill.sh && go test ./... && go run ./tools/docsgen --check && pnpm run check && scripts/test-postgres-store.sh
+    evidence: |-
+      Tightened drill scripts: artifacts/ is ignored, drill ports are process-unique by default, soak verifies retention pruning of an aged terminal run, restart captures wakeplane status --watch samples during recovery, and backup/restore verifies restored readiness plus retention fields in status output. Ran the default 30-second soak drill successfully; receipt at artifacts/drills/soak-20260527T221138Z/receipt.json recorded 63 runs, 122 receipts, max_receipt_bytes=256, retention_probe_remaining=0, 16 retries, and expected failures from the intentional failing schedule. Restart and backup/restore drills also exited 0 after the tightened checks.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+      scripts/test-postgres-store.sh still could not run because the Docker daemon socket was unavailable at /Users/jcnagent/.docker/run/docker.sock.
+    notes: Local task-47 evidence is stronger; full completion still needs the real Postgres gate and Postgres backup/restore evidence.
+    status: pending
+    task_id: task-47
+    timestamp: "2026-05-27T22:12:34.458733000Z"
+  - command: scripts/test-postgres-store.sh && scripts/postgres-backup-restore-drill.sh && scripts/restart-drill.sh && go test ./... && go run ./tools/docsgen --check && pnpm run check
+    evidence: |-
+      Completed task-46 and task-47 evidence. scripts/test-postgres-store.sh now starts a temporary local Postgres cluster when no WAKEPLANE_POSTGRES_TEST_URL is supplied and Docker is unavailable; it passed against store, app, dispatcher, and CLI Postgres tests. CI and release workflows now run the Postgres suite with a postgres:16 service. scripts/postgres-backup-restore-drill.sh passed and emitted artifacts/drills/postgres-backup-restore-20260527T221838Z/receipt.json with matching source/restored schedules=1, runs=1, receipts=2. The tightened restart drill emitted artifacts/drills/restart-20260527T221800Z/receipt.json with pending=1, running=1, failed=1, completed=1, expired_active_claims=0, and status_watch_samples=5.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      pnpm run check exited 0.
+    notes: Postgres backend and local production drill evidence are now verified locally; remaining work is final completion audit against plans/prod-phase.md.
+    status: completed
+    task_id: task-46
+    timestamp: "2026-05-27T22:18:49.243866000Z"
+  - command: scripts/soak-drill.sh && scripts/restart-drill.sh && scripts/backup-restore-drill.sh && scripts/postgres-backup-restore-drill.sh
+    evidence: |-
+      Completed task-47 drill evidence. Default soak receipt artifacts/drills/soak-20260527T221138Z/receipt.json recorded duration_seconds=30, runs=63, receipts=122, max_receipt_bytes=256, retention_probe_remaining=0, retries=16, and expected intentional failures. Restart receipt artifacts/drills/restart-20260527T221800Z/receipt.json verifies completed work was not repeated and pending/running/failed/completed states were visible after restart. SQLite backup/restore receipt artifacts/drills/backup-restore-20260527T221658Z/receipt.json verifies restored schedules/runs/receipts match source and restored retention status is visible. Postgres backup/restore receipt artifacts/drills/postgres-backup-restore-20260527T221838Z/receipt.json verifies restored Postgres schedules/runs/receipts match source.
+    notes: Soak, restart, SQLite restore, and Postgres restore drills all have persistent receipt artifacts under artifacts/drills/.
+    status: completed
+    task_id: task-47
+    timestamp: "2026-05-27T22:18:49.243867000Z"
+  - command: rg stale Postgres status text && go test ./... && go run ./tools/docsgen --check && pnpm run check && small check --strict
+    evidence: |-
+      Final production-phase audit found and corrected stale docs that still described Postgres real-database verification as pending. The stale-text scan then found no remaining matches for pending Postgres verification language. go test ./... exited 0. go run ./tools/docsgen --check exited 0. pnpm run check exited 0. small check --strict exited 0.
+    notes: plans/prod-phase.md deliverables are represented by completed task-46 and task-47 evidence plus persistent drill receipts under artifacts/drills/.
+    status: completed
+    task_id: task-47
+    timestamp: "2026-05-27T22:21:12.121619000Z"

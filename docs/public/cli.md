@@ -55,7 +55,7 @@ Usage:
 Available Commands:
   create      Create a schedule from YAML
   delete      Delete a schedule
-  export      Export schedules as JSON
+  export      Export schedules as import-compatible JSON
   get         Get one schedule
   import      Create schedules from a YAML file
   list        List schedules

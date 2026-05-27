@@ -2,7 +2,7 @@
 
 Operational reference for running Wakeplane in production or staging environments.
 
-> **Operator warning:** Wakeplane has no authentication or RBAC. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md) before deploying.
+> **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md) before deploying.
 
 ## Startup
 
@@ -147,11 +147,59 @@ sqlite3 /var/lib/wakeplane/data.db ".backup /backups/wakeplane-$(date +%Y%m%d).d
 
 Do not copy the file while the daemon is running. Use SQLite's backup API or stop the daemon first.
 
+For Postgres installs, use the platform-native backup path, for example:
+
+```bash
+pg_dump "$WAKEPLANE_DATABASE_URL" > "wakeplane-$(date +%Y%m%d).sql"
+```
+
+## Restore
+
+For SQLite, restore the backup file into a fresh path and start Wakeplane against it:
+
+```bash
+cp /backups/wakeplane-20260527.db /var/lib/wakeplane/restored.db
+WAKEPLANE_STORE=sqlite WAKEPLANE_DB_PATH=/var/lib/wakeplane/restored.db wakeplane serve
+wakeplane status
+```
+
+For Postgres, restore into a fresh database and point Wakeplane at that URL:
+
+```bash
+createdb wakeplane_restored
+psql "$WAKEPLANE_DATABASE_URL_RESTORED" < wakeplane-20260527.sql
+WAKEPLANE_STORE=postgres WAKEPLANE_DATABASE_URL="$WAKEPLANE_DATABASE_URL_RESTORED" wakeplane serve
+wakeplane status
+```
+
+Verify schedules, run history, receipts, audit rows, retention settings, and status output before switching operators to the restored instance.
+
+## SQLite to Postgres Schedule Bridge
+
+For a schedule-definition migration, use the CLI export/import bridge:
+
+```bash
+# Export from the SQLite-backed daemon.
+wakeplane schedule export > schedules.json
+
+# Import into a fresh Postgres-backed daemon.
+WAKEPLANE_STORE=postgres \
+WAKEPLANE_DATABASE_URL=postgres://wakeplane:secret@db.example.com:5432/wakeplane \
+wakeplane serve
+
+wakeplane schedule import --file schedules.json
+wakeplane status
+```
+
+This bridge moves schedule definitions only. Use database-native backup/restore when you need run history, receipts, request audit logs, leases, or dead letters.
+
 ## Environment reference
 
 | Variable                                | Default          | Description                                    |
 | --------------------------------------- | ---------------- | ---------------------------------------------- |
+| `WAKEPLANE_STORE`                       | `sqlite`         | Storage backend: `sqlite` or `postgres`        |
 | `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file path                      |
+| `WAKEPLANE_DATABASE_URL`                | unset            | Postgres URL when `WAKEPLANE_STORE=postgres`   |
 | `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                            |
 | `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity string in lease records        |
 | `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | Planner loop tick interval                     |
@@ -173,3 +221,28 @@ Wakeplane records request audit rows for `/v1/...` routes when `WAKEPLANE_REQUES
 Wakeplane bounds receipt body storage with `WAKEPLANE_RECEIPT_MAX_BYTES`. Oversized receipt bodies are truncated before storage and marked with a truncation note.
 
 Set `WAKEPLANE_RUN_RETENTION_DAYS` to prune terminal runs older than the configured number of days. Pruning deletes terminal run rows and cascades to attached receipts and dead letters. Active, pending, claimed, running, and retry-queued runs are not pruned.
+
+## Production Drills
+
+Wakeplane ships repeatable local drill scripts that create isolated SQLite-backed daemons and write receipts under `artifacts/drills/` by default.
+
+```bash
+scripts/soak-drill.sh
+scripts/restart-drill.sh
+scripts/backup-restore-drill.sh
+scripts/postgres-backup-restore-drill.sh
+```
+
+The soak drill records run counts, retry behavior, receipt truncation bounds, audit growth, retention settings, and process RSS samples while representative schedules run.
+
+The restart drill forces a daemon stop while work is running, restarts against the same database, and records completed-work and lease-recovery evidence.
+
+The backup/restore drill backs up a SQLite database with `.backup`, restores it into a fresh path, starts Wakeplane against the restored data, and records schedule, run, receipt, audit, retention, and status evidence.
+
+The Postgres backup/restore drill starts a temporary local Postgres cluster when Postgres binaries are available, runs Wakeplane against a source database, restores a `pg_dump` into a fresh database, and records schedule, run, receipt, audit, and status evidence.
+
+For a short local verification run:
+
+```bash
+WAKEPLANE_SOAK_DURATION_SECONDS=5 scripts/soak-drill.sh
+```

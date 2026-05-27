@@ -2,7 +2,7 @@
 
 Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the current public beta release line.
 
-> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is unchanged: no auth, no RBAC, SQLite-first, single-process, trusted-network-only. See [Security](security.md) and [Status](status.md).
+> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres work in progress behind the store seam. See [Security](security.md) and [Status](status.md).
 
 ## Start here
 
@@ -40,10 +40,10 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 - [CLI](cli.md) - generated from the real Cobra command tree
 - [API](api.md) - endpoint list, error envelope, pagination, filtering, content types
 - [Embedding](embedding.md) - using Wakeplane as a Go library in your application
-- [Storage](storage.md) - SQLite-first rationale, constraints, portability seam
+- [Storage](storage.md) - SQLite local mode, Postgres production mode, and migration bridge
 - [Runbook](runbook.md) - startup, health checks, shutdown, metrics, common failures
 - [Releasing](releasing.md) - versioning, release checklist, breaking change definition
-- [Security](security.md) - no-auth posture, trusted-network requirements, planned work
+- [Security](security.md) - bearer-token auth, trusted-network requirements, planned work
 - [Status](status.md) - beta gate, 1.0 gate, and explicit out-of-scope boundaries
 
 ## Current scope
@@ -51,7 +51,7 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 The current public beta line ships as:
 
 - Single-process Go daemon and CLI
-- SQLite-first storage with embedded migrations
+- SQLite-first storage with embedded migrations and a Postgres backend seam
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
 - Planner and dispatcher loops with durable run ledger
@@ -69,8 +69,7 @@ Wakeplane is beta because the release discipline is now real:
 
 Not yet shipped:
 
-- Authentication, RBAC, or multi-tenancy
-- Postgres backend
+- RBAC or multi-tenancy
 - UI
 - Distributed coordination
 - Dynamic plugin loading

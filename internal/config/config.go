@@ -9,7 +9,9 @@ import (
 
 type Config struct {
 	HTTPAddress        string
+	StoreDialect       string
 	DatabasePath       string
+	DatabaseURL        string
 	SchedulerInterval  time.Duration
 	DispatcherInterval time.Duration
 	LeaseTTL           time.Duration
@@ -24,7 +26,9 @@ type Config struct {
 func FromEnv(version string) Config {
 	cfg := Config{
 		HTTPAddress:        envOrDefault("WAKEPLANE_HTTP_ADDR", ":8080"),
+		StoreDialect:       envOrDefault("WAKEPLANE_STORE", "sqlite"),
 		DatabasePath:       envOrDefault("WAKEPLANE_DB_PATH", "./wakeplane.db"),
+		DatabaseURL:        os.Getenv("WAKEPLANE_DATABASE_URL"),
 		SchedulerInterval:  durationEnv("WAKEPLANE_SCHEDULER_INTERVAL_SECONDS", 5),
 		DispatcherInterval: durationEnv("WAKEPLANE_DISPATCHER_INTERVAL_SECONDS", 2),
 		LeaseTTL:           durationEnv("WAKEPLANE_LEASE_TTL_SECONDS", 30),
@@ -44,6 +48,9 @@ func (c Config) WithDefaults() Config {
 	}
 	if c.DatabasePath == "" {
 		c.DatabasePath = "./wakeplane.db"
+	}
+	if c.StoreDialect == "" {
+		c.StoreDialect = "sqlite"
 	}
 	if c.SchedulerInterval == 0 {
 		c.SchedulerInterval = 5 * time.Second
@@ -66,6 +73,8 @@ func (c Config) WithDefaults() Config {
 func (c *Config) BindFlags(fs *flag.FlagSet) {
 	fs.StringVar(&c.HTTPAddress, "http", c.HTTPAddress, "HTTP listen address")
 	fs.StringVar(&c.DatabasePath, "db", c.DatabasePath, "SQLite database path")
+	fs.StringVar(&c.StoreDialect, "store", c.StoreDialect, "storage backend: sqlite or postgres")
+	fs.StringVar(&c.DatabaseURL, "database-url", c.DatabaseURL, "Postgres database URL")
 }
 
 func envOrDefault(key, fallback string) string {

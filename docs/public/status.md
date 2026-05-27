@@ -63,8 +63,8 @@ The most practical path beyond beta is:
 
 1. Add single-operator authentication and HTTP request audit logging before recommending broader trusted-network exposure.
 2. Add import/export and schedule update ergonomics so operators can manage real fleets without hand-editing API calls.
-3. Add a Postgres storage dialect behind the existing store seam after the single-process SQLite path remains stable.
-4. Run soak, restart-recovery, and backup/restore verification against real operator workloads before claiming 1.0.
+3. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0.
+4. Decide whether the embedding surface becomes a stable public Go package or remains source-level for the current release line.
 
 ## Explicitly out of scope today
 

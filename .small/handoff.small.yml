@@ -1,11 +1,11 @@
 small_version: "1.0.0"
 owner: agent
-summary: Wakeplane has begun the post-beta production track. The source repo now has bounded receipt storage, optional terminal-run retention pruning, single-operator bearer auth, HTTP request audit logging, a live status/watch CLI surface, and schedule import/export/update ergonomics.
+summary: Wakeplane has completed the post-beta production track implementation and final local audit described by plans/prod-phase.md. The source repo now has bounded receipt storage, optional terminal-run retention pruning, single-operator bearer auth, HTTP request audit logging, a live status/watch CLI surface, import-compatible schedule export/import ergonomics, a documented SQLite-to-Postgres schedule bridge, a verified Postgres storage dialect behind the existing store boundary, CI/release Postgres integration coverage, and verified local soak/restart/backup-restore drill scripts that emit receipts.
 resume:
+  current_task_id: task-47
   next_steps:
-    - Sync these source docs into wakeplane.dev before public deploy.
-    - Build and validate the Postgres dialect at the existing store seam.
-    - Add soak, restart-recovery, and backup/restore verification against real operator workloads.
+    - "Key receipts: artifacts/drills/soak-20260527T221138Z/receipt.json, artifacts/drills/restart-20260527T221800Z/receipt.json, artifacts/drills/backup-restore-20260527T221658Z/receipt.json, artifacts/drills/postgres-backup-restore-20260527T221838Z/receipt.json."
+    - Sync updated source docs into wakeplane.dev before public deploy.
     - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.
 links: []
 replayId:

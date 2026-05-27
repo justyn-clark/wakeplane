@@ -10,6 +10,20 @@ jobs:
   ci:
     name: Format / Test / Build
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: wakeplane
+          POSTGRES_PASSWORD: wakeplane
+          POSTGRES_DB: wakeplane
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wakeplane -d wakeplane"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
 
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +47,11 @@ jobs:
 
       - name: Run tests
         run: go test ./... -count=1 -timeout 120s
+
+      - name: Run Postgres integration tests
+        env:
+          WAKEPLANE_POSTGRES_TEST_URL: postgres://wakeplane:wakeplane@127.0.0.1:5432/wakeplane?sslmode=disable
+        run: scripts/test-postgres-store.sh
 
       - name: Build binaries
         run: |

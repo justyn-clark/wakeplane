@@ -1,6 +1,6 @@
 # Storage Portability
 
-Summary of what is portable, what is intentionally SQLite-first, and what must change before Postgres work begins.
+Summary of what is portable, what remains intentionally SQLite-first for local installs, and what has been verified for the Postgres production backend.
 
 ## Already Portable
 
@@ -20,33 +20,43 @@ These are deliberate choices for the v1 bootstrap:
 - **Text-encoded timestamps** - simpler than native types for a single driver, but adds parsing overhead.
 - **Text-encoded booleans and JSON** - same rationale.
 
-## Must Change Before Postgres
+## Postgres Backend Status
 
-See [sqlite-audit.md](sqlite-audit.md) for the full inventory. The critical changes are:
+The first Postgres slice is implemented behind the existing store boundary:
 
-| Change                                  | Effort  | Files                          |
-| --------------------------------------- | ------- | ------------------------------ |
-| Driver and connection config            | Small   | `store.go:Open()`              |
-| Remove PRAGMAs                          | Trivial | `store.go:Open()`              |
-| Timestamp columns -> `TIMESTAMPTZ`      | Medium  | Schema + all time helpers      |
-| Boolean columns -> `BOOLEAN`            | Small   | Schema + `boolToInt` removal   |
-| JSON columns -> `JSONB`                 | Small   | Schema + serialization helpers |
-| `INSERT OR REPLACE` -> `ON CONFLICT`    | Small   | 1 query                        |
-| `julianday()` -> `EXTRACT(EPOCH FROM)`  | Small   | 2 queries                      |
-| Error detection -> Postgres error codes | Small   | 1 helper                       |
-| Connection pool sizing                  | Trivial | `store.go:Open()`              |
-| Dialect-specific migration files        | Medium  | New migration file             |
+- `WAKEPLANE_STORE=sqlite|postgres`, defaulting to `sqlite`
+- `WAKEPLANE_DATABASE_URL` for Postgres
+- dialect-owned migrations under `internal/store/migrations/{sqlite,postgres}`
+- Postgres placeholder rebinding for existing store queries
+- Postgres `ON CONFLICT` lease upsert
+- row-locking claim path for Postgres (`FOR UPDATE` on the schedule and run rows)
+
+Production verification:
+
+| Verification item                         | Status |
+| ----------------------------------------- | ------ |
+| Existing SQLite suite unchanged           | Done   |
+| Store/app/dispatcher/CLI Postgres tests   | Done   |
+| Concurrent worker duplicate-claim test    | Done   |
+| Lease expiry and crash-window tests on PG | Done   |
+| CLI/API parity run against both backends  | Done   |
+| Disposable Postgres execution             | Done   |
 
 See [storage-interface.md](storage-interface.md) for the recommended abstraction strategy.
 
-## Implementation Order
+## SQLite to Postgres Bridge
 
-1. Add `Dialect` field to store config.
-2. Create `001_init_postgres.sql` with native types.
-3. Branch `Open()` by dialect (driver, pool, init queries).
-4. Replace serialization helpers with dialect-aware versions.
-5. Fix the 3 non-portable SQL queries (upsert, 2x julianday).
-6. Fix error detection for Postgres error codes.
-7. Test against a real Postgres instance.
+The current migration bridge is schedule export/import:
 
-Total estimated scope: ~200 lines of changes in `store.go`, one new migration file, no changes outside the store package.
+```
+wakeplane schedule export > schedules.json
+wakeplane schedule import --file schedules.json
+```
+
+`schedule export` emits full schedule definitions in an import-compatible manifest. It does not migrate historical runs, receipts, request audit logs, worker leases, or dead letters. Use SQLite/Postgres native backup and restore commands when preserving full history is required.
+
+## Verification Commands
+
+1. Run `scripts/test-postgres-store.sh` against local Postgres binaries, Docker, or an externally supplied `WAKEPLANE_POSTGRES_TEST_URL`.
+2. Run `scripts/soak-drill.sh`, `scripts/restart-drill.sh`, `scripts/backup-restore-drill.sh`, and `scripts/postgres-backup-restore-drill.sh`.
+3. Keep the emitted drill receipts under `artifacts/drills/` for operator review.

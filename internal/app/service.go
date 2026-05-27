@@ -45,7 +45,7 @@ func New(ctx context.Context, cfg config.Config) (*Service, error) {
 func NewWithOptions(ctx context.Context, cfg config.Config, opts ...Option) (*Service, error) {
 	cfg = cfg.WithDefaults()
 	logger := logging.New()
-	st, err := store.Open(cfg.DatabasePath)
+	st, err := openStore(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +75,17 @@ func NewWithOptions(ctx context.Context, cfg config.Config, opts ...Option) (*Se
 		workflowRegistry: workflowRegistry,
 		startedAt:        time.Now().UTC(),
 	}, nil
+}
+
+func openStore(cfg config.Config) (*store.Store, error) {
+	switch strings.ToLower(cfg.StoreDialect) {
+	case "", "sqlite":
+		return store.OpenSQLite(cfg.DatabasePath)
+	case "postgres":
+		return store.OpenPostgres(cfg.DatabaseURL)
+	default:
+		return nil, fmt.Errorf("unsupported store dialect %q", cfg.StoreDialect)
+	}
 }
 
 func (s *Service) RegisterWorkflow(id string, handler executors.WorkflowHandler) {
@@ -430,8 +441,11 @@ func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 		Version:   s.cfg.Version,
 		StartedAt: s.startedAt.Format(time.RFC3339),
 	}
-	resp.Database.Driver = "sqlite"
-	resp.Database.Path = s.cfg.DatabasePath
+	resp.Database.Driver = s.store.Dialect()
+	resp.Database.Path = s.store.DataSource()
+	if resp.Database.Driver == "postgres" {
+		resp.Database.Path = redactDatabaseURL(resp.Database.Path)
+	}
 	resp.Scheduler.LoopIntervalSeconds = int(s.cfg.SchedulerInterval / time.Second)
 	if last := s.planner.LastTick(); !last.IsZero() {
 		resp.Scheduler.LastTickAt = last.Format(time.RFC3339)
@@ -484,6 +498,16 @@ func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 
 func (s *Service) AuthToken() string {
 	return s.cfg.AuthToken
+}
+
+func redactDatabaseURL(raw string) string {
+	if i := strings.Index(raw, "://"); i >= 0 {
+		rest := raw[i+3:]
+		if at := strings.Index(rest, "@"); at >= 0 {
+			return raw[:i+3] + "redacted@" + rest[at+1:]
+		}
+	}
+	return raw
 }
 
 func (s *Service) RequestAuditEnabled() bool {

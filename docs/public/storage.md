@@ -1,6 +1,6 @@
 # Storage
 
-Wakeplane is SQLite-first in the current beta line. This page explains why, what it means in practice, and where the seam for future storage portability lives.
+Wakeplane is SQLite-first for local installs and now has an explicit Postgres production backend seam. SQLite remains the default; Postgres is selected by configuration when an operator wants a managed production database.
 
 ## Why SQLite first
 
@@ -13,17 +13,25 @@ SQLite is the right choice for the current pre-1.0 phase:
 
 ## Current constraints
 
-- One writer. Wakeplane is a single-process daemon. Distributed or multi-writer deployments are not supported in the current beta line.
-- File-based. The database must be a local file accessible by the daemon process. Network file systems (NFS, EFS) are not recommended.
-- No connection pooling. The single-connection model means read queries also serialize behind the writer. This is fine for single-process workloads.
+- SQLite local mode is one writer. Wakeplane is still a single-process daemon; distributed worker deployments are not part of this phase.
+- SQLite is file-based. The database must be a local file accessible by the daemon process. Network file systems (NFS, EFS) are not recommended.
+- Postgres mode uses a connection pool and row locks for run claiming, but real disposable-Postgres verification is still required before calling the backend production-complete.
 
 ## Configuration
 
 ```bash
+WAKEPLANE_STORE=sqlite              # default
 WAKEPLANE_DB_PATH=./wakeplane.db   # path to SQLite file
 ```
 
-The database is created automatically on first startup. Migrations run on every startup and are idempotent.
+For Postgres:
+
+```bash
+WAKEPLANE_STORE=postgres
+WAKEPLANE_DATABASE_URL=postgres://wakeplane:secret@db.example.com:5432/wakeplane
+```
+
+Migrations are dialect-owned under `internal/store/migrations/{sqlite,postgres}` and run on startup. Keep SQLite for local trusted installs; use Postgres when you need an external production database, backups, and operational database tooling.
 
 ## Backup
 
@@ -34,6 +42,31 @@ sqlite3 /var/lib/wakeplane/data.db ".backup /backups/wakeplane-$(date +%Y%m%d).d
 ```
 
 Do not copy the file while the daemon is running. Use the SQLite backup API or stop the daemon first.
+
+For Postgres:
+
+```bash
+pg_dump "$WAKEPLANE_DATABASE_URL" > "wakeplane-$(date +%Y%m%d).sql"
+```
+
+## SQLite to Postgres schedule bridge
+
+The supported bridge in this phase is schedule export/import:
+
+```bash
+# Against the SQLite-backed daemon.
+wakeplane schedule export > schedules.json
+
+# Start a fresh Postgres-backed daemon, then import.
+WAKEPLANE_STORE=postgres \
+WAKEPLANE_DATABASE_URL=postgres://wakeplane:secret@db.example.com:5432/wakeplane \
+wakeplane serve
+
+wakeplane schedule import --file schedules.json
+wakeplane status
+```
+
+`schedule export` emits an import-compatible manifest with schedule definitions. It does not move run history, execution receipts, request audit rows, worker leases, or dead letters. Preserve those with database-native backups when you need a full historical restore.
 
 ## What is stored
 
@@ -58,36 +91,28 @@ Specifically portable:
 - Transaction isolation (default levels compatible with standard databases)
 - Query patterns (SELECT, INSERT, UPDATE, DELETE, JOIN, COUNT - standard SQL)
 
-## What must change before Postgres
+## Postgres Hardening Status
 
-| Change                                         | Effort  |
-| ---------------------------------------------- | ------- |
-| Driver and connection config                   | Small   |
-| Remove SQLite PRAGMAs                          | Trivial |
-| Timestamp columns -> `TIMESTAMPTZ`             | Medium  |
-| Boolean columns -> `BOOLEAN`                   | Small   |
-| JSON columns -> `JSONB`                        | Small   |
-| `INSERT OR REPLACE` -> `ON CONFLICT DO UPDATE` | Small   |
-| `julianday()` -> `EXTRACT(EPOCH FROM ...)`     | Small   |
-| Error detection -> Postgres error codes        | Small   |
-| Connection pool sizing                         | Trivial |
-| Dialect-specific migration file                | Medium  |
+| Verification item                                   | Status |
+| --------------------------------------------------- | ------ |
+| Driver and connection config                        | Done   |
+| Dialect-owned migrations                            | Done   |
+| Postgres placeholder binding and lease upsert       | Done   |
+| Postgres row-lock claim path                        | Done   |
+| Store/app/dispatcher/CLI Postgres test suite        | Done   |
+| Disposable Postgres execution                       | Done   |
+| Native Postgres timestamp/boolean/JSON column types | Later  |
 
-Total estimated scope: approximately 200 lines of changes in `store.go` and one new migration file. No changes outside the store package.
+## Verification path
 
-## Future portability path
+The recommended verification path for Postgres changes:
 
-The recommended approach when adding Postgres support:
+1. Run `scripts/test-postgres-store.sh` against local Postgres binaries, Docker, or an externally supplied `WAKEPLANE_POSTGRES_TEST_URL`.
+2. Fix any store/app/dispatcher/CLI parity failures exposed by real Postgres.
+3. Run the soak, restart-recovery, and backup/restore drills after backend changes.
+4. Move to native Postgres timestamp/boolean/JSON column types only behind an explicit migration.
 
-1. Add a `Dialect` field to the store config.
-2. Branch `Open()` by dialect (driver, pool, init queries).
-3. Replace time/boolean/JSON serialization helpers with dialect-aware versions.
-4. Fix the three non-portable SQL queries (`INSERT OR REPLACE`, two `julianday()` calls).
-5. Fix error detection for Postgres error codes.
-6. Create `001_init_postgres.sql` with native types.
-7. Test against a real Postgres instance.
-
-This work is scoped and bounded. It does not touch any application logic.
+This work stays behind the store boundary. Scheduler, dispatcher, run ledger, policy, and operator surfaces remain separate.
 
 ## Reference docs
 

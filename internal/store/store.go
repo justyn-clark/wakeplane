@@ -10,16 +10,19 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 
 	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
-//go:embed migrations/*.sql
+//go:embed migrations/*/*.sql
 var migrationsFS embed.FS
 
 type Store struct {
 	db              *sql.DB
+	dialect         string
+	dataSource      string
 	receiptMaxBytes int
 }
 
@@ -34,6 +37,10 @@ type NextDue struct {
 }
 
 func Open(path string) (*Store, error) {
+	return OpenSQLite(path)
+}
+
+func OpenSQLite(path string) (*Store, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, err
@@ -42,7 +49,21 @@ func Open(path string) (*Store, error) {
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;`); err != nil {
 		return nil, err
 	}
-	return &Store{db: db, receiptMaxBytes: 262144}, nil
+	return &Store{db: db, dialect: "sqlite", dataSource: path, receiptMaxBytes: 262144}, nil
+}
+
+func OpenPostgres(databaseURL string) (*Store, error) {
+	if strings.TrimSpace(databaseURL) == "" {
+		return nil, errors.New("postgres database URL is required")
+	}
+	db, err := sql.Open("pgx", databaseURL)
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(30 * time.Minute)
+	return &Store{db: db, dialect: "postgres", dataSource: databaseURL, receiptMaxBytes: 262144}, nil
 }
 
 func (s *Store) SetReceiptMaxBytes(maxBytes int) {
@@ -53,21 +74,67 @@ func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) DB() *sql.DB { return s.db }
 
+func (s *Store) Dialect() string { return s.dialect }
+
+func (s *Store) DataSource() string { return s.dataSource }
+
 func (s *Store) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
+func (s *Store) exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return s.db.ExecContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	return s.db.QueryContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) queryRow(ctx context.Context, query string, args ...any) *sql.Row {
+	return s.db.QueryRowContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) txExec(ctx context.Context, tx *sql.Tx, query string, args ...any) (sql.Result, error) {
+	return tx.ExecContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) txQuery(ctx context.Context, tx *sql.Tx, query string, args ...any) (*sql.Rows, error) {
+	return tx.QueryContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) txQueryRow(ctx context.Context, tx *sql.Tx, query string, args ...any) *sql.Row {
+	return tx.QueryRowContext(ctx, s.rebind(query), args...)
+}
+
+func (s *Store) rebind(query string) string {
+	if s.dialect != "postgres" {
+		return query
+	}
+	var b strings.Builder
+	b.Grow(len(query) + 8)
+	arg := 1
+	for _, r := range query {
+		if r == '?' {
+			b.WriteString(fmt.Sprintf("$%d", arg))
+			arg++
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
 func (s *Store) Migrate(ctx context.Context) error {
-	entries, err := migrationsFS.ReadDir("migrations")
+	entries, err := migrationsFS.ReadDir("migrations/" + s.dialect)
 	if err != nil {
 		return err
 	}
 	for _, entry := range entries {
-		b, err := migrationsFS.ReadFile("migrations/" + entry.Name())
+		b, err := migrationsFS.ReadFile("migrations/" + s.dialect + "/" + entry.Name())
 		if err != nil {
 			return err
 		}
-		if _, err := s.db.ExecContext(ctx, string(b)); err != nil {
+		if _, err := s.exec(ctx, string(b)); err != nil {
 			return fmt.Errorf("apply migration %s: %w", entry.Name(), err)
 		}
 	}
@@ -75,7 +142,7 @@ func (s *Store) Migrate(ctx context.Context) error {
 }
 
 func (s *Store) CreateSchedule(ctx context.Context, schedule domain.Schedule) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		INSERT INTO schedules (
 			id, name, enabled, schedule_kind, schedule_spec_json, timezone,
 			target_kind, target_spec_json, overlap_policy, misfire_policy,
@@ -112,7 +179,7 @@ func (s *Store) CreateSchedule(ctx context.Context, schedule domain.Schedule) er
 }
 
 func (s *Store) UpdateSchedule(ctx context.Context, schedule domain.Schedule) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE schedules
 		SET name = ?, enabled = ?, schedule_kind = ?, schedule_spec_json = ?, timezone = ?,
 		    target_kind = ?, target_spec_json = ?, overlap_policy = ?, misfire_policy = ?,
@@ -148,7 +215,7 @@ func (s *Store) UpdateSchedule(ctx context.Context, schedule domain.Schedule) er
 }
 
 func (s *Store) GetSchedule(ctx context.Context, id string) (domain.Schedule, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT id, name, enabled, schedule_kind, schedule_spec_json, timezone, target_kind, target_spec_json,
 		       overlap_policy, misfire_policy, timeout_seconds, max_concurrency, retry_max_attempts,
 		       retry_strategy, retry_initial_delay_seconds, retry_max_delay_seconds, start_at, end_at,
@@ -163,7 +230,7 @@ func (s *Store) GetSchedule(ctx context.Context, id string) (domain.Schedule, er
 }
 
 func (s *Store) DeleteSchedule(ctx context.Context, id string) error {
-	res, err := s.db.ExecContext(ctx, `DELETE FROM schedules WHERE id = ?`, id)
+	res, err := s.exec(ctx, `DELETE FROM schedules WHERE id = ?`, id)
 	if err != nil {
 		return err
 	}
@@ -204,7 +271,7 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 	}
 	query += " ORDER BY created_at DESC, id DESC LIMIT ?"
 	args = append(args, limit+1)
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.query(ctx, query, args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -245,7 +312,7 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 }
 
 func (s *Store) ListAllSchedules(ctx context.Context) ([]domain.Schedule, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT id, name, enabled, schedule_kind, schedule_spec_json, timezone, target_kind, target_spec_json,
 		       overlap_policy, misfire_policy, timeout_seconds, max_concurrency, retry_max_attempts,
 		       retry_strategy, retry_initial_delay_seconds, retry_max_delay_seconds, start_at, end_at,
@@ -269,7 +336,7 @@ func (s *Store) ListAllSchedules(ctx context.Context) ([]domain.Schedule, error)
 }
 
 func (s *Store) InsertRun(ctx context.Context, run domain.Run) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		INSERT INTO schedule_runs (
 			id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 			claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
@@ -302,7 +369,7 @@ func (s *Store) InsertRun(ctx context.Context, run domain.Run) error {
 }
 
 func (s *Store) GetRun(ctx context.Context, id string) (domain.Run, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
@@ -354,7 +421,7 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 	}
 	query += " ORDER BY created_at DESC, id DESC LIMIT ?"
 	args = append(args, limit+1)
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.query(ctx, query, args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -390,7 +457,7 @@ func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receip
 	if err := s.ensureRunExists(ctx, runID); err != nil {
 		return nil, err
 	}
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT id, receipt_kind, content_type, body, created_at
 		FROM execution_receipts
 		WHERE run_id = ?
@@ -418,7 +485,7 @@ func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receip
 
 func (s *Store) InsertReceipt(ctx context.Context, receipt domain.Receipt) error {
 	receipt.Body = truncateReceiptBody(receipt.Body, s.receiptMaxBytes)
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		INSERT INTO execution_receipts (id, run_id, receipt_kind, content_type, body, created_at)
 		VALUES (?, ?, ?, ?, ?, ?)
 	`, receipt.ID, receipt.RunID, receipt.ReceiptKind, receipt.ContentType, receipt.Body, timeString(receipt.CreatedAt))
@@ -426,7 +493,7 @@ func (s *Store) InsertReceipt(ctx context.Context, receipt domain.Receipt) error
 }
 
 func (s *Store) PruneTerminalRunsBefore(ctx context.Context, cutoff time.Time) (int64, error) {
-	result, err := s.db.ExecContext(ctx, `
+	result, err := s.exec(ctx, `
 		DELETE FROM schedule_runs
 		WHERE finished_at IS NOT NULL
 		  AND finished_at < ?
@@ -455,7 +522,7 @@ func truncateReceiptBody(body string, maxBytes int) string {
 }
 
 func (s *Store) InsertDeadLetter(ctx context.Context, dead domain.DeadLetter) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		INSERT INTO dead_letters (id, run_id, schedule_id, occurrence_key, reason, payload_json, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`, dead.ID, dead.RunID, dead.ScheduleID, dead.OccurrenceKey, dead.Reason, rawJSON(dead.PayloadJSON), timeString(dead.CreatedAt))
@@ -463,7 +530,7 @@ func (s *Store) InsertDeadLetter(ctx context.Context, dead domain.DeadLetter) er
 }
 
 func (s *Store) InsertRequestAudit(ctx context.Context, audit domain.RequestAudit) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		INSERT INTO request_audit_logs (id, method, path, status_code, remote_addr, user_agent, auth_subject, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`, audit.ID, audit.Method, audit.Path, audit.StatusCode, audit.RemoteAddr, audit.UserAgent, audit.AuthSubject, timeString(audit.CreatedAt))
@@ -475,7 +542,7 @@ func (s *Store) RequestAuditCount(ctx context.Context) (int, error) {
 }
 
 func (s *Store) ListCandidateRuns(ctx context.Context, now time.Time, limit int) ([]domain.Run, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
@@ -510,7 +577,20 @@ func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, w
 		status     domain.RunStatus
 		scheduleID string
 	)
-	if err := tx.QueryRowContext(ctx, `SELECT schedule_id, status FROM schedule_runs WHERE id = ?`, runID).Scan(&scheduleID, &status); err != nil {
+	if s.dialect == "postgres" {
+		var lockedScheduleID string
+		if err := s.txQueryRow(ctx, tx, `SELECT id FROM schedules WHERE id = ? FOR UPDATE`, schedule.ID).Scan(&lockedScheduleID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return false, ErrNotFound
+			}
+			return false, err
+		}
+	}
+	runQuery := `SELECT schedule_id, status FROM schedule_runs WHERE id = ?`
+	if s.dialect == "postgres" {
+		runQuery += ` FOR UPDATE`
+	}
+	if err := s.txQueryRow(ctx, tx, runQuery, runID).Scan(&scheduleID, &status); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, ErrNotFound
 		}
@@ -523,7 +603,7 @@ func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, w
 		return false, nil
 	}
 	var activeCount int
-	if err := tx.QueryRowContext(ctx, `
+	if err := s.txQueryRow(ctx, tx, `
 		SELECT COUNT(*) FROM schedule_runs
 		WHERE schedule_id = ? AND id <> ? AND status IN ('claimed', 'running')
 	`, schedule.ID, runID).Scan(&activeCount); err != nil {
@@ -536,7 +616,7 @@ func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, w
 		return false, nil
 	}
 	expires := now.Add(ttl)
-	res, err := tx.ExecContext(ctx, `
+	res, err := s.txExec(ctx, tx, `
 		UPDATE schedule_runs
 		SET status = 'claimed', claimed_by_worker_id = ?, claim_expires_at = ?, updated_at = ?
 		WHERE id = ? AND status IN ('pending', 'retry_scheduled')
@@ -551,19 +631,37 @@ func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, w
 	if rowsAffected == 0 {
 		return false, nil
 	}
-	_, err = tx.ExecContext(ctx, `
-		INSERT OR REPLACE INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, domain.NewID("lease"), workerID, runID, runID, timeString(now), timeString(expires), timeString(now))
-	if err != nil {
+	if err := s.upsertLease(ctx, tx, workerID, runID, now, expires); err != nil {
 		return false, err
 	}
 	return true, tx.Commit()
 }
 
+func (s *Store) upsertLease(ctx context.Context, tx *sql.Tx, workerID, runID string, acquiredAt, expiresAt time.Time) error {
+	query := `
+		INSERT OR REPLACE INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+	if s.dialect == "postgres" {
+		query = `
+			INSERT INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT (lease_key) DO UPDATE
+			SET id = EXCLUDED.id,
+			    worker_id = EXCLUDED.worker_id,
+			    run_id = EXCLUDED.run_id,
+			    acquired_at = EXCLUDED.acquired_at,
+			    expires_at = EXCLUDED.expires_at,
+			    heartbeat_at = EXCLUDED.heartbeat_at
+		`
+	}
+	_, err := s.txExec(ctx, tx, query, domain.NewID("lease"), workerID, runID, runID, timeString(acquiredAt), timeString(expiresAt), timeString(acquiredAt))
+	return err
+}
+
 func (s *Store) RenewLease(ctx context.Context, runID, workerID string, now time.Time, ttl time.Duration) error {
 	expires := now.Add(ttl)
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE worker_leases
 		SET expires_at = ?, heartbeat_at = ?
 		WHERE run_id = ? AND worker_id = ?
@@ -571,7 +669,7 @@ func (s *Store) RenewLease(ctx context.Context, runID, workerID string, now time
 	if err != nil {
 		return err
 	}
-	_, err = s.db.ExecContext(ctx, `
+	_, err = s.exec(ctx, `
 		UPDATE schedule_runs
 		SET claim_expires_at = ?, updated_at = ?
 		WHERE id = ? AND claimed_by_worker_id = ?
@@ -585,7 +683,7 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
-	rows, err := tx.QueryContext(ctx, `SELECT run_id FROM worker_leases WHERE expires_at <= ?`, timeString(now))
+	rows, err := s.txQuery(ctx, tx, `SELECT run_id FROM worker_leases WHERE expires_at <= ?`, timeString(now))
 	if err != nil {
 		return err
 	}
@@ -600,14 +698,14 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 	}
 	rows.Close()
 	for _, runID := range runIDs {
-		if _, err := tx.ExecContext(ctx, `
+		if _, err := s.txExec(ctx, tx, `
 			UPDATE schedule_runs
 			SET status = 'pending', claimed_by_worker_id = NULL, claim_expires_at = NULL, updated_at = ?
 			WHERE id = ? AND status IN ('claimed', 'running')
 		`, timeString(now), runID); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID); err != nil {
+		if _, err := s.txExec(ctx, tx, `DELETE FROM worker_leases WHERE run_id = ?`, runID); err != nil {
 			return err
 		}
 	}
@@ -615,7 +713,7 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 }
 
 func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]ExpiredLease, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT sr.id, sr.schedule_id, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt, sr.claimed_by_worker_id,
 		       sr.claim_expires_at, sr.started_at, sr.finished_at, sr.http_status_code, sr.exit_code, sr.result_json, sr.error_text,
 		       sr.retry_available_at, sr.created_at, sr.updated_at,
@@ -713,7 +811,7 @@ func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]Expired
 }
 
 func (s *Store) ResetClaimedRun(ctx context.Context, runID string, now time.Time) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE schedule_runs
 		SET status = 'pending', claimed_by_worker_id = NULL, claim_expires_at = NULL, updated_at = ?
 		WHERE id = ? AND status = 'claimed'
@@ -721,17 +819,17 @@ func (s *Store) ResetClaimedRun(ctx context.Context, runID string, now time.Time
 	if err != nil {
 		return err
 	}
-	_, err = s.db.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
+	_, err = s.exec(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
 	return err
 }
 
 func (s *Store) ClearLease(ctx context.Context, runID string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
+	_, err := s.exec(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
 	return err
 }
 
 func (s *Store) MarkRunRunning(ctx context.Context, runID string, now time.Time) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE schedule_runs
 		SET status = 'running', started_at = COALESCE(started_at, ?), updated_at = ?
 		WHERE id = ?
@@ -740,7 +838,7 @@ func (s *Store) MarkRunRunning(ctx context.Context, runID string, now time.Time)
 }
 
 func (s *Store) FinishRun(ctx context.Context, run domain.Run) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE schedule_runs
 		SET status = ?, claimed_by_worker_id = ?, claim_expires_at = ?, started_at = ?, finished_at = ?,
 		    http_status_code = ?, exit_code = ?, result_json = ?, error_text = ?, retry_available_at = ?, updated_at = ?
@@ -763,13 +861,13 @@ func (s *Store) FinishRun(ctx context.Context, run domain.Run) error {
 		return err
 	}
 	if run.FinishedAt != nil {
-		_, _ = s.db.ExecContext(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, run.ID)
+		_, _ = s.exec(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, run.ID)
 	}
 	return nil
 }
 
 func (s *Store) UpdateScheduleRuntime(ctx context.Context, scheduleID string, nextRunAt, lastRunAt, pausedAt *time.Time, enabled bool, now time.Time) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.exec(ctx, `
 		UPDATE schedules
 		SET enabled = ?, paused_at = ?, next_run_at = ?, last_run_at = ?, updated_at = ?
 		WHERE id = ?
@@ -778,7 +876,7 @@ func (s *Store) UpdateScheduleRuntime(ctx context.Context, scheduleID string, ne
 }
 
 func (s *Store) ActiveRunCount(ctx context.Context, scheduleID string) (int, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT COUNT(*) FROM schedule_runs
 		WHERE schedule_id = ? AND status IN ('claimed', 'running')
 	`, scheduleID)
@@ -787,7 +885,7 @@ func (s *Store) ActiveRunCount(ctx context.Context, scheduleID string) (int, err
 }
 
 func (s *Store) ListActiveRuns(ctx context.Context, scheduleID string) ([]domain.Run, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
@@ -811,7 +909,7 @@ func (s *Store) ListActiveRuns(ctx context.Context, scheduleID string) ([]domain
 }
 
 func (s *Store) ListPendingRunsBySchedule(ctx context.Context, scheduleID string) ([]domain.Run, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
@@ -836,33 +934,33 @@ func (s *Store) ListPendingRunsBySchedule(ctx context.Context, scheduleID string
 
 func (s *Store) CountStatus(ctx context.Context, table, column, value string) (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", table, column)
-	row := s.db.QueryRowContext(ctx, query, value)
+	row := s.queryRow(ctx, query, value)
 	var n int
 	return n, row.Scan(&n)
 }
 
 func (s *Store) CountTable(ctx context.Context, table string) (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
-	row := s.db.QueryRowContext(ctx, query)
+	row := s.queryRow(ctx, query)
 	var n int
 	return n, row.Scan(&n)
 }
 
 func (s *Store) WorkerLeaseCount(ctx context.Context) (int, error) {
-	row := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM worker_leases`)
+	row := s.queryRow(ctx, `SELECT COUNT(*) FROM worker_leases`)
 	var n int
 	return n, row.Scan(&n)
 }
 
 func (s *Store) ScheduleEnabledCount(ctx context.Context) (int, error) {
-	row := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schedules WHERE enabled = 1`)
+	row := s.queryRow(ctx, `SELECT COUNT(*) FROM schedules WHERE enabled = 1`)
 	var n int
 	return n, row.Scan(&n)
 }
 
 func (s *Store) ensureRunExists(ctx context.Context, runID string) error {
 	var id string
-	err := s.db.QueryRowContext(ctx, `SELECT id FROM schedule_runs WHERE id = ?`, runID).Scan(&id)
+	err := s.queryRow(ctx, `SELECT id FROM schedule_runs WHERE id = ?`, runID).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
@@ -874,7 +972,7 @@ var ErrNotFound = errors.New("not found")
 var ErrConflict = errors.New("conflict")
 
 func (s *Store) DueRunCount(ctx context.Context, now time.Time) (int, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT COUNT(*) FROM schedule_runs
 		WHERE (status = 'pending' AND due_time <= ?)
 		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND retry_available_at <= ?)
@@ -888,7 +986,7 @@ func (s *Store) RetryQueuedCount(ctx context.Context) (int, error) {
 }
 
 func (s *Store) ClaimedExpiredCount(ctx context.Context, now time.Time) (int, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT COUNT(*) FROM schedule_runs
 		WHERE status IN ('claimed', 'running') AND claim_expires_at IS NOT NULL AND claim_expires_at <= ?
 	`, timeString(now))
@@ -897,7 +995,7 @@ func (s *Store) ClaimedExpiredCount(ctx context.Context, now time.Time) (int, er
 }
 
 func (s *Store) NextDueSchedule(ctx context.Context, _ time.Time) (*NextDue, error) {
-	row := s.db.QueryRowContext(ctx, `
+	row := s.queryRow(ctx, `
 		SELECT schedule_id,
 		       MIN(CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END)
 		FROM schedule_runs
@@ -917,7 +1015,7 @@ func (s *Store) NextDueSchedule(ctx context.Context, _ time.Time) (*NextDue, err
 }
 
 func (s *Store) ExecutorOutcomeCounts(ctx context.Context) (map[string]map[string]int, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	rows, err := s.query(ctx, `
 		SELECT s.target_kind, sr.status, COUNT(*)
 		FROM schedule_runs sr
 		JOIN schedules s ON s.id = sr.schedule_id
@@ -947,7 +1045,7 @@ func (s *Store) ExecutorDurationStats(ctx context.Context) (map[string]struct {
 	Count      int
 	SumSeconds float64
 }, error) {
-	rows, err := s.db.QueryContext(ctx, `
+	query := `
 		SELECT s.target_kind,
 		       COUNT(*),
 		       COALESCE(SUM((julianday(sr.finished_at) - julianday(sr.started_at)) * 86400.0), 0)
@@ -955,7 +1053,19 @@ func (s *Store) ExecutorDurationStats(ctx context.Context) (map[string]struct {
 		JOIN schedules s ON s.id = sr.schedule_id
 		WHERE sr.started_at IS NOT NULL AND sr.finished_at IS NOT NULL
 		GROUP BY s.target_kind
-	`)
+	`
+	if s.dialect == "postgres" {
+		query = `
+			SELECT s.target_kind,
+			       COUNT(*),
+			       COALESCE(SUM(EXTRACT(EPOCH FROM (sr.finished_at::timestamptz - sr.started_at::timestamptz))), 0)
+			FROM schedule_runs sr
+			JOIN schedules s ON s.id = sr.schedule_id
+			WHERE sr.started_at IS NOT NULL AND sr.finished_at IS NOT NULL
+			GROUP BY s.target_kind
+		`
+	}
+	rows, err := s.query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -1140,5 +1250,6 @@ func isUniqueErr(err error) bool {
 	if err == nil {
 		return false
 	}
-	return strings.Contains(strings.ToLower(err.Error()), "unique")
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unique") || strings.Contains(msg, "sqlstate 23505")
 }

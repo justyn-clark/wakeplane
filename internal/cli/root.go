@@ -214,8 +214,18 @@ func newScheduleCmd(baseURL *string) *cobra.Command {
 	importCmd.Flags().StringVarP(&manifest, "file", "f", "", "Schedule manifest")
 	_ = importCmd.MarkFlagRequired("file")
 
-	export := &cobra.Command{Use: "export", Short: "Export schedules as JSON", RunE: func(cmd *cobra.Command, args []string) error {
-		return getAndPrint(*baseURL + "/v1/schedules?limit=1000")
+	export := &cobra.Command{Use: "export", Short: "Export schedules as import-compatible JSON", RunE: func(cmd *cobra.Command, args []string) error {
+		manifest, err := exportScheduleManifest(*baseURL)
+		if err != nil {
+			return err
+		}
+		b, err := json.MarshalIndent(manifest, "", "  ")
+		if err != nil {
+			return err
+		}
+		_, _ = os.Stdout.Write(b)
+		_, _ = os.Stdout.Write([]byte("\n"))
+		return nil
 	}}
 	list := &cobra.Command{Use: "list", Short: "List schedules", RunE: func(cmd *cobra.Command, args []string) error {
 		return getAndPrint(*baseURL + "/v1/schedules")
@@ -279,6 +289,54 @@ func sendJSON(method, url string, body any) error {
 	return do(req)
 }
 
+type scheduleExportManifest struct {
+	Schedules []domain.CreateScheduleRequest `json:"schedules" yaml:"schedules"`
+}
+
+func exportScheduleManifest(baseURL string) (scheduleExportManifest, error) {
+	var listed domain.ListResponse[domain.ScheduleSummary]
+	if err := getJSON(baseURL+"/v1/schedules?limit=1000", &listed); err != nil {
+		return scheduleExportManifest{}, err
+	}
+	manifest := scheduleExportManifest{Schedules: make([]domain.CreateScheduleRequest, 0, len(listed.Items))}
+	for _, item := range listed.Items {
+		var schedule domain.Schedule
+		if err := getJSON(baseURL+"/v1/schedules/"+item.ID, &schedule); err != nil {
+			return scheduleExportManifest{}, err
+		}
+		manifest.Schedules = append(manifest.Schedules, domain.CreateScheduleRequest{
+			Name:     schedule.Name,
+			Enabled:  schedule.Enabled,
+			Timezone: schedule.Timezone,
+			Schedule: schedule.Schedule,
+			Target:   schedule.Target,
+			Policy:   schedule.Policy,
+			Retry:    schedule.Retry,
+			StartAt:  schedule.StartAt,
+			EndAt:    schedule.EndAt,
+		})
+	}
+	return manifest, nil
+}
+
+func getJSON(url string, target any) error {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	applyAuth(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("%s", body)
+	}
+	return json.Unmarshal(body, target)
+}
+
 func do(req *http.Request) error {
 	applyAuth(req)
 	resp, err := http.DefaultClient.Do(req)
@@ -319,6 +377,10 @@ func printStatus(baseURL string) error {
 		Service   string `json:"service"`
 		Version   string `json:"version"`
 		StartedAt string `json:"started_at"`
+		Database  struct {
+			Driver string `json:"driver"`
+			Path   string `json:"path"`
+		} `json:"database"`
 		Scheduler struct {
 			LastTickAt        string `json:"last_tick_at"`
 			DueRuns           int    `json:"due_runs"`
@@ -348,9 +410,11 @@ func printStatus(baseURL string) error {
 		nextDue = status.Scheduler.NextDueRunAt + " " + status.Scheduler.NextDueScheduleID
 	}
 	_, err = fmt.Fprintf(os.Stdout,
-		"wakeplane %s started=%s last_tick=%s\nruns due=%d running=%d failed=%d retry_queued=%d dead_letter=%d workers active=%d expired_claims=%d\nnext_due=%s retention_days=%d receipt_max_bytes=%d\n",
+		"wakeplane %s started=%s store=%s database=%s last_tick=%s\nruns due=%d running=%d failed=%d retry_queued=%d dead_letter=%d workers active=%d expired_claims=%d\nnext_due=%s retention_days=%d receipt_max_bytes=%d\n",
 		status.Version,
 		status.StartedAt,
+		status.Database.Driver,
+		status.Database.Path,
 		status.Scheduler.LastTickAt,
 		status.Scheduler.DueRuns,
 		status.Runs.Running,

@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/justyn-clark/wakeplane/internal/api"
 	"github.com/justyn-clark/wakeplane/internal/app"
 	"github.com/justyn-clark/wakeplane/internal/config"
 	"github.com/justyn-clark/wakeplane/internal/domain"
@@ -151,6 +153,74 @@ func TestVersionCommandPrintsVersion(t *testing.T) {
 
 	if got := stdout.String(); got != "0.2.0-beta.1\n" {
 		t.Fatalf("expected version output, got %q", got)
+	}
+}
+
+func TestExportScheduleManifestIsImportCompatible(t *testing.T) {
+	service, err := app.New(context.Background(), config.Config{
+		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  time.Second,
+		DispatcherInterval: time.Second,
+		LeaseTTL:           time.Second,
+		WorkerID:           "wrk_export",
+		Version:            "test",
+	})
+	if err != nil {
+		t.Fatalf("app.New returned error: %v", err)
+	}
+	defer service.Close()
+	server := httptest.NewServer(api.NewMux(service))
+	defer server.Close()
+
+	policy := domain.Policy{
+		Overlap:        domain.OverlapQueueLatest,
+		Misfire:        domain.MisfireCatchUp,
+		TimeoutSeconds: 45,
+		MaxConcurrency: 2,
+	}
+	retry := domain.RetryPolicy{
+		MaxAttempts:         3,
+		Strategy:            domain.RetryExponential,
+		InitialDelaySeconds: 5,
+		MaxDelaySeconds:     60,
+	}
+	if _, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "export-http",
+		Enabled:  true,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target: domain.TargetSpec{
+			Kind:   domain.TargetKindHTTP,
+			Method: http.MethodPost,
+			URL:    "https://example.com/hook",
+			Headers: map[string]string{
+				"X-Wakeplane": "test",
+			},
+			Body: map[string]any{"ok": true},
+		},
+		Policy: policy,
+		Retry:  retry,
+	}); err != nil || len(errs) > 0 {
+		t.Fatalf("CreateSchedule failed: %v %+v", err, errs)
+	}
+
+	manifest, err := exportScheduleManifest(server.URL)
+	if err != nil {
+		t.Fatalf("exportScheduleManifest returned error: %v", err)
+	}
+	if len(manifest.Schedules) != 1 {
+		t.Fatalf("expected 1 exported schedule, got %d", len(manifest.Schedules))
+	}
+	got := manifest.Schedules[0]
+	if got.Name != "export-http" || got.Target.URL != "https://example.com/hook" {
+		t.Fatalf("export did not include full schedule target: %+v", got)
+	}
+	if got.Policy != policy {
+		t.Fatalf("expected policy %+v, got %+v", policy, got.Policy)
+	}
+	if got.Retry != retry {
+		t.Fatalf("expected retry %+v, got %+v", retry, got.Retry)
 	}
 }
 

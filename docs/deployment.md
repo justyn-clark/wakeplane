@@ -63,7 +63,7 @@ See [docs/release.md](release.md) for the full release checklist and versioning 
 
 ## Security posture for deployment
 
-**v0.1.x has no auth.** See [SECURITY.md](../SECURITY.md).
+Wakeplane supports single-operator bearer auth for `/v1/...`, but has no RBAC or multi-tenancy. See [SECURITY.md](../SECURITY.md).
 
 Recommended deployment topologies:
 

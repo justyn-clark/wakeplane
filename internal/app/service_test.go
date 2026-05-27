@@ -142,8 +142,22 @@ func TestStatusIncludesOperationalCounts(t *testing.T) {
 	if status.Scheduler.DueRuns == 0 {
 		t.Fatalf("expected due runs to be > 0")
 	}
+	if status.Database.Driver != "sqlite" {
+		t.Fatalf("expected sqlite database driver, got %q", status.Database.Driver)
+	}
+	if status.Database.Path != dbPath {
+		t.Fatalf("expected database path %q, got %q", dbPath, status.Database.Path)
+	}
 	if status.Scheduler.NextDueScheduleID == "" {
 		t.Fatalf("expected next due schedule id to be populated")
+	}
+}
+
+func TestRedactDatabaseURLHidesCredentials(t *testing.T) {
+	got := redactDatabaseURL("postgres://wakeplane:secret@localhost:5432/wakeplane")
+	want := "postgres://redacted@localhost:5432/wakeplane"
+	if got != want {
+		t.Fatalf("expected redacted URL %q, got %q", want, got)
 	}
 }
 

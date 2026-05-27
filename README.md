@@ -57,13 +57,13 @@ Core invariants currently enforced in code:
 
 ## Operational Context
 
-Wakeplane was born inside the OpenCLAW ACE Hermes personal-agent environment running on a Mac Mini. That local system remains an important proving ground for the product.
+Wakeplane has a real local-operator deployment that remains an important proving ground for the product.
 
 That provenance is operational context, not product lock-in. Wakeplane is still intended to stand on its own:
 
-- as the local scheduler on a personal machine such as a MacBook Air
+- as the local scheduler on a personal machine
 - as the control plane for small internal systems
-- as a standalone tool other operators can run without inheriting the ACE-specific environment
+- as a standalone tool other operators can run without inheriting any private operator environment
 
 Single-machine operation is a first-class use case, not a temporary bootstrap mode. Changes here should not regress the local system Wakeplane was built to support.
 

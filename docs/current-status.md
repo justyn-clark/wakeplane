@@ -16,12 +16,11 @@ This repository is not a reminder app, not a thin cron wrapper, and not a genera
 
 ## Current deployments
 
-Wakeplane was born in the OpenCLAW ACE Hermes personal-agent environment on a Mac Mini. That environment is still a real operational consumer and an important validation surface for single-machine scheduling, typed execution, and operator visibility.
+Wakeplane has a real local-operator deployment that validates single-machine scheduling, typed execution, and operator visibility.
 
-Wakeplane is not documented as an ACE-only subsystem. The same product is expected to run:
+Wakeplane is not documented as an environment-specific subsystem. The same product is expected to run:
 
-- on the Mac Mini where that environment lives
-- on a local machine such as a MacBook Air for personal scheduling and agent support
+- on a local machine for personal scheduling and agent support
 - as a standalone control plane other operators can run in their own environments
 
 That means local-system safety matters. Regressing the single-node local deployment model would be a product regression, not an acceptable trade for future scale.

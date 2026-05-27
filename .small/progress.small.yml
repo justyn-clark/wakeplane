@@ -1393,7 +1393,7 @@ entries:
       status: completed
       task_id: task-38
       timestamp: "2026-04-15T22:05:56.400000000Z"
-    - evidence: Added explicit operational context describing Wakeplane's origin in the OpenCLAW ACE Hermes Mac Mini environment while preserving Wakeplane's standalone product boundary and local-machine support expectations.
+    - evidence: Added explicit operational context for local-operator deployments while preserving Wakeplane's standalone product boundary and local-machine support expectations.
       notes: Updated README.md, docs/current-status.md, docs/public/index.md, and docs/public/quickstart.md
       status: completed
       task_id: task-39

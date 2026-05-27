@@ -1,6 +1,6 @@
 small_version: "1.0.0"
 owner: agent
-summary: Source docs and wakeplane.dev were resynced onto the shipped beta baseline, including local-system operational context for the Mac Mini / ACE environment and standalone positioning for personal-machine use. Source verification and docsite build both passed locally.
+summary: Source docs and wakeplane.dev were resynced onto the shipped beta baseline with standalone positioning for local and internal deployments. Source verification and docsite build both passed locally.
 resume:
     next_steps:
         - Implement retention and size bounds for receipts, runs, and dead letters.

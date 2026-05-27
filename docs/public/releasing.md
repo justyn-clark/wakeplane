@@ -64,7 +64,7 @@ Each release page should include:
 Current release notes:
 
 - [v0.1.0](releases/v0.1.0.md)
-- [v0.2.0-beta.1 (planned beta tag)](releases/v0.2.0-beta.1.md)
+- [v0.2.0-beta.1 (published public beta)](releases/v0.2.0-beta.1.md)
 
 ## What constitutes a breaking change
 

@@ -8,6 +8,14 @@ Use one of these supported install paths for Wakeplane. The canonical repository
 
 Preferred for operators. Tagged releases publish platform archives and a checksum file on the [GitHub Releases page](https://github.com/justyn-clark/wakeplane/releases).
 
+For the fastest path on macOS or Linux:
+
+```bash
+curl -fsSL https://wakeplane.dev/install.sh | sh
+```
+
+By default, this installs `wakeplane` and `wakeplaned` to `~/.local/bin`. Override with `INSTALL_DIR=/usr/local/bin` or pin a version with `WAKEPLANE_VERSION=v0.2.0-beta.1`.
+
 Published for `v0.2.0-beta.1`:
 
 - `wakeplane_0.2.0-beta.1_darwin_arm64.tar.gz`

@@ -124,6 +124,12 @@ If you are running directly from source, use `go run ./cmd/wakeplane serve` in p
 
 Preferred operator path: download tagged archives and checksums from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases).
 
+One-command install for macOS or Linux:
+
+```bash
+curl -fsSL https://wakeplane.dev/install.sh | sh
+```
+
 Additional install paths:
 
 - `go install github.com/justyn-clark/wakeplane/cmd/wakeplane@latest`

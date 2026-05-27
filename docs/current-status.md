@@ -91,8 +91,9 @@ The main gaps are structural, not semantic:
 
 ## Recommended Next Steps
 
-1. Finish documentation convergence: treat `docs/public` as the operator-facing source and keep internal design notes narrowly scoped.
+1. Keep install friction low: maintain the hosted `https://wakeplane.dev/install.sh` path alongside tagged release archives and checksum verification.
 2. Add receipt retention and size-bound behavior with tests.
-3. Implement authn/authz and request audit logging ahead of any trusted-network expansion.
-4. Build the Postgres backend at the existing store seam, then verify claim and retry behavior against a real Postgres instance.
-5. Add scale-oriented verification: concurrency stress, restart recovery soak tests, and backup/restore drills.
+3. Implement single-operator authn/authz and request audit logging ahead of any trusted-network expansion.
+4. Improve operator ergonomics around schedule export/import, update, and fleet inspection.
+5. Build the Postgres backend at the existing store seam, then verify claim and retry behavior against a real Postgres instance.
+6. Add scale-oriented verification: concurrency stress, restart recovery soak tests, and backup/restore drills.

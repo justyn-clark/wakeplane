@@ -31,8 +31,9 @@ Before tagging a release:
 3. **SMALL strict check passes**: `small check --strict`
 4. **Version constants updated** in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go`
 5. **README "Current status" section** reflects any new capabilities
-6. **No uncommitted changes**: `git status` is clean
-7. **Documentation current**: docs/ files reflect actual behavior
+6. **Hosted installer default version** is updated if a public install script points at the release
+7. **No uncommitted changes**: `git status` is clean
+8. **Documentation current**: docs/ files reflect actual behavior
 
 ## Tagging
 

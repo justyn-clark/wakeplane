@@ -35,7 +35,8 @@ Before tagging a release:
 5. **Public docs validation passes**: docs tests reject unsupported fields, fantasy commands, and unknown API paths
 6. **Version constants updated** in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go`
 7. **Install and release notes updated** under `docs/public/`
-8. **No uncommitted changes**: `git status` is clean
+8. **Hosted installer default version updated** if `wakeplane.dev/install.sh` should point at this release
+9. **No uncommitted changes**: `git status` is clean
 
 ## Release artifacts
 

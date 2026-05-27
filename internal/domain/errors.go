@@ -48,3 +48,11 @@ func NewBadRequestError(message string) *APIError {
 		Message: message,
 	}
 }
+
+func NewUnauthorizedError(message string) *APIError {
+	return &APIError{
+		Status:  401,
+		Code:    "unauthorized",
+		Message: message,
+	}
+}

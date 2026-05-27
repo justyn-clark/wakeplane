@@ -19,7 +19,8 @@ import (
 var migrationsFS embed.FS
 
 type Store struct {
-	db *sql.DB
+	db              *sql.DB
+	receiptMaxBytes int
 }
 
 type ExpiredLease struct {
@@ -41,7 +42,11 @@ func Open(path string) (*Store, error) {
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;`); err != nil {
 		return nil, err
 	}
-	return &Store{db: db}, nil
+	return &Store{db: db, receiptMaxBytes: 262144}, nil
+}
+
+func (s *Store) SetReceiptMaxBytes(maxBytes int) {
+	s.receiptMaxBytes = maxBytes
 }
 
 func (s *Store) Close() error { return s.db.Close() }
@@ -412,11 +417,41 @@ func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receip
 }
 
 func (s *Store) InsertReceipt(ctx context.Context, receipt domain.Receipt) error {
+	receipt.Body = truncateReceiptBody(receipt.Body, s.receiptMaxBytes)
 	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO execution_receipts (id, run_id, receipt_kind, content_type, body, created_at)
 		VALUES (?, ?, ?, ?, ?, ?)
 	`, receipt.ID, receipt.RunID, receipt.ReceiptKind, receipt.ContentType, receipt.Body, timeString(receipt.CreatedAt))
 	return err
+}
+
+func (s *Store) PruneTerminalRunsBefore(ctx context.Context, cutoff time.Time) (int64, error) {
+	result, err := s.db.ExecContext(ctx, `
+		DELETE FROM schedule_runs
+		WHERE finished_at IS NOT NULL
+		  AND finished_at < ?
+		  AND status IN ('succeeded', 'failed', 'dead_lettered', 'cancelled', 'skipped')
+	`, timeString(cutoff))
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+func truncateReceiptBody(body string, maxBytes int) string {
+	if maxBytes <= 0 || len([]byte(body)) <= maxBytes {
+		return body
+	}
+	marker := "\n[truncated by wakeplane receipt max bytes]\n"
+	if maxBytes <= len(marker) {
+		return marker[:maxBytes]
+	}
+	limit := maxBytes - len(marker)
+	truncated := []byte(body)
+	if len(truncated) > limit {
+		truncated = truncated[:limit]
+	}
+	return string(truncated) + marker
 }
 
 func (s *Store) InsertDeadLetter(ctx context.Context, dead domain.DeadLetter) error {
@@ -425,6 +460,18 @@ func (s *Store) InsertDeadLetter(ctx context.Context, dead domain.DeadLetter) er
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`, dead.ID, dead.RunID, dead.ScheduleID, dead.OccurrenceKey, dead.Reason, rawJSON(dead.PayloadJSON), timeString(dead.CreatedAt))
 	return err
+}
+
+func (s *Store) InsertRequestAudit(ctx context.Context, audit domain.RequestAudit) error {
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO request_audit_logs (id, method, path, status_code, remote_addr, user_agent, auth_subject, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`, audit.ID, audit.Method, audit.Path, audit.StatusCode, audit.RemoteAddr, audit.UserAgent, audit.AuthSubject, timeString(audit.CreatedAt))
+	return err
+}
+
+func (s *Store) RequestAuditCount(ctx context.Context) (int, error) {
+	return s.CountTable(ctx, "request_audit_logs")
 }
 
 func (s *Store) ListCandidateRuns(ctx context.Context, now time.Time, limit int) ([]domain.Run, error) {

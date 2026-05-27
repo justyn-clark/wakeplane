@@ -1,12 +1,9 @@
 small_version: "1.0.0"
 owner: agent
-summary: Wakeplane is on the public beta baseline with source docs synced into wakeplane.dev. The next product track is to reduce install friction, then add retention bounds, single-operator auth/audit, operator ergonomics, Postgres, and soak/backup verification before any stable label.
+summary: Wakeplane has begun the post-beta production track. The source repo now has bounded receipt storage, optional terminal-run retention pruning, single-operator bearer auth, HTTP request audit logging, a live status/watch CLI surface, and schedule import/export/update ergonomics.
 resume:
   next_steps:
-    - Finish hosted curl installer verification and publish it at https://wakeplane.dev/install.sh.
-    - Implement retention and size bounds for receipts, runs, and dead letters.
-    - Add single-operator authn/authz and HTTP-layer audit logging before broader deployment exposure.
-    - Improve schedule export/import/update and fleet inspection ergonomics.
+    - Sync these source docs into wakeplane.dev before public deploy.
     - Build and validate the Postgres dialect at the existing store seam.
     - Add soak, restart-recovery, and backup/restore verification against real operator workloads.
     - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.

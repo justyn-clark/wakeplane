@@ -152,6 +152,17 @@ type DeadLetter struct {
 	CreatedAt     time.Time       `json:"created_at"`
 }
 
+type RequestAudit struct {
+	ID          string    `json:"id"`
+	Method      string    `json:"method"`
+	Path        string    `json:"path"`
+	StatusCode  int       `json:"status_code"`
+	RemoteAddr  string    `json:"remote_addr,omitempty"`
+	UserAgent   string    `json:"user_agent,omitempty"`
+	AuthSubject string    `json:"auth_subject,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type CreateScheduleRequest struct {
 	Name     string       `json:"name" yaml:"name"`
 	Enabled  bool         `json:"enabled" yaml:"enabled"`
@@ -221,6 +232,14 @@ type StatusResponse struct {
 		RetryQueued int `json:"retry_queued"`
 		DeadLetter  int `json:"dead_letter"`
 	} `json:"runs"`
+	Retention struct {
+		RunRetentionDays int `json:"run_retention_days"`
+		ReceiptMaxBytes  int `json:"receipt_max_bytes"`
+	} `json:"retention"`
+	Security struct {
+		AuthRequired bool `json:"auth_required"`
+		RequestAudit bool `json:"request_audit"`
+	} `json:"security"`
 }
 
 type ListResponse[T any] struct {

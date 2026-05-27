@@ -57,6 +57,7 @@ The code and product intent are aligned on the important boundaries:
 - Timezone discipline: timezone is required and validated.
 - Append-only audit shape: retries create new run rows and receipts are attached as separate artifacts.
 - Operator legibility: health, readiness, status, metrics, receipts, and structured shutdown logging are present.
+- Bounded ledger controls: receipt bodies have a configurable byte limit, and terminal run retention can be enabled by environment.
 
 Documentation drift found in this audit was concentrated in the public docs, not the runtime:
 
@@ -75,9 +76,8 @@ The main gaps are structural, not semantic:
 
 ## Hardening Opportunities
 
-- Add authentication, authorization, and API-layer audit logging before any broader network exposure.
-- Introduce retention and archival policy for runs, receipts, and dead letters so the append-only history remains operationally sustainable.
-- Put explicit size limits and truncation rules around receipt payloads, especially shell stdout/stderr and workflow results.
+- Extend authorization beyond the current single-operator bearer token only if deployment needs become more complex.
+- Add archival policy for pruned runs, receipts, and dead letters if operators need long-term cold storage beyond the local database.
 - Expand store-level and lifecycle testing from correctness into load, long-run soak, and backup/restore verification.
 - Tighten operator ergonomics around schedule mutation and export/import so the CLI is useful beyond basic create/list/get/trigger flows.
 
@@ -92,8 +92,6 @@ The main gaps are structural, not semantic:
 ## Recommended Next Steps
 
 1. Keep install friction low: maintain the hosted `https://wakeplane.dev/install.sh` path alongside tagged release archives and checksum verification.
-2. Add receipt retention and size-bound behavior with tests.
-3. Implement single-operator authn/authz and request audit logging ahead of any trusted-network expansion.
-4. Improve operator ergonomics around schedule export/import, update, and fleet inspection.
-5. Build the Postgres backend at the existing store seam, then verify claim and retry behavior against a real Postgres instance.
-6. Add scale-oriented verification: concurrency stress, restart recovery soak tests, and backup/restore drills.
+2. Improve operator ergonomics around schedule export/import, update, and fleet inspection.
+3. Build the Postgres backend at the existing store seam, then verify claim and retry behavior against a real Postgres instance.
+4. Add scale-oriented verification: concurrency stress, restart recovery soak tests, and backup/restore drills.

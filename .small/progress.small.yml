@@ -1417,3 +1417,21 @@ entries:
     status: completed
     task_id: task-42
     timestamp: "2026-05-27T16:40:54.000000000Z"
+  - command: go test ./... && pnpm run check && go run ./tools/docsgen --check && small check --strict
+    evidence: Added configurable receipt body truncation via WAKEPLANE_RECEIPT_MAX_BYTES, optional terminal-run pruning via WAKEPLANE_RUN_RETENTION_DAYS, status response retention fields, and store tests for truncation plus pruning cascade behavior. Verification passed.
+    notes: First production hardening slice for bounded long-running installs.
+    status: completed
+    task_id: task-43
+    timestamp: "2026-05-27T20:16:48.100000000Z"
+  - command: go test ./... && pnpm run check && go run ./tools/docsgen --check && small check --strict
+    evidence: Added optional WAKEPLANE_AUTH_TOKEN bearer protection for /v1 routes, default-enabled WAKEPLANE_REQUEST_AUDIT request audit rows, auth status reporting, CLI auth header support from env, and API tests for unauthorized/authorized requests and unauthenticated health checks. Verification passed.
+    notes: Health and readiness remain unauthenticated for supervisors.
+    status: completed
+    task_id: task-44
+    timestamp: "2026-05-27T20:16:48.200000000Z"
+  - command: go test ./... && pnpm run check && go run ./tools/docsgen --check && small check --strict
+    evidence: Added wakeplane status --watch, schedule update, schedule import, and schedule export commands; regenerated public CLI/API docs. Verification passed.
+    notes: This improves single-node operator visibility and manifest management. Multi-node fleet inventory remains future scope after Postgres or explicit fleet config.
+    status: completed
+    task_id: task-45
+    timestamp: "2026-05-27T20:16:48.300000000Z"

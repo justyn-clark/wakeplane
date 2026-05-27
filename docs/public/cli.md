@@ -19,6 +19,7 @@ Available Commands:
   run         Inspect runs
   schedule    Manage schedules
   serve       Run the Wakeplane daemon
+  status      Show operational status
   version     Print the Wakeplane version
 
 Flags:
@@ -54,11 +55,14 @@ Usage:
 Available Commands:
   create      Create a schedule from YAML
   delete      Delete a schedule
+  export      Export schedules as JSON
   get         Get one schedule
+  import      Create schedules from a YAML file
   list        List schedules
   pause       Pause a schedule
   resume      Resume a schedule
   trigger     Trigger a schedule now
+  update      Replace a schedule from YAML
 
 Flags:
   -h, --help   help for schedule

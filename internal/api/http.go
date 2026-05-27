@@ -1,17 +1,21 @@
 package api
 
 import (
+	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/justyn-clark/wakeplane/internal/app"
 	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
-func NewMux(service *app.Service) *http.ServeMux {
+func NewMux(service *app.Service) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +213,67 @@ func NewMux(service *app.Service) *http.ServeMux {
 		writeJSON(w, http.StatusOK, domain.ListResponse[domain.Receipt]{Items: items})
 	})
 
-	return mux
+	return controlPlaneMiddleware(service, mux)
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(statusCode int) {
+	r.statusCode = statusCode
+	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+func controlPlaneMiddleware(service *app.Service, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/v1/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		authSubject := ""
+		if token := service.AuthToken(); token != "" {
+			if !authorizedBearer(r.Header.Get("Authorization"), token) {
+				w.Header().Set("Content-Type", "application/json")
+				rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusUnauthorized}
+				writeAPIError(rec, domain.NewUnauthorizedError("missing or invalid bearer token"))
+				recordAudit(context.Background(), service, r, rec.statusCode, authSubject)
+				return
+			}
+			authSubject = "operator"
+		}
+		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		recordAudit(context.Background(), service, r, rec.statusCode, authSubject)
+	})
+}
+
+func authorizedBearer(header, token string) bool {
+	if header == "" {
+		return false
+	}
+	value := strings.TrimSpace(header)
+	if !strings.HasPrefix(value, "Bearer ") {
+		return false
+	}
+	got := strings.TrimSpace(strings.TrimPrefix(value, "Bearer "))
+	return subtle.ConstantTimeCompare([]byte(got), []byte(token)) == 1
+}
+
+func recordAudit(ctx context.Context, service *app.Service, r *http.Request, statusCode int, authSubject string) {
+	if !service.RequestAuditEnabled() {
+		return
+	}
+	_ = service.RecordRequestAudit(ctx, domain.RequestAudit{
+		Method:      r.Method,
+		Path:        r.URL.Path,
+		StatusCode:  statusCode,
+		RemoteAddr:  r.RemoteAddr,
+		UserAgent:   r.UserAgent(),
+		AuthSubject: authSubject,
+		CreatedAt:   time.Now().UTC(),
+	})
 }
 
 func parseLimit(r *http.Request) int {

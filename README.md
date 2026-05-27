@@ -85,6 +85,7 @@ Execution:
 - in-process workflow executor backed by a registry
 - durable claim before execution
 - execution receipts for stdout, stderr, HTTP response summary, and workflow result
+- configurable receipt body size bounds and terminal run retention
 - retry with exponential backoff
 
 Policy:
@@ -221,6 +222,10 @@ The daemon reads configuration from environment variables:
 - `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` default `2`
 - `WAKEPLANE_LEASE_TTL_SECONDS` default `30`
 - `WAKEPLANE_WORKER_ID` default `wrk_local`
+- `WAKEPLANE_RECEIPT_MAX_BYTES` default `262144`
+- `WAKEPLANE_RUN_RETENTION_DAYS` default `0` (disabled)
+- `WAKEPLANE_AUTH_TOKEN` default unset; when set, `/v1/...` requires `Authorization: Bearer <token>`
+- `WAKEPLANE_REQUEST_AUDIT` default `true`
 
 ## Docs Map
 

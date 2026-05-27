@@ -219,6 +219,70 @@ func TestListRunsStatusAndCursorValidation(t *testing.T) {
 	}
 }
 
+func TestAuthTokenProtectsControlPlaneAndAuditsRequests(t *testing.T) {
+	service, err := app.New(context.Background(), config.Config{
+		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  time.Second,
+		DispatcherInterval: time.Second,
+		LeaseTTL:           time.Second,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+		AuthToken:          "secret-token",
+		RequestAudit:       true,
+	})
+	if err != nil {
+		t.Fatalf("app.New returned error: %v", err)
+	}
+	defer service.Close()
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/status", nil)
+	rec := httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+	assertErrorResponse(t, rec, http.StatusUnauthorized, "unauthorized", "missing or invalid bearer token")
+
+	req = httptest.NewRequest(http.MethodGet, "/v1/status", nil)
+	req.Header.Set("Authorization", "Bearer secret-token")
+	rec = httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	count, err := service.RequestAuditCount(context.Background())
+	if err != nil {
+		t.Fatalf("RequestAuditCount returned error: %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("expected 2 audit records, got %d", count)
+	}
+}
+
+func TestHealthRoutesDoNotRequireAuth(t *testing.T) {
+	service, err := app.New(context.Background(), config.Config{
+		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  time.Second,
+		DispatcherInterval: time.Second,
+		LeaseTTL:           time.Second,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+		AuthToken:          "secret-token",
+		RequestAudit:       true,
+	})
+	if err != nil {
+		t.Fatalf("app.New returned error: %v", err)
+	}
+	defer service.Close()
+
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	rec := httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+}
+
 func newTestService(t *testing.T) (*app.Service, error) {
 	t.Helper()
 	return app.New(context.Background(), config.Config{

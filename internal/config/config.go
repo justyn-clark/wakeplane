@@ -15,6 +15,10 @@ type Config struct {
 	LeaseTTL           time.Duration
 	WorkerID           string
 	Version            string
+	ReceiptMaxBytes    int
+	RunRetentionDays   int
+	AuthToken          string
+	RequestAudit       bool
 }
 
 func FromEnv(version string) Config {
@@ -26,8 +30,37 @@ func FromEnv(version string) Config {
 		LeaseTTL:           durationEnv("WAKEPLANE_LEASE_TTL_SECONDS", 30),
 		WorkerID:           envOrDefault("WAKEPLANE_WORKER_ID", "wrk_local"),
 		Version:            version,
+		ReceiptMaxBytes:    intEnv("WAKEPLANE_RECEIPT_MAX_BYTES", 262144),
+		RunRetentionDays:   intEnv("WAKEPLANE_RUN_RETENTION_DAYS", 0),
+		AuthToken:          os.Getenv("WAKEPLANE_AUTH_TOKEN"),
+		RequestAudit:       boolEnv("WAKEPLANE_REQUEST_AUDIT", true),
 	}
 	return cfg
+}
+
+func (c Config) WithDefaults() Config {
+	if c.HTTPAddress == "" {
+		c.HTTPAddress = ":8080"
+	}
+	if c.DatabasePath == "" {
+		c.DatabasePath = "./wakeplane.db"
+	}
+	if c.SchedulerInterval == 0 {
+		c.SchedulerInterval = 5 * time.Second
+	}
+	if c.DispatcherInterval == 0 {
+		c.DispatcherInterval = 2 * time.Second
+	}
+	if c.LeaseTTL == 0 {
+		c.LeaseTTL = 30 * time.Second
+	}
+	if c.WorkerID == "" {
+		c.WorkerID = "wrk_local"
+	}
+	if c.ReceiptMaxBytes == 0 {
+		c.ReceiptMaxBytes = 262144
+	}
+	return c
 }
 
 func (c *Config) BindFlags(fs *flag.FlagSet) {
@@ -43,10 +76,26 @@ func envOrDefault(key, fallback string) string {
 }
 
 func durationEnv(key string, fallback int) time.Duration {
+	return time.Duration(intEnv(key, fallback)) * time.Second
+}
+
+func intEnv(key string, fallback int) int {
 	if raw := os.Getenv(key); raw != "" {
 		if n, err := strconv.Atoi(raw); err == nil {
-			return time.Duration(n) * time.Second
+			return n
 		}
 	}
-	return time.Duration(fallback) * time.Second
+	return fallback
+}
+
+func boolEnv(key string, fallback bool) bool {
+	if raw := os.Getenv(key); raw != "" {
+		switch raw {
+		case "1", "true", "TRUE", "yes", "YES", "on", "ON":
+			return true
+		case "0", "false", "FALSE", "no", "NO", "off", "OFF":
+			return false
+		}
+	}
+	return fallback
 }

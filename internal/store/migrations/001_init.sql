@@ -121,3 +121,17 @@ CREATE TABLE IF NOT EXISTS execution_receipts (
 
 CREATE INDEX IF NOT EXISTS idx_execution_receipts_run_id
   ON execution_receipts (run_id);
+
+CREATE TABLE IF NOT EXISTS request_audit_logs (
+  id TEXT PRIMARY KEY,
+  method TEXT NOT NULL,
+  path TEXT NOT NULL,
+  status_code INTEGER NOT NULL,
+  remote_addr TEXT NULL,
+  user_agent TEXT NULL,
+  auth_subject TEXT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_request_audit_logs_created_at
+  ON request_audit_logs (created_at);

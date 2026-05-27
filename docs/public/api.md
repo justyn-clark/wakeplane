@@ -108,6 +108,14 @@ List endpoints use cursor-based pagination with newest-first ordering (`created_
     "failed": 0,
     "retry_queued": 0,
     "dead_letter": 0
+  },
+  "retention": {
+    "run_retention_days": 30,
+    "receipt_max_bytes": 262144
+  },
+  "security": {
+    "auth_required": true,
+    "request_audit": true
   }
 }
 ```

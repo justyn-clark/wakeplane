@@ -32,10 +32,37 @@ func NewRootCmd(version string) *cobra.Command {
 	}
 	root.PersistentFlags().StringVar(&baseURL, "addr", baseURL, "Wakeplane HTTP base URL")
 	root.AddCommand(newServeCmd(version))
+	root.AddCommand(newStatusCmd(&baseURL))
 	root.AddCommand(newScheduleCmd(&baseURL))
 	root.AddCommand(newRunCmd(&baseURL))
 	root.AddCommand(newVersionCmd(version))
 	return root
+}
+
+func newStatusCmd(baseURL *string) *cobra.Command {
+	var watch bool
+	var everySeconds int
+	cmd := &cobra.Command{
+		Use:   "status",
+		Short: "Show operational status",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if everySeconds <= 0 {
+				everySeconds = 2
+			}
+			for {
+				if err := printStatus(*baseURL); err != nil {
+					return err
+				}
+				if !watch {
+					return nil
+				}
+				time.Sleep(time.Duration(everySeconds) * time.Second)
+			}
+		},
+	}
+	cmd.Flags().BoolVarP(&watch, "watch", "w", false, "Refresh status continuously")
+	cmd.Flags().IntVar(&everySeconds, "every", 2, "Watch refresh interval in seconds")
+	return cmd
 }
 
 func newVersionCmd(version string) *cobra.Command {
@@ -136,6 +163,60 @@ func newScheduleCmd(baseURL *string) *cobra.Command {
 	create.Flags().StringVarP(&manifest, "file", "f", "", "Schedule manifest")
 	_ = create.MarkFlagRequired("file")
 
+	update := &cobra.Command{
+		Use:   "update <id>",
+		Short: "Replace a schedule from YAML",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			b, err := os.ReadFile(manifest)
+			if err != nil {
+				return err
+			}
+			var req domain.UpdateScheduleRequest
+			if err := yaml.Unmarshal(b, &req); err != nil {
+				return err
+			}
+			return putJSON(*baseURL+"/v1/schedules/"+args[0], req)
+		},
+	}
+	update.Flags().StringVarP(&manifest, "file", "f", "", "Schedule manifest")
+	_ = update.MarkFlagRequired("file")
+
+	importCmd := &cobra.Command{
+		Use:   "import",
+		Short: "Create schedules from a YAML file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			b, err := os.ReadFile(manifest)
+			if err != nil {
+				return err
+			}
+			var batch struct {
+				Schedules []domain.CreateScheduleRequest `yaml:"schedules"`
+			}
+			if err := yaml.Unmarshal(b, &batch); err != nil {
+				return err
+			}
+			if len(batch.Schedules) == 0 {
+				var single domain.CreateScheduleRequest
+				if err := yaml.Unmarshal(b, &single); err != nil {
+					return err
+				}
+				batch.Schedules = []domain.CreateScheduleRequest{single}
+			}
+			for _, req := range batch.Schedules {
+				if err := postJSON(*baseURL+"/v1/schedules", req); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	}
+	importCmd.Flags().StringVarP(&manifest, "file", "f", "", "Schedule manifest")
+	_ = importCmd.MarkFlagRequired("file")
+
+	export := &cobra.Command{Use: "export", Short: "Export schedules as JSON", RunE: func(cmd *cobra.Command, args []string) error {
+		return getAndPrint(*baseURL + "/v1/schedules?limit=1000")
+	}}
 	list := &cobra.Command{Use: "list", Short: "List schedules", RunE: func(cmd *cobra.Command, args []string) error {
 		return getAndPrint(*baseURL + "/v1/schedules")
 	}}
@@ -156,7 +237,7 @@ func newScheduleCmd(baseURL *string) *cobra.Command {
 		return postJSON(*baseURL+"/v1/schedules/"+args[0]+"/trigger", domain.TriggerRequest{Reason: "manual operator trigger"})
 	}}
 
-	cmd.AddCommand(create, list, get, pause, resume, del, trigger)
+	cmd.AddCommand(create, update, importCmd, export, list, get, pause, resume, del, trigger)
 	return cmd
 }
 
@@ -178,11 +259,19 @@ func getAndPrint(url string) error {
 }
 
 func postJSON(url string, body any) error {
+	return sendJSON(http.MethodPost, url, body)
+}
+
+func putJSON(url string, body any) error {
+	return sendJSON(http.MethodPut, url, body)
+}
+
+func sendJSON(method, url string, body any) error {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
+	req, err := http.NewRequest(method, url, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
@@ -191,6 +280,7 @@ func postJSON(url string, body any) error {
 }
 
 func do(req *http.Request) error {
+	applyAuth(req)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -208,4 +298,76 @@ func do(req *http.Request) error {
 	}
 	_, _ = os.Stdout.Write(body)
 	return nil
+}
+
+func printStatus(baseURL string) error {
+	req, err := http.NewRequest(http.MethodGet, baseURL+"/v1/status", nil)
+	if err != nil {
+		return err
+	}
+	applyAuth(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("%s", body)
+	}
+	var status struct {
+		Service   string `json:"service"`
+		Version   string `json:"version"`
+		StartedAt string `json:"started_at"`
+		Scheduler struct {
+			LastTickAt        string `json:"last_tick_at"`
+			DueRuns           int    `json:"due_runs"`
+			NextDueScheduleID string `json:"next_due_schedule_id"`
+			NextDueRunAt      string `json:"next_due_run_at"`
+		} `json:"scheduler"`
+		Workers struct {
+			Active            int `json:"active"`
+			ClaimedButExpired int `json:"claimed_but_expired"`
+		} `json:"workers"`
+		Runs struct {
+			Running     int `json:"running"`
+			Failed      int `json:"failed"`
+			RetryQueued int `json:"retry_queued"`
+			DeadLetter  int `json:"dead_letter"`
+		} `json:"runs"`
+		Retention struct {
+			RunRetentionDays int `json:"run_retention_days"`
+			ReceiptMaxBytes  int `json:"receipt_max_bytes"`
+		} `json:"retention"`
+	}
+	if err := json.Unmarshal(body, &status); err != nil {
+		return err
+	}
+	nextDue := "none"
+	if status.Scheduler.NextDueRunAt != "" {
+		nextDue = status.Scheduler.NextDueRunAt + " " + status.Scheduler.NextDueScheduleID
+	}
+	_, err = fmt.Fprintf(os.Stdout,
+		"wakeplane %s started=%s last_tick=%s\nruns due=%d running=%d failed=%d retry_queued=%d dead_letter=%d workers active=%d expired_claims=%d\nnext_due=%s retention_days=%d receipt_max_bytes=%d\n",
+		status.Version,
+		status.StartedAt,
+		status.Scheduler.LastTickAt,
+		status.Scheduler.DueRuns,
+		status.Runs.Running,
+		status.Runs.Failed,
+		status.Runs.RetryQueued,
+		status.Runs.DeadLetter,
+		status.Workers.Active,
+		status.Workers.ClaimedButExpired,
+		nextDue,
+		status.Retention.RunRetentionDays,
+		status.Retention.ReceiptMaxBytes,
+	)
+	return err
+}
+
+func applyAuth(req *http.Request) {
+	if token := os.Getenv("WAKEPLANE_AUTH_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 }

@@ -149,11 +149,27 @@ Do not copy the file while the daemon is running. Use SQLite's backup API or sto
 
 ## Environment reference
 
-| Variable                                | Default          | Description                             |
-| --------------------------------------- | ---------------- | --------------------------------------- |
-| `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file path               |
-| `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                     |
-| `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity string in lease records |
-| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | Planner loop tick interval              |
-| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2`              | Dispatcher loop tick interval           |
-| `WAKEPLANE_LEASE_TTL_SECONDS`           | `30`             | Worker lease TTL for crash recovery     |
+| Variable                                | Default          | Description                                    |
+| --------------------------------------- | ---------------- | ---------------------------------------------- |
+| `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file path                      |
+| `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                            |
+| `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity string in lease records        |
+| `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | Planner loop tick interval                     |
+| `WAKEPLANE_DISPATCHER_INTERVAL_SECONDS` | `2`              | Dispatcher loop tick interval                  |
+| `WAKEPLANE_LEASE_TTL_SECONDS`           | `30`             | Worker lease TTL for crash recovery            |
+| `WAKEPLANE_RECEIPT_MAX_BYTES`           | `262144`         | Maximum stored body size per receipt           |
+| `WAKEPLANE_RUN_RETENTION_DAYS`          | `0`              | Days to keep terminal runs; 0 disables pruning |
+| `WAKEPLANE_AUTH_TOKEN`                  | unset            | Bearer token required for `/v1/...` when set   |
+| `WAKEPLANE_REQUEST_AUDIT`               | `true`           | Record HTTP control-plane requests             |
+
+## Auth and Audit
+
+Set `WAKEPLANE_AUTH_TOKEN` to require `Authorization: Bearer <token>` on `/v1/...` routes. Health and readiness routes stay unauthenticated so process supervisors can check liveness.
+
+Wakeplane records request audit rows for `/v1/...` routes when `WAKEPLANE_REQUEST_AUDIT=true`. Audit rows include method, path, status code, remote address, user agent, auth subject, and timestamp.
+
+## Retention
+
+Wakeplane bounds receipt body storage with `WAKEPLANE_RECEIPT_MAX_BYTES`. Oversized receipt bodies are truncated before storage and marked with a truncation note.
+
+Set `WAKEPLANE_RUN_RETENTION_DAYS` to prune terminal runs older than the configured number of days. Pruning deletes terminal run rows and cascades to attached receipts and dead letters. Active, pending, claimed, running, and retry-queued runs are not pruned.

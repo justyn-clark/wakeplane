@@ -2,13 +2,14 @@
 
 ## Current security posture
 
-**Wakeplane currently has no authentication or RBAC.**
+**Wakeplane supports single-operator bearer authentication when configured, but it does not provide RBAC or multi-tenant access control.**
 
 This is a deliberate and explicit constraint in the current release line. Every operator who deploys Wakeplane must understand what this means:
 
-- Any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, and access all run receipts.
-- The HTTP API has no API keys, no tokens, no sessions, and no access control.
-- There is no multi-tenancy, RBAC, or audit logging at the HTTP layer.
+- If `WAKEPLANE_AUTH_TOKEN` is unset, any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, and access all run receipts.
+- If `WAKEPLANE_AUTH_TOKEN` is set, `/v1/...` routes require `Authorization: Bearer <token>`.
+- There are no sessions, users, roles, or per-schedule permissions.
+- HTTP request audit logging is enabled by default and can be disabled with `WAKEPLANE_REQUEST_AUDIT=false`.
 
 ## Required: bind to a trusted network
 
@@ -51,7 +52,7 @@ The current release does **not** provide:
 
 ## Planned (not shipped)
 
-Authentication and RBAC are planned for a future release. The timeline is not committed. Do not deploy Wakeplane in a context that requires these properties in the current form.
+RBAC, mTLS, OAuth, and multi-tenant security are not committed for the current release line. Do not deploy Wakeplane in a context that requires those properties in the current form.
 
 ## Responsible disclosure
 
@@ -77,13 +78,13 @@ Dependency versions are pinned in `go.sum`. Verify with `go mod verify` before d
 
 ## Summary
 
-| Property                   | Status                                   |
-| -------------------------- | ---------------------------------------- |
-| Authentication             | No - not implemented                     |
-| Authorization / RBAC       | No - not implemented                     |
-| TLS (native)               | No - not implemented (use reverse proxy) |
-| Audit logging              | No - not implemented                     |
-| Multi-tenancy              | No - not implemented                     |
-| Trusted-network deployment | Yes - supported and required             |
-| Reverse proxy pattern      | Yes - recommended                        |
-| Go module integrity        | Yes - `go.sum` pinned                    |
+| Property                   | Status                                       |
+| -------------------------- | -------------------------------------------- |
+| Authentication             | Single-operator bearer token when configured |
+| Authorization / RBAC       | No - not implemented                         |
+| TLS (native)               | No - not implemented (use reverse proxy)     |
+| Audit logging              | Yes - HTTP control-plane request audit       |
+| Multi-tenancy              | No - not implemented                         |
+| Trusted-network deployment | Yes - supported and required                 |
+| Reverse proxy pattern      | Yes - recommended                            |
+| Go module integrity        | Yes - `go.sum` pinned                        |

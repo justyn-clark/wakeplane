@@ -129,13 +129,13 @@ tasks:
     status: completed
   - id: task-43
     title: Add retention and receipt-size bounds for long-running installs
-    status: pending
+    status: completed
   - id: task-44
     title: Add single-operator auth and HTTP request audit logging
-    status: pending
+    status: completed
   - id: task-45
     title: Improve schedule export, import, update, and fleet inspection ergonomics
-    status: pending
+    status: completed
   - id: task-46
     title: Add Postgres storage dialect and real-database verification
     status: pending

@@ -43,11 +43,13 @@ func New(ctx context.Context, cfg config.Config) (*Service, error) {
 }
 
 func NewWithOptions(ctx context.Context, cfg config.Config, opts ...Option) (*Service, error) {
+	cfg = cfg.WithDefaults()
 	logger := logging.New()
 	st, err := store.Open(cfg.DatabasePath)
 	if err != nil {
 		return nil, err
 	}
+	st.SetReceiptMaxBytes(cfg.ReceiptMaxBytes)
 	if err := st.Migrate(ctx); err != nil {
 		return nil, err
 	}
@@ -142,6 +144,9 @@ func (s *Service) runDispatcher(ctx context.Context) {
 	ticker := time.NewTicker(s.cfg.DispatcherInterval)
 	defer ticker.Stop()
 	for {
+		if err := s.pruneRetention(ctx); err != nil && ctx.Err() == nil {
+			s.logger.Error("retention prune failed", "error", err)
+		}
 		if err := s.dispatcher.Tick(ctx); err != nil && ctx.Err() == nil {
 			s.logger.Error("dispatcher tick failed", "error", err)
 		}
@@ -151,6 +156,21 @@ func (s *Service) runDispatcher(ctx context.Context) {
 		case <-ticker.C:
 		}
 	}
+}
+
+func (s *Service) pruneRetention(ctx context.Context) error {
+	if s.cfg.RunRetentionDays <= 0 {
+		return nil
+	}
+	cutoff := time.Now().UTC().Add(-time.Duration(s.cfg.RunRetentionDays) * 24 * time.Hour)
+	deleted, err := s.store.PruneTerminalRunsBefore(ctx, cutoff)
+	if err != nil {
+		return err
+	}
+	if deleted > 0 {
+		s.logger.Info("retention pruned terminal runs", "deleted", deleted, "cutoff", cutoff.Format(time.RFC3339))
+	}
+	return nil
 }
 
 func (s *Service) beginRun(parent context.Context) (context.Context, context.CancelFunc, chan struct{}, error) {
@@ -447,6 +467,10 @@ func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 	resp.Runs.Failed = failed
 	resp.Runs.RetryQueued = retryQueued
 	resp.Runs.DeadLetter = deadLetters
+	resp.Retention.RunRetentionDays = s.cfg.RunRetentionDays
+	resp.Retention.ReceiptMaxBytes = s.cfg.ReceiptMaxBytes
+	resp.Security.AuthRequired = s.cfg.AuthToken != ""
+	resp.Security.RequestAudit = s.cfg.RequestAudit
 	nextDue, err := s.store.NextDueSchedule(ctx, time.Now().UTC())
 	if err != nil {
 		return domain.StatusResponse{}, err
@@ -456,6 +480,31 @@ func (s *Service) Status(ctx context.Context) (domain.StatusResponse, error) {
 		resp.Scheduler.NextDueRunAt = nextDue.DueTime.Format(time.RFC3339)
 	}
 	return resp, nil
+}
+
+func (s *Service) AuthToken() string {
+	return s.cfg.AuthToken
+}
+
+func (s *Service) RequestAuditEnabled() bool {
+	return s.cfg.RequestAudit
+}
+
+func (s *Service) RecordRequestAudit(ctx context.Context, audit domain.RequestAudit) error {
+	if !s.cfg.RequestAudit {
+		return nil
+	}
+	if audit.ID == "" {
+		audit.ID = domain.NewID("aud")
+	}
+	if audit.CreatedAt.IsZero() {
+		audit.CreatedAt = time.Now().UTC()
+	}
+	return s.store.InsertRequestAudit(ctx, audit)
+}
+
+func (s *Service) RequestAuditCount(ctx context.Context) (int, error) {
+	return s.store.RequestAuditCount(ctx)
 }
 
 func (s *Service) Metrics(ctx context.Context) (string, error) {

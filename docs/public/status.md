@@ -61,11 +61,10 @@ Wakeplane should not be labeled stable until all of these are true:
 
 The most practical path beyond beta is:
 
-1. Add retention and receipt-size limits so long-running installs stay bounded.
-2. Add single-operator authentication and HTTP request audit logging before recommending broader trusted-network exposure.
-3. Add import/export and schedule update ergonomics so operators can manage real fleets without hand-editing API calls.
-4. Add a Postgres storage dialect behind the existing store seam after the single-process SQLite path remains stable.
-5. Run soak, restart-recovery, and backup/restore verification against real operator workloads before claiming 1.0.
+1. Add single-operator authentication and HTTP request audit logging before recommending broader trusted-network exposure.
+2. Add import/export and schedule update ergonomics so operators can manage real fleets without hand-editing API calls.
+3. Add a Postgres storage dialect behind the existing store seam after the single-process SQLite path remains stable.
+4. Run soak, restart-recovery, and backup/restore verification against real operator workloads before claiming 1.0.
 
 ## Explicitly out of scope today
 

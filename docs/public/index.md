@@ -10,13 +10,13 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 - [Quickstart](quickstart.md) - start the daemon, create a schedule, inspect runs in under five minutes
 - [GitHub](https://github.com/justyn-clark/wakeplane) - canonical public repository
 
-## Use it when...
+## Use cases
 
 - You need an internal scheduling control plane with durable run recording.
 - You want to embed scheduling into a Go service and register workflow handlers explicitly.
 - You need an operator-visible replacement for ad hoc cron in a system where retries, overlap policy, and audit history matter.
 
-## Do not use it when...
+## Avoid when
 
 - You need a public multi-tenant SaaS scheduler.
 - You need an auth-heavy enterprise control plane today.

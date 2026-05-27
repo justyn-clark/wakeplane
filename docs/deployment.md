@@ -1,4 +1,4 @@
-# Deployment Notes — wakeplane.dev
+# Deployment Notes - wakeplane.dev
 
 This doc covers the deployment topology for the Wakeplane public site (`wakeplane.dev`).
 
@@ -19,8 +19,8 @@ Infrastructure is in `infra/terraform/`. Site source is in a separate `wakeplane
 The `infra/terraform/` directory manages:
 
 - Route53 hosted zone for `wakeplane.dev`
-- Apex A record → Vercel ingress (`216.198.79.1`)
-- `www` CNAME → Vercel project-specific DNS target
+- Apex A record -> Vercel ingress (`216.198.79.1`)
+- `www` CNAME -> Vercel project-specific DNS target
 
 The Terraform scope is DNS only. Vercel project creation, domain linking, and deployments are not managed in Terraform (consistent with the existing pattern across JCN sites).
 

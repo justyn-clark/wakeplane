@@ -41,8 +41,8 @@ service, err := app.NewWithOptions(ctx, cfg,
 
 **Registration options:**
 
-- `WithWorkflowHandler(id, handler)` — register a single workflow handler by ID
-- `WithWorkflowRegistry(registry)` — pass a pre-built `*executors.WorkflowRegistry` for bulk registration
+- `WithWorkflowHandler(id, handler)` - register a single workflow handler by ID
+- `WithWorkflowRegistry(registry)` - pass a pre-built `*executors.WorkflowRegistry` for bulk registration
 
 If no handlers are registered, the service starts normally. Schedules targeting `workflow` targets will fail at dispatch time with `"workflow X is not registered"`.
 
@@ -59,7 +59,7 @@ go func() {
 }()
 ```
 
-`Run` starts the planner and dispatcher loops. It blocks until the context is cancelled or an unrecoverable error occurs. Call it exactly once — a second call returns `"service already running"`.
+`Run` starts the planner and dispatcher loops. It blocks until the context is cancelled or an unrecoverable error occurs. Call it exactly once - a second call returns `"service already running"`.
 
 ### Stopping
 
@@ -71,9 +71,9 @@ err := service.CloseContext(ctx)
 
 **Shutdown sequence:**
 
-1. Cancel the run context — planner and dispatcher loops stop
+1. Cancel the run context - planner and dispatcher loops stop
 2. Wait for the run loop goroutine to exit
-3. Call `dispatcher.Shutdown` — cancel all active execution contexts, wait for in-flight work to drain
+3. Call `dispatcher.Shutdown` - cancel all active execution contexts, wait for in-flight work to drain
 4. Close the SQLite store
 
 Each phase emits structured log lines so you can trace where shutdown stalled.
@@ -134,12 +134,12 @@ type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string
 
 ## Recovery guarantees
 
-| Crash point                       | DB state                | Recovery action                                |
-| --------------------------------- | ----------------------- | ---------------------------------------------- |
-| After claim, before mark-running  | `claimed`, lease exists | Lease expires → reset to `pending`             |
-| After mark-running, before finish | `running`, lease exists | Lease expires → mark `failed`, retry scheduled |
-| After finish, before retry insert | `failed`, no retry      | **No automatic recovery** — retry is lost      |
-| Retry scheduled, before dispatch  | `retry_scheduled`       | Picked up by next dispatcher tick              |
+| Crash point                       | DB state                | Recovery action                                 |
+| --------------------------------- | ----------------------- | ----------------------------------------------- |
+| After claim, before mark-running  | `claimed`, lease exists | Lease expires -> reset to `pending`             |
+| After mark-running, before finish | `running`, lease exists | Lease expires -> mark `failed`, retry scheduled |
+| After finish, before retry insert | `failed`, no retry      | **No automatic recovery** - retry is lost       |
+| Retry scheduled, before dispatch  | `retry_scheduled`       | Picked up by next dispatcher tick               |
 
 The "after finish, before retry insert" gap is a known limitation of the current beta line. `FinishRun` and retry `InsertRun` are not in a single transaction.
 

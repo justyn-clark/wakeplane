@@ -4,7 +4,7 @@ This document defines the contract that the Wakeplane storage layer must satisfy
 
 ## Current Architecture
 
-All storage is in `internal/store/store.go` as a concrete `*Store` struct. The dispatcher, planner, and service layers call `Store` methods directly. There is no interface today — the seam is the method set on `*Store`.
+All storage is in `internal/store/store.go` as a concrete `*Store` struct. The dispatcher, planner, and service layers call `Store` methods directly. There is no interface today - the seam is the method set on `*Store`.
 
 ## Store Method Contract
 
@@ -87,12 +87,12 @@ These are the operations that any storage backend must implement:
 
 When introducing Postgres support, these are the narrowest points to abstract:
 
-1. **`Open()`** — driver name, connection string, pragma vs server config.
-2. **`Migrate()`** — different SQL files per dialect.
-3. **Serialization helpers** — `timeString`, `parseNullTime`, `boolToInt`, `mustJSONString`, `rawJSON` are only needed for SQLite. Postgres native types eliminate them.
-4. **Upsert syntax** — `INSERT OR REPLACE` (SQLite) vs `ON CONFLICT DO UPDATE` (Postgres).
-5. **Date arithmetic** — `julianday()` (SQLite) vs `EXTRACT(EPOCH FROM ...)` (Postgres).
-6. **Error detection** — `isUniqueErr()` string matching vs Postgres error code `23505`.
+1. **`Open()`** - driver name, connection string, pragma vs server config.
+2. **`Migrate()`** - different SQL files per dialect.
+3. **Serialization helpers** - `timeString`, `parseNullTime`, `boolToInt`, `mustJSONString`, `rawJSON` are only needed for SQLite. Postgres native types eliminate them.
+4. **Upsert syntax** - `INSERT OR REPLACE` (SQLite) vs `ON CONFLICT DO UPDATE` (Postgres).
+5. **Date arithmetic** - `julianday()` (SQLite) vs `EXTRACT(EPOCH FROM ...)` (Postgres).
+6. **Error detection** - `isUniqueErr()` string matching vs Postgres error code `23505`.
 
 ## Recommended Abstraction Strategy
 
@@ -101,6 +101,6 @@ Do **not** create a full Go interface prematurely. Instead:
 1. Add a `Dialect` config field (`sqlite` or `postgres`) to `Store`.
 2. Branch dialect-specific behavior inside the existing `Store` methods (the total surface is ~6 helpers and 2 SQL queries).
 3. Use separate migration files per dialect: `001_init_sqlite.sql`, `001_init_postgres.sql`.
-4. Keep a single `Store` struct — the method signatures do not change.
+4. Keep a single `Store` struct - the method signatures do not change.
 
 This keeps the codebase simple and avoids an interface that maps 1:1 to a single implementation.

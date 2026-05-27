@@ -43,7 +43,7 @@ Do not copy the file while the daemon is running. Use the SQLite backup API or s
 - **Dead letters**: occurrence key, reason, payload
 - **Receipts**: executor output attached to a run (stdout, HTTP response, workflow result)
 
-All timestamps are stored as UTC RFC3339 strings. IDs are application-generated ULIDs stored as TEXT — no SERIAL or AUTOINCREMENT dependency.
+All timestamps are stored as UTC RFC3339 strings. IDs are application-generated ULIDs stored as TEXT - no SERIAL or AUTOINCREMENT dependency.
 
 ## What is already portable
 
@@ -54,24 +54,24 @@ Specifically portable:
 - All application logic
 - Schema structure (tables, foreign keys, indices, constraints are standard SQL)
 - IDs (application-generated ULIDs)
-- Cursor pagination (uses `ORDER BY created_at DESC, id DESC` — standard SQL)
+- Cursor pagination (uses `ORDER BY created_at DESC, id DESC` - standard SQL)
 - Transaction isolation (default levels compatible with standard databases)
-- Query patterns (SELECT, INSERT, UPDATE, DELETE, JOIN, COUNT — standard SQL)
+- Query patterns (SELECT, INSERT, UPDATE, DELETE, JOIN, COUNT - standard SQL)
 
 ## What must change before Postgres
 
-| Change                                        | Effort  |
-| --------------------------------------------- | ------- |
-| Driver and connection config                  | Small   |
-| Remove SQLite PRAGMAs                         | Trivial |
-| Timestamp columns → `TIMESTAMPTZ`             | Medium  |
-| Boolean columns → `BOOLEAN`                   | Small   |
-| JSON columns → `JSONB`                        | Small   |
-| `INSERT OR REPLACE` → `ON CONFLICT DO UPDATE` | Small   |
-| `julianday()` → `EXTRACT(EPOCH FROM ...)`     | Small   |
-| Error detection → Postgres error codes        | Small   |
-| Connection pool sizing                        | Trivial |
-| Dialect-specific migration file               | Medium  |
+| Change                                         | Effort  |
+| ---------------------------------------------- | ------- |
+| Driver and connection config                   | Small   |
+| Remove SQLite PRAGMAs                          | Trivial |
+| Timestamp columns -> `TIMESTAMPTZ`             | Medium  |
+| Boolean columns -> `BOOLEAN`                   | Small   |
+| JSON columns -> `JSONB`                        | Small   |
+| `INSERT OR REPLACE` -> `ON CONFLICT DO UPDATE` | Small   |
+| `julianday()` -> `EXTRACT(EPOCH FROM ...)`     | Small   |
+| Error detection -> Postgres error codes        | Small   |
+| Connection pool sizing                         | Trivial |
+| Dialect-specific migration file                | Medium  |
 
 Total estimated scope: approximately 200 lines of changes in `store.go` and one new migration file. No changes outside the store package.
 
@@ -91,6 +91,6 @@ This work is scoped and bounded. It does not touch any application logic.
 
 ## Reference docs
 
-- [SQLite Audit](../sqlite-audit.md) — complete inventory of SQLite-specific assumptions
-- [Storage Interface](../storage-interface.md) — full store method contract and dialect seam design
-- [Storage Portability](../storage-portability.md) — portability summary and implementation order
+- [SQLite Audit](../sqlite-audit.md) - complete inventory of SQLite-specific assumptions
+- [Storage Interface](../storage-interface.md) - full store method contract and dialect seam design
+- [Storage Portability](../storage-portability.md) - portability summary and implementation order

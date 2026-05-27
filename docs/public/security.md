@@ -46,7 +46,7 @@ The current release does **not** provide:
 - Authentication (API keys, bearer tokens, OAuth, mTLS)
 - Authorization (RBAC, per-schedule access control)
 - Audit logging at the API layer
-- Network-layer encryption (TLS) — this should be provided by a reverse proxy
+- Network-layer encryption (TLS) - this should be provided by a reverse proxy
 - Multi-tenancy
 
 ## Planned (not shipped)
@@ -77,13 +77,13 @@ Dependency versions are pinned in `go.sum`. Verify with `go mod verify` before d
 
 ## Summary
 
-| Property                   | Status                                 |
-| -------------------------- | -------------------------------------- |
-| Authentication             | ❌ Not implemented                     |
-| Authorization / RBAC       | ❌ Not implemented                     |
-| TLS (native)               | ❌ Not implemented (use reverse proxy) |
-| Audit logging              | ❌ Not implemented                     |
-| Multi-tenancy              | ❌ Not implemented                     |
-| Trusted-network deployment | ✅ Supported and required              |
-| Reverse proxy pattern      | ✅ Recommended                         |
-| Go module integrity        | ✅ `go.sum` pinned                     |
+| Property                   | Status                                   |
+| -------------------------- | ---------------------------------------- |
+| Authentication             | No - not implemented                     |
+| Authorization / RBAC       | No - not implemented                     |
+| TLS (native)               | No - not implemented (use reverse proxy) |
+| Audit logging              | No - not implemented                     |
+| Multi-tenancy              | No - not implemented                     |
+| Trusted-network deployment | Yes - supported and required             |
+| Reverse proxy pattern      | Yes - recommended                        |
+| Go module integrity        | Yes - `go.sum` pinned                    |

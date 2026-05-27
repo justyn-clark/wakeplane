@@ -8,19 +8,19 @@ This document catalogs every SQLite-specific behavior in the Wakeplane storage l
 | ---------------- | ----------------------------------------------------- | -------------------------------------------------------- |
 | `store.go:13`    | `modernc.org/sqlite` driver import                    | Replace with `github.com/lib/pq` or `pgx`                |
 | `store.go:36`    | `sql.Open("sqlite", path)`                            | Change to `sql.Open("postgres", connStr)`                |
-| `store.go:40`    | `SetMaxOpenConns(1)` — single-writer for SQLite WAL   | Remove or set to pool size (20-25)                       |
+| `store.go:40`    | `SetMaxOpenConns(1)` - single-writer for SQLite WAL   | Remove or set to pool size (20-25)                       |
 | `store.go:41-42` | `PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL` | Remove (Postgres enables FK by default, has its own WAL) |
 
 ## Time Encoding
 
 All timestamps are stored as `TEXT` in RFC3339Nano format with manual parsing.
 
-| Location                  | Pattern                                                  | Postgres Change                                      |
-| ------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| `store.go:1023-1025`      | `timeString()` converts `time.Time` → RFC3339Nano string | Use `TIMESTAMPTZ` columns, pass `time.Time` directly |
-| `store.go:1039-1045`      | `parseNullTime()` scans string → `*time.Time`            | Scan `*time.Time` directly from native column        |
-| `store.go:1055-1062`      | `mustParseTime()` with RFC3339Nano/RFC3339 fallback      | Remove — driver handles natively                     |
-| Schema: all `_at` columns | `TEXT NOT NULL` or `TEXT NULL`                           | `TIMESTAMPTZ NOT NULL` or `TIMESTAMPTZ NULL`         |
+| Location                  | Pattern                                                   | Postgres Change                                      |
+| ------------------------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| `store.go:1023-1025`      | `timeString()` converts `time.Time` -> RFC3339Nano string | Use `TIMESTAMPTZ` columns, pass `time.Time` directly |
+| `store.go:1039-1045`      | `parseNullTime()` scans string -> `*time.Time`            | Scan `*time.Time` directly from native column        |
+| `store.go:1055-1062`      | `mustParseTime()` with RFC3339Nano/RFC3339 fallback       | Remove - driver handles natively                     |
+| Schema: all `_at` columns | `TEXT NOT NULL` or `TEXT NULL`                            | `TIMESTAMPTZ NOT NULL` or `TIMESTAMPTZ NULL`         |
 
 **Scope:** ~20 columns across 5 tables. Every query that writes or reads a timestamp uses the string helpers.
 
@@ -39,12 +39,12 @@ Booleans are stored as `INTEGER` with 0/1 conversion.
 
 JSON is stored as `TEXT`, serialized manually.
 
-| Location                                                                        | Pattern                                         | Postgres Change                             |
-| ------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| `store.go:86,122`                                                               | `mustJSONString()` serializes struct → string   | Use `JSONB` columns, pass `[]byte` directly |
-| `store.go:287,426`                                                              | `rawJSON()` converts `json.RawMessage` → string | Pass bytes directly                         |
-| `store.go:223-224,650-655`                                                      | `json.Unmarshal()` on scan                      | Scan `json.RawMessage` directly from JSONB  |
-| Schema: `schedule_spec_json`, `target_spec_json`, `result_json`, `payload_json` | `TEXT NULL`                                     | `JSONB NULL`                                |
+| Location                                                                        | Pattern                                          | Postgres Change                             |
+| ------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| `store.go:86,122`                                                               | `mustJSONString()` serializes struct -> string   | Use `JSONB` columns, pass `[]byte` directly |
+| `store.go:287,426`                                                              | `rawJSON()` converts `json.RawMessage` -> string | Pass bytes directly                         |
+| `store.go:223-224,650-655`                                                      | `json.Unmarshal()` on scan                       | Scan `json.RawMessage` directly from JSONB  |
+| Schema: `schedule_spec_json`, `target_spec_json`, `result_json`, `payload_json` | `TEXT NULL`                                      | `JSONB NULL`                                |
 
 ## SQL Dialect
 
@@ -68,7 +68,7 @@ JSON is stored as `TEXT`, serialized manually.
 
 ## What Is Already Portable
 
-- All IDs are application-generated `TEXT PRIMARY KEY` (ULID) — no SERIAL/AUTOINCREMENT dependency.
+- All IDs are application-generated `TEXT PRIMARY KEY` (ULID) - no SERIAL/AUTOINCREMENT dependency.
 - `CREATE TABLE IF NOT EXISTS` syntax is standard.
 - `PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK` constraints are standard.
 - `ON DELETE CASCADE` is standard.
@@ -86,4 +86,4 @@ JSON is stored as `TEXT`, serialized manually.
    - Date arithmetic functions
    - Error code detection
 2. **Dual-schema migration files**: `001_init_sqlite.sql` and `001_init_postgres.sql` with appropriate column types.
-3. **No application logic changes needed** — the domain, dispatcher, planner, and API layers do not depend on storage internals.
+3. **No application logic changes needed** - the domain, dispatcher, planner, and API layers do not depend on storage internals.

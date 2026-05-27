@@ -33,7 +33,7 @@ The planner does not execute work. It only materializes the intent.
 The dispatcher loop ticks at a configurable interval (default: every 2 seconds). On each tick it:
 
 1. Queries for pending runs that are ready to dispatch (respecting overlap and concurrency policy).
-2. Claims each eligible run — atomically transitioning it from `pending` to `claimed` and inserting a worker lease.
+2. Claims each eligible run - atomically transitioning it from `pending` to `claimed` and inserting a worker lease.
 3. Starts execution in a goroutine.
 4. Renews the worker lease at half the TTL until execution finishes.
 5. Records the result as `succeeded`, `failed`, `cancelled`, or `dead_lettered`.
@@ -56,11 +56,11 @@ Manual triggers use `manual:{run_id}` instead. The occurrence key is unique per 
 
 A run is a durable record of one execution attempt for one occurrence. It tracks:
 
-- `status` — current state in the run state machine
-- `attempt` — which attempt this is (starts at `1`)
-- `claimed_by_worker_id`, `claim_expires_at`, `started_at`, `finished_at` — execution timing and lease ownership
-- `error_text` — set on failure or recovery
-- `result_json` — executor-specific result data
+- `status` - current state in the run state machine
+- `attempt` - which attempt this is (starts at `1`)
+- `claimed_by_worker_id`, `claim_expires_at`, `started_at`, `finished_at` - execution timing and lease ownership
+- `error_text` - set on failure or recovery
+- `result_json` - executor-specific result data
 
 Runs are never mutated after they reach a terminal state (`succeeded`, `failed`, `dead_lettered`, `cancelled`, `skipped`).
 
@@ -74,8 +74,8 @@ When the dispatcher claims a run, it inserts a worker lease with an `expires_at`
 
 If the process crashes, the lease is never renewed. On the next startup, the dispatcher detects expired leases:
 
-- `claimed` run with expired lease → reset to `pending`
-- `running` run with expired lease → mark `failed`, schedule retry per policy
+- `claimed` run with expired lease -> reset to `pending`
+- `running` run with expired lease -> mark `failed`, schedule retry per policy
 
 ### Receipt
 
@@ -97,9 +97,9 @@ A dead letter means: "this occurrence failed completely and will not be retried 
 
 A target defines what to execute when a run is dispatched. Wakeplane supports three target kinds:
 
-- `http` — make an HTTP request to a URL
-- `shell` — run a command with arguments
-- `workflow` — call a registered in-process handler by ID
+- `http` - make an HTTP request to a URL
+- `shell` - run a command with arguments
+- `workflow` - call a registered in-process handler by ID
 
 ### Manual trigger
 

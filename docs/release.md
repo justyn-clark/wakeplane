@@ -14,12 +14,12 @@ The current version is `0.x.y`, indicating pre-stable. During `0.x`, minor versi
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` — `const version = "0.2.0-beta.1"`
-- `cmd/wakeplaned/main.go` — `const version = "0.2.0-beta.1"`
+- `cmd/wakeplane/main.go` - `const version = "0.2.0-beta.1"`
+- `cmd/wakeplaned/main.go` - `const version = "0.2.0-beta.1"`
 
 Both must be updated in lockstep. The version is surfaced in:
 
-- `GET /v1/status` → `version` field
+- `GET /v1/status` -> `version` field
 - Embedded example passes `"embed-example"` as version
 
 ## Release Checklist

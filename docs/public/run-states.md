@@ -21,71 +21,71 @@ Terminal statuses are never updated after they are set.
 ## Transition diagram
 
 ```
-                    ┌────────────────────────────┐
-                    │         PLANNER             │
-                    │  occurrence becomes due     │
-                    └────────────┬────────────────┘
-                                 │
-                          ┌──────▼──────┐
-                          │   pending   │◄── recovered from expired claim
-                          └──────┬──────┘
-                                 │ dispatcher claims
-                          ┌──────▼──────┐
-                          │   claimed   │
-                          └──────┬──────┘
-                                 │ mark running
-                          ┌──────▼──────┐
-                          │   running   │
-                          └──┬──┬──┬──┬─┘
-               success ─────┘  │  │  └─── ctx cancelled
-                               │  │
-                      failure ─┘  └── lease expired (crash recovery)
-                                              │
-┌───────────┐  ┌─────────┐  ┌───────────┐   │
-│ succeeded │  │ failed  │  │ cancelled │   │ mark failed
-└───────────┘  └────┬────┘  └───────────┘   └──► failed
-                    │
+                    +----------------------------+
+                    |         PLANNER             |
+                    |  occurrence becomes due     |
+                    +------------+----------------+
+                                 |
+                          +------v------+
+                          |   pending   |<-- recovered from expired claim
+                          +------+------+
+                                 | dispatcher claims
+                          +------v------+
+                          |   claimed   |
+                          +------+------+
+                                 | mark running
+                          +------v------+
+                          |   running   |
+                          +--+--+--+--+-+
+               success -----+  |  |  +--- ctx cancelled
+                               |  |
+                      failure -+  +-- lease expired (crash recovery)
+                                              |
++-----------+  +---------+  +-----------+   |
+| succeeded |  | failed  |  | cancelled |   | mark failed
++-----------+  +----+----+  +-----------+   +--> failed
+                    |
               retry available?
-               ┌────┴────┐
-           yes │         │ no
-       ┌───────▼───────┐  │
-       │retry_scheduled│  │
-       └───────┬───────┘  │
-               │          │
-      new pending run      │
-      (next attempt)       ▼
-                    ┌──────────────┐
-                    │ dead_lettered│
-                    └──────────────┘
+               +----+----+
+           yes |         | no
+       +-------v-------+  |
+       |retry_scheduled|  |
+       +-------+-------+  |
+               |          |
+      new pending run      |
+      (next attempt)       v
+                    +--------------+
+                    | dead_lettered|
+                    +--------------+
 
-┌─────────┐
-│ skipped │  (misfire policy — never dispatched)
-└─────────┘
++---------+
+| skipped |  (misfire policy - never dispatched)
++---------+
 ```
 
 ## Transition rules
 
-### `pending` → `claimed`
+### `pending` -> `claimed`
 
 The dispatcher atomically claims a run: verifies it is still `pending` (or `retry_scheduled` with `retry_available_at` in the past), checks overlap and concurrency policy, updates the run status to `claimed`, and inserts a worker lease.
 
-### `claimed` → `running`
+### `claimed` -> `running`
 
 The dispatcher sets `started_at` and transitions to `running`. The heartbeat goroutine begins renewing the lease at `ttl/2` intervals.
 
-### `running` → `succeeded`
+### `running` -> `succeeded`
 
 The executor returned without error. `finished_at`, `result_json`, and `status=succeeded` are set. The worker lease is deleted.
 
-### `running` → `failed`
+### `running` -> `failed`
 
 The executor returned an error. `finished_at`, `error_text`, and `status=failed` are set. If retry policy allows another attempt, a new run is inserted with `status=retry_scheduled` and `retry_available_at` set to a future time based on exponential backoff.
 
-### `running` → `cancelled`
+### `running` -> `cancelled`
 
 The executor's context was cancelled (shutdown or `replace` overlap policy). `status=cancelled` is set. No retry is scheduled for cancellation.
 
-### `failed` → new run with `retry_scheduled`
+### `failed` -> new run with `retry_scheduled`
 
 A new run record is created with:
 
@@ -96,27 +96,27 @@ A new run record is created with:
 
 The original failed run stays as `failed`. The new run becomes a candidate when `retry_available_at` passes.
 
-### `failed` → `dead_lettered`
+### `failed` -> `dead_lettered`
 
 When `attempt >= max_attempts`, no retry is created. A `dead_letters` record is inserted capturing the occurrence key, reason, and payload. The run status is set to `dead_lettered`.
 
-### `claimed` → `pending` (crash recovery)
+### `claimed` -> `pending` (crash recovery)
 
 If the process crashes after claiming but before marking running, the lease eventually expires. The dispatcher's `recoverExpiredLeases` resets the run to `pending` and deletes the stale lease.
 
-### `running` → `failed` (crash recovery)
+### `running` -> `failed` (crash recovery)
 
 If the process crashes while a run is in `running` state, the lease eventually expires. Recovery marks the run as `failed` with `error_text = "worker lease expired during execution"` and schedules a retry if policy allows.
 
 ### `skipped` (planner only)
 
-The planner creates a run with `status=skipped` and `finished_at` set immediately when misfire policy dictates the occurrence should not execute. This preserves the audit trail — you can see what was skipped and why.
+The planner creates a run with `status=skipped` and `finished_at` set immediately when misfire policy dictates the occurrence should not execute. This preserves the audit trail - you can see what was skipped and why.
 
 ## Occurrence identity
 
 Each run has an `occurrence_key`:
 
-- **Scheduled:** `{schedule_id}:{nominal_time_rfc3339}` — e.g., `sch_01HZ123ABC:2026-04-01T09:00:00Z`
+- **Scheduled:** `{schedule_id}:{nominal_time_rfc3339}` - e.g., `sch_01HZ123ABC:2026-04-01T09:00:00Z`
 - **Manual:** `manual:{run_id}`
 
 The database enforces a unique constraint on `(occurrence_key, attempt)`. This prevents duplicate execution for the same logical occurrence at the same attempt number.
@@ -126,8 +126,8 @@ The database enforces a unique constraint on `(occurrence_key, attempt)`. This p
 - **TTL**: default 30 seconds. Configurable via `WAKEPLANE_LEASE_TTL_SECONDS`.
 - **Heartbeat**: renewed at `ttl/2` by the dispatcher goroutine managing the run.
 - **Expiry recovery**: runs on every dispatcher tick. Leases older than `expires_at` trigger recovery.
-- **Claim expiry**: `claimed` → `pending` (re-dispatchable)
-- **Running expiry**: `running` → `failed` → retry per policy
+- **Claim expiry**: `claimed` -> `pending` (re-dispatchable)
+- **Running expiry**: `running` -> `failed` -> retry per policy
 
 ## Known gap
 

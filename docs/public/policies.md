@@ -39,8 +39,8 @@ Active runs receive a cancellation signal (`ctx.Done()`). All pending runs excep
 
 **`replace` is cooperative and best-effort.** Wakeplane cannot force-kill an executor. The actual behavior depends on the executor:
 
-- **HTTP executor**: underlying request is cancelled via context — typically fast
-- **Shell executor**: process receives `SIGKILL` via `exec.CommandContext` — reliable
+- **HTTP executor**: underlying request is cancelled via context - typically fast
+- **Shell executor**: process receives `SIGKILL` via `exec.CommandContext` - reliable
 - **Workflow executor**: `ctx.Done()` is closed; the handler must check it and return
 
 If the active executor does not stop promptly:
@@ -125,9 +125,9 @@ retry:
 **Exponential backoff:** Each retry delay is doubled from the previous, bounded by `max_delay_seconds`.
 
 - Attempt 0: initial execution
-- Attempt 1: delay = `initial_delay_seconds` × 2^0 = 30s
-- Attempt 2: delay = 30s × 2^1 = 60s
-- Attempt 3: delay = 30s × 2^2 = 120s
+- Attempt 1: delay = `initial_delay_seconds` x 2^0 = 30s
+- Attempt 2: delay = 30s x 2^1 = 60s
+- Attempt 3: delay = 30s x 2^2 = 120s
 - ...capped at `max_delay_seconds`
 
 When all attempts are exhausted, the run is dead-lettered. Dead letters are visible at `GET /v1/status` and the metrics endpoint.

@@ -50,7 +50,7 @@ Send `SIGINT` or `SIGTERM`. The daemon logs a structured shutdown sequence:
 {"level":"WARN","msg":"shutdown timeout: dispatcher drain exceeded deadline","remaining":N}
 ```
 
-This means the process did not drain cleanly within the shutdown deadline. The store is left open until the shutdown path finishes, active executions retain their `running` status, and on next startup expired leases trigger recovery (`claimed` → `pending`, `running` → `failed` with retry or dead-letter handling per policy).
+This means the process did not drain cleanly within the shutdown deadline. The store is left open until the shutdown path finishes, active executions retain their `running` status, and on next startup expired leases trigger recovery (`claimed` -> `pending`, `running` -> `failed` with retry or dead-letter handling per policy).
 
 ## Metrics
 
@@ -146,4 +146,4 @@ The SQLite database is a single file. Back it up with:
 sqlite3 /var/lib/wakeplane/data.db ".backup /backups/wakeplane-$(date +%Y%m%d).db"
 ```
 
-Do not copy the file directly while the daemon is running — use SQLite's backup API or stop the daemon first.
+Do not copy the file directly while the daemon is running - use SQLite's backup API or stop the daemon first.

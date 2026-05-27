@@ -146,9 +146,9 @@ GET    /readyz
 
 ## Next steps
 
-- [Concepts](concepts.md) — understand how Wakeplane thinks about scheduling
-- [Schedules](schedules.md) — YAML manifest shape, cron/interval/once, timezone behavior
-- [Policies](policies.md) — overlap, misfire, retry, and concurrency
-- [Executors](executors.md) — HTTP, shell, and workflow targets
-- [Embedding](embedding.md) — use Wakeplane as a library in your Go application
-- [Status](status.md) — beta gate, 1.0 gate, and explicit scope boundaries
+- [Concepts](concepts.md) - understand how Wakeplane thinks about scheduling
+- [Schedules](schedules.md) - YAML manifest shape, cron/interval/once, timezone behavior
+- [Policies](policies.md) - overlap, misfire, retry, and concurrency
+- [Executors](executors.md) - HTTP, shell, and workflow targets
+- [Embedding](embedding.md) - use Wakeplane as a library in your Go application
+- [Status](status.md) - beta gate, 1.0 gate, and explicit scope boundaries

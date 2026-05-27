@@ -6,9 +6,9 @@ Release conventions for Wakeplane. This page covers versioning policy, artifact 
 
 Wakeplane follows [Semantic Versioning](https://semver.org/):
 
-- **MAJOR** — breaking changes to API contract, CLI interface, or storage schema
-- **MINOR** — new features, new endpoints, new policy types, backwards-compatible schema migrations
-- **PATCH** — bug fixes, test improvements, documentation updates
+- **MAJOR** - breaking changes to API contract, CLI interface, or storage schema
+- **MINOR** - new features, new endpoints, new policy types, backwards-compatible schema migrations
+- **PATCH** - bug fixes, test improvements, documentation updates
 
 **Pre-stable notice:** The current version is `0.x.y`. During `0.x`, minor versions may include breaking changes without a MAJOR bump. The API and CLI surface are not yet guaranteed stable.
 
@@ -16,12 +16,12 @@ Wakeplane follows [Semantic Versioning](https://semver.org/):
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` — `const version = "0.2.0-beta.1"`
-- `cmd/wakeplaned/main.go` — `const version = "0.2.0-beta.1"`
+- `cmd/wakeplane/main.go` - `const version = "0.2.0-beta.1"`
+- `cmd/wakeplaned/main.go` - `const version = "0.2.0-beta.1"`
 
 Both must be updated in lockstep before tagging. The version is surfaced in:
 
-- `GET /v1/status` → `version` field
+- `GET /v1/status` -> `version` field
 - Embedded applications pass their own version string to `config.FromEnv`
 
 ## Release checklist
@@ -85,6 +85,6 @@ Adding new optional fields, new endpoints, new policy types, or new executor kin
 
 Both binaries are identical in `v0.2.0-beta.1`. They share the same command surface and configuration.
 
-`wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking — they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
+`wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking - they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
 
 Do not treat `wakeplaned` as deprecated. Both binaries are maintained.

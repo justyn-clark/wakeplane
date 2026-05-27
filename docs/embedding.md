@@ -17,8 +17,8 @@ service, err := app.NewWithOptions(ctx, cfg,
 
 **Options:**
 
-- `WithWorkflowHandler(id, handler)` — register a single workflow handler by ID.
-- `WithWorkflowRegistry(registry)` — pass a pre-built `*executors.WorkflowRegistry` for bulk registration.
+- `WithWorkflowHandler(id, handler)` - register a single workflow handler by ID.
+- `WithWorkflowRegistry(registry)` - pass a pre-built `*executors.WorkflowRegistry` for bulk registration.
 
 If no workflow handlers are registered, the service still starts. Schedules targeting `workflow` targets will fail at dispatch time with `"workflow X is not registered"`.
 
@@ -114,8 +114,8 @@ type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string
 
 **Return values:**
 
-- `(result, nil)` — run succeeds. `result` is stored as a `workflow_result` receipt.
-- `(nil, err)` — run fails. `err.Error()` is stored as `error_text`. Retry policy applies.
+- `(result, nil)` - run succeeds. `result` is stored as a `workflow_result` receipt.
+- `(nil, err)` - run fails. `err.Error()` is stored as `error_text`. Retry policy applies.
 - If `ctx.Err() != nil` at return time, the run is marked `cancelled` regardless of the returned error.
 
 **Cooperative cancellation:** Handlers should check `ctx.Done()` and return promptly. If a handler ignores cancellation, the dispatcher waits until the `CloseContext` deadline is exceeded, then returns `DeadlineExceeded`. The handler goroutine continues running in the background until it returns or the process exits.
@@ -135,9 +135,9 @@ On startup, the dispatcher recovers stale state from the previous process:
 
 | Crash point                       | DB state after crash             | Recovery action                                                    |
 | --------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| After claim, before mark-running  | Run is `claimed`, lease exists   | Lease expires → run reset to `pending`                             |
-| After mark-running, before finish | Run is `running`, lease exists   | Lease expires → run marked `failed`, retry scheduled               |
-| After finish, before retry insert | Run is `failed`, no retry exists | **No automatic recovery** — retry is lost                          |
+| After claim, before mark-running  | Run is `claimed`, lease exists   | Lease expires -> run reset to `pending`                            |
+| After mark-running, before finish | Run is `running`, lease exists   | Lease expires -> run marked `failed`, retry scheduled              |
+| After finish, before retry insert | Run is `failed`, no retry exists | **No automatic recovery** - retry is lost                          |
 | Retry scheduled, before dispatch  | Run is `retry_scheduled`         | Picked up by next dispatcher tick when `retry_available_at` passes |
 
 The "after finish, before retry insert" gap is a known limitation. `FinishRun` and retry `InsertRun` are not in a single transaction. In practice, the window is extremely small (two sequential SQLite writes), but embedding code should be aware that a process kill at exactly this moment can lose a retry attempt.

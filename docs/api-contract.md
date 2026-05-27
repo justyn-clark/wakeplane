@@ -16,9 +16,9 @@ All errors return a JSON body with this shape:
 
 **Fields:**
 
-- `code` — machine-readable error category (see table below).
-- `error` — human-readable description. Not guaranteed to be stable across versions.
-- `details` — array of `{"field": "...", "message": "..."}` objects. Present only for `validation_failed` responses. Empty or omitted otherwise.
+- `code` - machine-readable error category (see table below).
+- `error` - human-readable description. Not guaranteed to be stable across versions.
+- `details` - array of `{"field": "...", "message": "..."}` objects. Present only for `validation_failed` responses. Empty or omitted otherwise.
 
 **Error codes and HTTP status mapping:**
 
@@ -38,8 +38,8 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 
 **Request parameters:**
 
-- `limit` — maximum items to return. Default `50`. Invalid or non-positive values fall back to `50`.
-- `cursor` — opaque cursor string from a previous response. Omit for the first page. Malformed cursor values return `400 bad_request`.
+- `limit` - maximum items to return. Default `50`. Invalid or non-positive values fall back to `50`.
+- `cursor` - opaque cursor string from a previous response. Omit for the first page. Malformed cursor values return `400 bad_request`.
 
 **Response shape:**
 
@@ -50,8 +50,8 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 }
 ```
 
-- `items` — array of results, ordered by `created_at DESC, id DESC`.
-- `next_cursor` — if non-null, pass as `cursor` to fetch the next page. When null, there are no more results.
+- `items` - array of results, ordered by `created_at DESC, id DESC`.
+- `next_cursor` - if non-null, pass as `cursor` to fetch the next page. When null, there are no more results.
 
 **Cursor format:** The cursor is a base64url-encoded JSON object containing `created_at` and `id`. Clients must treat it as opaque. Cursors from one endpoint are not valid at another. Cursors do not expire but may become invalid if the underlying data is deleted.
 
@@ -61,12 +61,12 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 
 **`GET /v1/schedules`:**
 
-- `enabled=true|false` — filter by enabled state. The value is case-sensitive and strict: `true` filters enabled schedules, `false` filters disabled schedules, and any other value returns `400 bad_request`.
+- `enabled=true|false` - filter by enabled state. The value is case-sensitive and strict: `true` filters enabled schedules, `false` filters disabled schedules, and any other value returns `400 bad_request`.
 
 **`GET /v1/runs` and `GET /v1/schedules/{id}/runs`:**
 
-- `schedule_id=<id>` — filter by schedule (only on `/v1/runs`).
-- `status=<status>` — filter by run status. Accepted values are `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
+- `schedule_id=<id>` - filter by schedule (only on `/v1/runs`).
+- `status=<status>` - filter by run status. Accepted values are `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
 
 Filters are combined with AND. `enabled` and `status` are validated strictly by the handler and reject invalid values with `400 bad_request`. Matching is exact and case-sensitive.
 

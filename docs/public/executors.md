@@ -85,8 +85,8 @@ type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string
 
 - The `ctx` carries a deadline from `policy.timeout_seconds`.
 - `input` is the `target.input` map from the schedule definition.
-- Return `(result, nil)` on success — `result` is stored as the `workflow_result` receipt.
-- Return `(nil, err)` on failure — retry policy applies.
+- Return `(result, nil)` on success - `result` is stored as the `workflow_result` receipt.
+- Return `(nil, err)` on failure - retry policy applies.
 - If `ctx.Err() != nil` at return time, the run is marked `cancelled` regardless of the returned error.
 
 **Missing handler behavior:** If a schedule targets `workflow_id: X` and no handler is registered for `X`, the run fails with `workflow "X" is not registered`. Retry policy applies. After all retries are exhausted, the run is dead-lettered.
@@ -110,7 +110,7 @@ The response is an array of receipt objects. Each receipt has a `receipt_kind` f
 | Aspect              | HTTP                                          | Shell                    | Workflow                            |
 | ------------------- | --------------------------------------------- | ------------------------ | ----------------------------------- |
 | Target              | URL + method                                  | Command + args           | Registered handler by ID            |
-| Cancellation        | Context → HTTP abort                          | Context → SIGKILL        | Context → ctx.Done() (cooperative)  |
+| Cancellation        | Context -> HTTP abort                         | Context -> SIGKILL       | Context -> ctx.Done() (cooperative) |
 | Timeout enforcement | Via context                                   | Via exec.CommandContext  | Via context                         |
 | Receipt kind        | HTTP response summary                         | stdout/stderr/exit code  | Handler return value                |
 | Registration        | None needed                                   | None needed              | Must register explicitly            |

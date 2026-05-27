@@ -72,11 +72,11 @@ Scrape `GET /v1/metrics` (Prometheus text format).
 
 `GET /v1/status` returns live operational counts. Key fields:
 
-- `scheduler.due_runs` — how many runs are currently pending dispatch. Normally near zero.
-- `workers.claimed_but_expired` — leases that expired without a heartbeat. Should be zero in steady state.
-- `runs.running` — currently executing runs.
-- `runs.dead_letter` — exhausted failure runs requiring manual investigation.
-- `runs.retry_queued` — runs waiting for their `retry_available_at` to pass.
+- `scheduler.due_runs` - how many runs are currently pending dispatch. Normally near zero.
+- `workers.claimed_but_expired` - leases that expired without a heartbeat. Should be zero in steady state.
+- `runs.running` - currently executing runs.
+- `runs.dead_letter` - exhausted failure runs requiring manual investigation.
+- `runs.retry_queued` - runs waiting for their `retry_available_at` to pass.
 
 ## Common failures
 

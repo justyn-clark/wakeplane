@@ -111,7 +111,7 @@ POST /v1/schedules/{id}/resume
 wakeplane schedule trigger <id>
 ```
 
-Creates a manual run immediately. The normal schedule cadence is unaffected — `next_run_at` is not changed. The manual run has a `manual:{run_id}` occurrence key separate from any scheduled occurrences.
+Creates a manual run immediately. The normal schedule cadence is unaffected - `next_run_at` is not changed. The manual run has a `manual:{run_id}` occurrence key separate from any scheduled occurrences.
 
 Trigger requires a reason:
 
@@ -123,8 +123,8 @@ POST /v1/schedules/{id}/trigger
 
 ## Full replacement vs partial update
 
-- `PUT /v1/schedules/{id}` — full replacement. All fields required. Equivalent to delete + create.
-- `PATCH /v1/schedules/{id}` — partial update. Only provided fields change. Useful for toggling `enabled` or updating a target URL.
+- `PUT /v1/schedules/{id}` - full replacement. All fields required. Equivalent to delete + create.
+- `PATCH /v1/schedules/{id}` - partial update. Only provided fields change. Useful for toggling `enabled` or updating a target URL.
 
 ## Target kinds
 

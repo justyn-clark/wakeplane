@@ -19,70 +19,70 @@ Every execution attempt in Wakeplane is tracked as a `Run` record with an explic
 ## Transition Diagram
 
 ```
-                          ┌──────────────────────────────────┐
-                          │         PLANNER                  │
-                          │                                  │
-                          │   due occurrence materialized    │
-                          └──────────┬───────────────────────┘
-                                     │
-                              ┌──────▼──────┐
-                              │   pending   │◄──── recovered from expired claim
-                              └──────┬──────┘
-                                     │ dispatcher claims
-                              ┌──────▼──────┐
-                              │   claimed   │
-                              └──────┬──────┘
-                                     │ mark running
-                              ┌──────▼──────┐
-                              │   running   │
-                              └──┬──┬──┬──┬─┘
-                     success ───┘  │  │  └─── ctx cancelled
-                                   │  │
-                          failure ─┘  └─ lease expired
+                          +----------------------------------+
+                          |         PLANNER                  |
+                          |                                  |
+                          |   due occurrence materialized    |
+                          +----------+-----------------------+
+                                     |
+                              +------v------+
+                              |   pending   |<---- recovered from expired claim
+                              +------+------+
+                                     | dispatcher claims
+                              +------v------+
+                              |   claimed   |
+                              +------+------+
+                                     | mark running
+                              +------v------+
+                              |   running   |
+                              +--+--+--+--+-+
+                     success ---+  |  |  +--- ctx cancelled
+                                   |  |
+                          failure -+  +- lease expired
                                           (recovery)
-    ┌───────────┐  ┌─────────┐  ┌───────────┐  ┌───────────────┐
-    │ succeeded │  │ failed  │  │ cancelled │  │retry_scheduled│
-    └───────────┘  └────┬────┘  └───────────┘  └───────┬───────┘
-                        │                              │
+    +-----------+  +---------+  +-----------+  +---------------+
+    | succeeded |  | failed  |  | cancelled |  |retry_scheduled|
+    +-----------+  +----+----+  +-----------+  +-------+-------+
+                        |                              |
                   retry available?              new pending run
-                   ┌────┴────┐                  (next attempt)
-                   │         │
-            ┌──────▼──────┐  │
-            │retry_sched. │  │
-            └─────────────┘  │
-                             │ no retries left
-                      ┌──────▼───────┐
-                      │ dead_lettered│
-                      └──────────────┘
+                   +----+----+                  (next attempt)
+                   |         |
+            +------v------+  |
+            |retry_sched. |  |
+            +-------------+  |
+                             | no retries left
+                      +------v-------+
+                      | dead_lettered|
+                      +--------------+
 
-    ┌─────────┐
-    │ skipped │  (misfire policy, never dispatched)
-    └─────────┘
+    +---------+
+    | skipped |  (misfire policy, never dispatched)
+    +---------+
 ```
 
 ## Transition Rules
 
-### pending → claimed
+### pending -> claimed
 
 Occurs in `store.ClaimRun`. This is the only transactional state change: it atomically verifies the run is still `pending` (or `retry_scheduled`), checks overlap/concurrency policy, updates the run status, and inserts a worker lease.
 
-### claimed → running
+### claimed -> running
 
 Occurs in `store.MarkRunRunning`. Sets `started_at` and transitions to `running`. The heartbeat goroutine begins renewing the lease at `ttl/2` intervals.
 
-### running → succeeded
+### running -> succeeded
 
 The executor returned without error. `store.FinishRun` sets `finished_at`, `result_json`, and `status = succeeded`. The worker lease is deleted.
 
-### running → failed
+### running -> failed
 
 The executor returned an error. `store.FinishRun` sets `finished_at`, `error_text`, and `status = failed`. If retry policy allows, a new run is inserted with `status = retry_scheduled` and `retry_available_at` set to a future time based on exponential backoff.
 
-### running → cancelled
+### running -> cancelled
 
 The executor's context was cancelled (shutdown or `replace` overlap policy). `store.FinishRun` sets `status = cancelled`. No retry is scheduled for cancellation.
 
-### failed → retry_scheduled (via new run)
+### failed -> retry_scheduled (via new run)
 
 When a failed run has remaining retry attempts, the dispatcher inserts a **new** run record with:
 
@@ -93,15 +93,15 @@ When a failed run has remaining retry attempts, the dispatcher inserts a **new**
 
 The original failed run stays as `failed`. The new run becomes a candidate when its `retry_available_at` passes.
 
-### failed → dead_lettered
+### failed -> dead_lettered
 
 When `attempt >= max_attempts`, no retry is created. Instead, a `dead_letters` record is inserted capturing the occurrence key, reason, and payload. The run status is set to `dead_lettered`.
 
-### claimed → pending (recovery)
+### claimed -> pending (recovery)
 
 If the process crashes after claiming but before marking running, the lease eventually expires. The dispatcher's `recoverExpiredLeases` resets the run to `pending` and deletes the stale lease.
 
-### running → failed (recovery)
+### running -> failed (recovery)
 
 If the process crashes while a run is in `running` state, the lease eventually expires. Recovery marks the run as `failed` with error text `"worker lease expired during execution"` and schedules a retry if policy allows.
 

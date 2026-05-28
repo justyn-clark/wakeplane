@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public beta - pre-stable release line.** No authentication or RBAC. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
+> **Public beta - pre-stable release line.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 
@@ -34,6 +34,7 @@ Current shipped state:
 - planner and dispatcher loops
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
+- embedded single-operator console at `/console/`
 - metrics, health, readiness, and status endpoints
 - structured shutdown and drain logging
 - restart, stale-lease, contention, and non-cooperative shutdown coverage
@@ -41,7 +42,7 @@ Current shipped state:
 Current limits:
 
 - native Postgres column types are still conservative/text-compatible in this first production backend slice
-- no RBAC, UI, distributed coordination, or plugin loading
+- no RBAC, distributed coordination, visual schedule editor, or plugin loading
 - workflow handlers must be registered explicitly by the embedding application or tests
 - `replace` is cooperative and best-effort, not forceful
 - shell targets inherit the daemon environment; per-target env or secret injection is not implemented
@@ -109,7 +110,7 @@ Durability and audit:
 1. Build the binary, or plan to run the daemon directly from source.
 2. Start the daemon.
 3. Create schedules from a YAML manifest.
-4. Inspect schedules and runs with the CLI or HTTP API.
+4. Inspect schedules and runs with the console, CLI, or HTTP API.
 5. Register workflow handlers explicitly if you use workflow targets.
 
 Build both entry points:
@@ -120,6 +121,16 @@ go build -o dist/wakeplaned ./cmd/wakeplaned
 ```
 
 If you are running directly from source, use `go run ./cmd/wakeplane serve` in place of the binary invocation below. If you built into `dist/` and did not install into `PATH`, prefix commands with `./dist/`.
+
+For local console development from source:
+
+```bash
+make console
+# or, if you use just:
+just console
+```
+
+Then open `http://127.0.0.1:8080/console/`. Override the address or dev database with `make console ADDR=127.0.0.1:18080 DB=./tmp/wakeplane.db` or `just console 127.0.0.1:18080 ./tmp/wakeplane.db`.
 
 ## Install
 
@@ -191,6 +202,8 @@ GET    /v1/runs/{id}/receipts
 GET    /v1/metrics
 ```
 
+The daemon also serves the local operator console at `http://localhost:8080/console/`. The console uses the same `/v1/...` API as the CLI. If `WAKEPLANE_AUTH_TOKEN` is set, open the console and enter the bearer token with the Token button before inspecting runs or schedules.
+
 ## Embedding
 
 Wakeplane does not ship hidden workflow handlers. Embedding applications must register each workflow explicitly.
@@ -252,6 +265,7 @@ This bridge moves schedule definitions. Run history, receipts, audit logs, lease
 - [Install](docs/public/install.md)
 - [CLI Reference](docs/public/cli.md)
 - [Public API Reference](docs/public/api.md)
+- [Operator Console](docs/public/console.md)
 - [Public Status](docs/public/status.md)
 - [Current Status](docs/current-status.md)
 - [Architecture](docs/architecture.md)

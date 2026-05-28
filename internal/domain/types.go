@@ -140,6 +140,8 @@ type Run struct {
 	CreatedAt         time.Time       `json:"created_at"`
 	UpdatedAt         time.Time       `json:"updated_at"`
 	Receipts          []Receipt       `json:"receipts,omitempty"`
+	Attempts          []RunSummary    `json:"attempts,omitempty"`
+	DeadLetter        *DeadLetter     `json:"dead_letter,omitempty"`
 }
 
 type DeadLetter struct {
@@ -262,15 +264,22 @@ type ScheduleSummary struct {
 }
 
 type RunSummary struct {
-	ID            string     `json:"id"`
-	ScheduleID    string     `json:"schedule_id"`
-	OccurrenceKey string     `json:"occurrence_key"`
-	Status        RunStatus  `json:"status"`
-	Attempt       int        `json:"attempt"`
-	StartedAt     *time.Time `json:"started_at,omitempty"`
-	FinishedAt    *time.Time `json:"finished_at,omitempty"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	ID                string     `json:"id"`
+	ScheduleID        string     `json:"schedule_id"`
+	ScheduleName      string     `json:"schedule_name,omitempty"`
+	OccurrenceKey     string     `json:"occurrence_key"`
+	NominalTime       time.Time  `json:"nominal_time"`
+	DueTime           time.Time  `json:"due_time"`
+	Status            RunStatus  `json:"status"`
+	Attempt           int        `json:"attempt"`
+	TargetKind        TargetKind `json:"target_kind,omitempty"`
+	ClaimedByWorkerID *string    `json:"claimed_by_worker_id,omitempty"`
+	StartedAt         *time.Time `json:"started_at,omitempty"`
+	FinishedAt        *time.Time `json:"finished_at,omitempty"`
+	RetryAvailableAt  *time.Time `json:"retry_available_at,omitempty"`
+	ErrorText         *string    `json:"error_text,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 type ValidationError struct {

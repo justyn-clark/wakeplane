@@ -33,6 +33,7 @@ dist/
 /wakeplaned
 /embedded
 artifacts/
+wakeplane.dev.db*
 
 # Editor/IDE
 # .idea/

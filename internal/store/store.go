@@ -387,39 +387,56 @@ func (s *Store) GetRun(ctx context.Context, id string) (domain.Run, error) {
 		return domain.Run{}, err
 	}
 	run.Receipts = receipts
+	attempts, err := s.ListRunAttempts(ctx, run.OccurrenceKey)
+	if err != nil {
+		return domain.Run{}, err
+	}
+	run.Attempts = attempts
+	deadLetter, err := s.GetDeadLetterForRun(ctx, id)
+	if err != nil {
+		return domain.Run{}, err
+	}
+	run.DeadLetter = deadLetter
 	return run, nil
 }
 
-func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain.RunStatus, limit int, cursor string) ([]domain.RunSummary, *string, error) {
+func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain.RunStatus, targetKind *domain.TargetKind, limit int, cursor string) ([]domain.RunSummary, *string, error) {
 	if limit <= 0 {
 		limit = 50
 	}
 	args := []any{}
 	clauses := []string{}
 	if scheduleID != nil {
-		clauses = append(clauses, "schedule_id = ?")
+		clauses = append(clauses, "sr.schedule_id = ?")
 		args = append(args, *scheduleID)
 	}
 	if status != nil {
-		clauses = append(clauses, "status = ?")
+		clauses = append(clauses, "sr.status = ?")
 		args = append(args, *status)
+	}
+	if targetKind != nil {
+		clauses = append(clauses, "s.target_kind = ?")
+		args = append(args, *targetKind)
 	}
 	if cursor != "" {
 		createdAt, id, err := domain.DecodeCursor(cursor)
 		if err != nil {
 			return nil, nil, err
 		}
-		clauses = append(clauses, "(created_at < ? OR (created_at = ? AND id < ?))")
+		clauses = append(clauses, "(sr.created_at < ? OR (sr.created_at = ? AND sr.id < ?))")
 		args = append(args, timeString(createdAt), timeString(createdAt), id)
 	}
 	query := `
-		SELECT id, schedule_id, occurrence_key, status, attempt, started_at, finished_at, created_at, updated_at
-		FROM schedule_runs
+		SELECT sr.id, sr.schedule_id, s.name, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt,
+		       s.target_kind, sr.claimed_by_worker_id, sr.started_at, sr.finished_at, sr.retry_available_at,
+		       sr.error_text, sr.created_at, sr.updated_at
+		FROM schedule_runs sr
+		JOIN schedules s ON s.id = sr.schedule_id
 	`
 	if len(clauses) > 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
-	query += " ORDER BY created_at DESC, id DESC LIMIT ?"
+	query += " ORDER BY sr.created_at DESC, sr.id DESC LIMIT ?"
 	args = append(args, limit+1)
 	rows, err := s.query(ctx, query, args...)
 	if err != nil {
@@ -428,20 +445,10 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 	defer rows.Close()
 	var items []domain.RunSummary
 	for rows.Next() {
-		var (
-			item         domain.RunSummary
-			startedAt    sql.NullString
-			finishedAt   sql.NullString
-			createdAtRaw string
-			updatedAtRaw string
-		)
-		if err := rows.Scan(&item.ID, &item.ScheduleID, &item.OccurrenceKey, &item.Status, &item.Attempt, &startedAt, &finishedAt, &createdAtRaw, &updatedAtRaw); err != nil {
+		item, err := scanRunSummary(rows)
+		if err != nil {
 			return nil, nil, err
 		}
-		item.StartedAt = parseNullTime(startedAt)
-		item.FinishedAt = parseNullTime(finishedAt)
-		item.CreatedAt = mustParseTime(createdAtRaw)
-		item.UpdatedAt = mustParseTime(updatedAtRaw)
 		items = append(items, item)
 	}
 	if len(items) <= limit {
@@ -451,6 +458,47 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 	items = items[:limit]
 	nextCursor := domain.EncodeCursor(last.CreatedAt, last.ID)
 	return items, &nextCursor, nil
+}
+
+func (s *Store) ListRunAttempts(ctx context.Context, occurrenceKey string) ([]domain.RunSummary, error) {
+	rows, err := s.query(ctx, `
+		SELECT sr.id, sr.schedule_id, s.name, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt,
+		       s.target_kind, sr.claimed_by_worker_id, sr.started_at, sr.finished_at, sr.retry_available_at,
+		       sr.error_text, sr.created_at, sr.updated_at
+		FROM schedule_runs sr
+		JOIN schedules s ON s.id = sr.schedule_id
+		WHERE sr.occurrence_key = ?
+		ORDER BY sr.attempt ASC, sr.created_at ASC, sr.id ASC
+	`, occurrenceKey)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []domain.RunSummary
+	for rows.Next() {
+		item, err := scanRunSummary(rows)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func (s *Store) GetDeadLetterForRun(ctx context.Context, runID string) (*domain.DeadLetter, error) {
+	row := s.queryRow(ctx, `
+		SELECT id, run_id, schedule_id, occurrence_key, reason, payload_json, created_at
+		FROM dead_letters
+		WHERE run_id = ?
+	`, runID)
+	deadLetter, err := scanDeadLetter(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &deadLetter, nil
 }
 
 func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receipt, error) {
@@ -1175,6 +1223,54 @@ func scanRun(scanner interface{ Scan(dest ...any) error }) (domain.Run, error) {
 	run.CreatedAt = mustParseTime(createdAtRaw)
 	run.UpdatedAt = mustParseTime(updatedAtRaw)
 	return run, nil
+}
+
+func scanRunSummary(scanner interface{ Scan(dest ...any) error }) (domain.RunSummary, error) {
+	var (
+		item              domain.RunSummary
+		claimedByWorkerID sql.NullString
+		startedAt         sql.NullString
+		finishedAt        sql.NullString
+		retryAvailableAt  sql.NullString
+		errorText         sql.NullString
+		nominalTimeRaw    string
+		dueTimeRaw        string
+		createdAtRaw      string
+		updatedAtRaw      string
+	)
+	if err := scanner.Scan(
+		&item.ID, &item.ScheduleID, &item.ScheduleName, &item.OccurrenceKey, &nominalTimeRaw, &dueTimeRaw,
+		&item.Status, &item.Attempt, &item.TargetKind, &claimedByWorkerID, &startedAt, &finishedAt,
+		&retryAvailableAt, &errorText, &createdAtRaw, &updatedAtRaw,
+	); err != nil {
+		return domain.RunSummary{}, err
+	}
+	item.NominalTime = mustParseTime(nominalTimeRaw)
+	item.DueTime = mustParseTime(dueTimeRaw)
+	item.ClaimedByWorkerID = parseNullString(claimedByWorkerID)
+	item.StartedAt = parseNullTime(startedAt)
+	item.FinishedAt = parseNullTime(finishedAt)
+	item.RetryAvailableAt = parseNullTime(retryAvailableAt)
+	item.ErrorText = parseNullString(errorText)
+	item.CreatedAt = mustParseTime(createdAtRaw)
+	item.UpdatedAt = mustParseTime(updatedAtRaw)
+	return item, nil
+}
+
+func scanDeadLetter(scanner interface{ Scan(dest ...any) error }) (domain.DeadLetter, error) {
+	var (
+		item         domain.DeadLetter
+		payloadJSON  sql.NullString
+		createdAtRaw string
+	)
+	if err := scanner.Scan(&item.ID, &item.RunID, &item.ScheduleID, &item.OccurrenceKey, &item.Reason, &payloadJSON, &createdAtRaw); err != nil {
+		return domain.DeadLetter{}, err
+	}
+	if payloadJSON.Valid {
+		item.PayloadJSON = json.RawMessage(payloadJSON.String)
+	}
+	item.CreatedAt = mustParseTime(createdAtRaw)
+	return item, nil
 }
 
 func timeString(t time.Time) string {

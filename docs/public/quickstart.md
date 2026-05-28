@@ -77,6 +77,14 @@ wakeplane schedule create -f ./examples/health-check-http.yaml
 
 ## 3. Inspect schedules and runs
 
+Open the local operator console:
+
+```text
+http://localhost:8080/console/
+```
+
+If `WAKEPLANE_AUTH_TOKEN` is set, use the Token button in the console before inspecting runs or schedules.
+
 ```bash
 wakeplane schedule list
 wakeplane schedule get <id>
@@ -153,4 +161,5 @@ GET    /readyz
 - [Policies](policies.md) - overlap, misfire, retry, and concurrency
 - [Executors](executors.md) - HTTP, shell, and workflow targets
 - [Embedding](embedding.md) - use Wakeplane as a library in your Go application
+- [Operator Console](console.md) - local inspection surface for runs, schedules, receipts, and daemon posture
 - [Status](status.md) - beta gate, 1.0 gate, and explicit scope boundaries

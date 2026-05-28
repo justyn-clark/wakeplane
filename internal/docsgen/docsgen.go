@@ -38,9 +38,9 @@ var routeDescriptions = map[string]string{
 	"POST /v1/schedules/{id}/pause":   "Pause a schedule by setting `enabled=false` and recording `paused_at`.",
 	"POST /v1/schedules/{id}/resume":  "Resume a schedule by setting `enabled=true`, clearing `paused_at`, and recomputing `next_run_at`.",
 	"POST /v1/schedules/{id}/trigger": "Create a manual run immediately. Requires `{\"reason\":\"...\"}`.",
-	"GET /v1/schedules/{id}/runs":     "List runs for a specific schedule. Supports `status`, `limit`, and `cursor`.",
-	"GET /v1/runs":                    "List runs across all schedules. Supports `schedule_id`, `status`, `limit`, and `cursor`.",
-	"GET /v1/runs/{id}":               "Get one run including result fields.",
+	"GET /v1/schedules/{id}/runs":     "List runs for a specific schedule. Supports `status`, `target_kind`, `limit`, and `cursor`.",
+	"GET /v1/runs":                    "List runs across all schedules. Supports `schedule_id`, `status`, `target_kind`, `limit`, and `cursor`.",
+	"GET /v1/runs/{id}":               "Get one run including result fields, receipts, attempt history, and dead-letter details when present.",
 	"GET /v1/runs/{id}/receipts":      "List execution receipts for a run.",
 }
 
@@ -204,9 +204,12 @@ func generateAPIReference(version string, routes []Route) string {
 	b.WriteString("| `cursor` | schedule and run list endpoints | Opaque cursor from a previous response. Invalid values return `400 bad_request`. |\n")
 	b.WriteString("| `enabled=true|false` | `GET /v1/schedules` | Strict boolean filter. Any other value returns `400 bad_request`. |\n")
 	b.WriteString("| `schedule_id=<id>` | `GET /v1/runs` | Filter runs to a single schedule. |\n")
+	b.WriteString("| `target_kind=http|shell|workflow` | run list endpoints | Filter runs by typed target kind. Any other value returns `400 bad_request`. |\n")
 	b.WriteString("| `status=<value>` | run list endpoints | Accepted values: `")
 	b.WriteString(strings.Join(runStatuses(), "`, `"))
 	b.WriteString("`. Invalid values return `400 bad_request`. |\n\n")
+
+	b.WriteString("Run list responses include operator-console fields: `schedule_name`, `target_kind`, `claimed_by_worker_id`, `retry_available_at`, and `error_text` when available. `GET /v1/runs/{id}` returns the full run plus `receipts`, `attempts`, and `dead_letter` when present so the UI and API expose the same execution truth.\n\n")
 
 	b.WriteString("## Content types\n\n")
 	b.WriteString("- Request bodies: `application/json`\n")

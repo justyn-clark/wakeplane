@@ -6,7 +6,7 @@
 
 This is a deliberate and explicit constraint in the current release line. Every operator who deploys Wakeplane must understand what this means:
 
-- If `WAKEPLANE_AUTH_TOKEN` is unset, any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, and access all run receipts.
+- If `WAKEPLANE_AUTH_TOKEN` is unset, any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, access all run receipts, and use the operator console.
 - If `WAKEPLANE_AUTH_TOKEN` is set, `/v1/...` routes require `Authorization: Bearer <token>`.
 - There are no sessions, users, roles, or per-schedule permissions.
 - HTTP request audit logging is enabled by default and can be disabled with `WAKEPLANE_REQUEST_AUDIT=false`.
@@ -40,13 +40,13 @@ The current release provides:
 - Correct scheduling, dispatch, and run ledger semantics
 - Structured logging of all operations
 - Prometheus metrics and operational status
+- Static console assets at `/console/`; console data and actions still use `/v1/...`
 - Durable run state with recovery on crash
 
 The current release does **not** provide:
 
-- Authentication (API keys, bearer tokens, OAuth, mTLS)
+- Multi-user authentication (OAuth, mTLS)
 - Authorization (RBAC, per-schedule access control)
-- Audit logging at the API layer
 - Network-layer encryption (TLS) - this should be provided by a reverse proxy
 - Multi-tenancy
 

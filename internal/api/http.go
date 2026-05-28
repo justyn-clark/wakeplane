@@ -3,9 +3,11 @@ package api
 import (
 	"context"
 	"crypto/subtle"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,8 +17,28 @@ import (
 	"github.com/justyn-clark/wakeplane/internal/domain"
 )
 
+//go:embed console/*
+var consoleFS embed.FS
+
 func NewMux(service *app.Service) http.Handler {
 	mux := http.NewServeMux()
+
+	consoleAssets, err := fs.Sub(consoleFS, "console")
+	if err != nil {
+		panic(err)
+	}
+	consoleHandler := http.FileServer(http.FS(consoleAssets))
+	mux.Handle("GET /console/", http.StripPrefix("/console/", consoleHandler))
+	mux.HandleFunc("GET /console", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/console/", http.StatusMovedPermanently)
+	})
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.Redirect(w, r, "/console/", http.StatusFound)
+	})
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, service.Health(r.Context()))
@@ -162,12 +184,17 @@ func NewMux(service *app.Service) http.Handler {
 			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
+		targetKind, err := parseTargetKind(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
 		cursor, err := parseCursor(r)
 		if err != nil {
 			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
-		items, nextCursor, err := service.ListRuns(r.Context(), &scheduleID, status, parseLimit(r), cursor)
+		items, nextCursor, err := service.ListRuns(r.Context(), &scheduleID, status, targetKind, parseLimit(r), cursor)
 		if err != nil {
 			writeError(w, err)
 			return
@@ -184,12 +211,17 @@ func NewMux(service *app.Service) http.Handler {
 			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
+		targetKind, err := parseTargetKind(r)
+		if err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
 		cursor, err := parseCursor(r)
 		if err != nil {
 			writeError(w, domain.NewBadRequestError(err.Error()))
 			return
 		}
-		items, nextCursor, err := service.ListRuns(r.Context(), scheduleID, status, parseLimit(r), cursor)
+		items, nextCursor, err := service.ListRuns(r.Context(), scheduleID, status, targetKind, parseLimit(r), cursor)
 		if err != nil {
 			writeError(w, err)
 			return
@@ -307,6 +339,20 @@ func parseStatus(r *http.Request) (*domain.RunStatus, error) {
 		return &status, nil
 	default:
 		return nil, fmt.Errorf("invalid status value %q", raw)
+	}
+}
+
+func parseTargetKind(r *http.Request) (*domain.TargetKind, error) {
+	raw := r.URL.Query().Get("target_kind")
+	if raw == "" {
+		return nil, nil
+	}
+	kind := domain.TargetKind(raw)
+	switch kind {
+	case domain.TargetKindHTTP, domain.TargetKindShell, domain.TargetKindWorkflow:
+		return &kind, nil
+	default:
+		return nil, fmt.Errorf("invalid target_kind value %q", raw)
 	}
 }
 

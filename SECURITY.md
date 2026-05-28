@@ -2,9 +2,11 @@
 
 ## Current security posture
 
-**Wakeplane currently has no authentication, authorization, or RBAC.**
+**Wakeplane supports single-operator bearer authentication when configured, but it does not provide authorization, RBAC, or multi-tenant access control.**
 
-Any process that can reach the HTTP port can create, modify, delete, trigger, or pause any schedule. Any process that can reach the port can read all run history and receipts.
+If `WAKEPLANE_AUTH_TOKEN` is unset, any process that can reach the HTTP port can create, modify, delete, trigger, or pause any schedule. Any process that can reach the port can read all run history and receipts and use the operator console.
+
+If `WAKEPLANE_AUTH_TOKEN` is set, `/v1/...` routes require `Authorization: Bearer <token>`. The static console assets at `/console/` are public so a local browser can load the page; console data and actions still call `/v1/...` and use the configured bearer token.
 
 **Do not expose Wakeplane directly to the public internet.**
 
@@ -21,15 +23,13 @@ A reverse proxy or VPN gateway that enforces auth/TLS is the recommended pattern
 
 The following are **out of scope** in the current beta release line:
 
-- HTTP authentication (Bearer tokens, API keys, basic auth)
 - Role-based access control
 - Multi-tenant separation
 - TLS termination in the daemon itself (use a reverse proxy)
-- Audit logging of API calls (run ledger is append-only but not access-logged)
 - Rate limiting
 - Secret injection for HTTP or shell targets
 
-These are planned features for future minor/major versions.
+These may be added in future minor/major versions.
 
 ## Intended use
 

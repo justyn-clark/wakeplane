@@ -1,6 +1,6 @@
 # Wakeplane Current Status
 
-As of 2026-04-15, Wakeplane is a coherent public-beta scheduling control plane with working planner, dispatcher, durable run ledger, typed executors, HTTP API, CLI, and embedding surface.
+As of 2026-05-28, Wakeplane is a coherent public-beta scheduling control plane with working planner, dispatcher, durable run ledger, typed executors, HTTP API, CLI, embedded operator console, and embedding surface.
 
 ## What it is
 
@@ -44,7 +44,7 @@ Then:
 
 1. Start the daemon with `WAKEPLANE_DB_PATH`, `WAKEPLANE_HTTP_ADDR`, and `WAKEPLANE_WORKER_ID`.
 2. Create a schedule from YAML with `wakeplane schedule create -f <file>`.
-3. Inspect schedules, runs, receipts, status, and metrics through the CLI or `/v1/...` API.
+3. Inspect schedules, runs, receipts, status, and metrics through the console, CLI, or `/v1/...` API.
 4. If using workflow targets, register handlers explicitly through `app.NewWithOptions(..., app.WithWorkflowHandler(...))`.
 
 ## Intent and Implementation Coherence

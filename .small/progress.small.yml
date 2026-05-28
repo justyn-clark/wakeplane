@@ -1524,3 +1524,14 @@ entries:
     status: completed
     task_id: task-47
     timestamp: "2026-05-27T22:21:12.121619000Z"
+  - command: go test ./... && go run ./tools/docsgen --check && pnpm run check && live console smoke
+    evidence: |-
+      Added the embedded single-operator console at /console/ with a ledger-first UI, sticky status/schedule/target filters, desktop table and mobile card layouts, run and schedule detail drawers, raw JSON panels, token handling for WAKEPLANE_AUTH_TOKEN, and schedule pause/resume/trigger actions. Extended run list API responses with schedule_name, target_kind, worker, retry, error, and timing fields; added target_kind filtering; and extended run detail with receipts, attempt history, and dead-letter details. Live smoke served the daemon on 127.0.0.1:18092, loaded /console/ and /console/app.js, created and triggered a shell schedule, verified /v1/runs?target_kind=shell exposed ledger fields, and verified /v1/runs/{id} returned receipts and attempts.
+      go test ./... exited 0.
+      go run ./tools/docsgen --check exited 0.
+      node --check internal/api/console/app.js exited 0.
+      pnpm run check exited 0 after formatting docs and console assets.
+    notes: This completes the first real local operator UI phase; visual schedule creation/editing remains intentionally deferred per objective.
+    status: completed
+    task_id: task-48
+    timestamp: "2026-05-28T17:45:48.943884000Z"

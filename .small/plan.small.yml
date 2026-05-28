@@ -142,3 +142,6 @@ tasks:
   - id: task-47
     title: Add soak, restart-recovery, and backup-restore verification
     status: completed
+  - id: task-48
+    title: Add first single-operator console for run ledger, schedules, and daemon posture
+    status: completed

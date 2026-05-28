@@ -67,8 +67,9 @@ List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/run
 
 - `schedule_id=<id>` - filter by schedule (only on `/v1/runs`).
 - `status=<status>` - filter by run status. Accepted values are `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
+- `target_kind=http|shell|workflow` - filter by typed target kind.
 
-Filters are combined with AND. `enabled` and `status` are validated strictly by the handler and reject invalid values with `400 bad_request`. Matching is exact and case-sensitive.
+Filters are combined with AND. `enabled`, `status`, and `target_kind` are validated strictly by the handler and reject invalid values with `400 bad_request`. Matching is exact and case-sensitive.
 
 ## Content Types
 
@@ -97,10 +98,10 @@ Filters are combined with AND. `enabled` and `status` are validated strictly by 
 
 ### Run Inspection
 
-| Method                       | Path                                                                         | Semantics |
-| ---------------------------- | ---------------------------------------------------------------------------- | --------- |
-| `GET /v1/runs/{id}`          | Returns the full run record including all result fields.                     |
-| `GET /v1/runs/{id}/receipts` | Returns execution receipts (stdout, stderr, HTTP response, workflow result). |
+| Method                       | Path                                                                                                                  | Semantics |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------- |
+| `GET /v1/runs/{id}`          | Returns the full run record including result fields, receipts, attempt history, and dead-letter details when present. |
+| `GET /v1/runs/{id}/receipts` | Returns execution receipts (stdout, stderr, HTTP response, workflow result).                                          |
 
 ### Operational
 

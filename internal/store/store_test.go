@@ -99,6 +99,119 @@ func TestSQLiteRebindLeavesPlaceholders(t *testing.T) {
 	}
 }
 
+func TestListRunsIncludesOperatorConsoleFieldsAndTargetFilter(t *testing.T) {
+	st := openTestStore(t)
+	ctx := context.Background()
+	shellSchedule := insertTestSchedule(t, st)
+	httpSchedule := insertTestSchedule(t, st)
+	httpSchedule.Name = "http-check"
+	httpSchedule.Target = domain.TargetSpec{Kind: domain.TargetKindHTTP, Method: "POST", URL: "https://example.test/hook"}
+	if err := st.UpdateSchedule(ctx, httpSchedule); err != nil {
+		t.Fatalf("UpdateSchedule returned error: %v", err)
+	}
+	finishedAt := time.Now().UTC()
+	httpRun := insertTestRun(t, st, httpSchedule.ID, domain.RunFailed, finishedAt)
+	httpRun.ErrorText = ptrString("target returned 500")
+	httpRun.RetryAvailableAt = ptrTime(finishedAt.Add(time.Minute))
+	if err := st.FinishRun(ctx, httpRun); err != nil {
+		t.Fatalf("FinishRun returned error: %v", err)
+	}
+	insertTestRun(t, st, shellSchedule.ID, domain.RunSucceeded, finishedAt)
+
+	targetKind := domain.TargetKindHTTP
+	items, _, err := st.ListRuns(ctx, nil, nil, &targetKind, 10, "")
+	if err != nil {
+		t.Fatalf("ListRuns returned error: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 HTTP run, got %d", len(items))
+	}
+	got := items[0]
+	if got.ID != httpRun.ID {
+		t.Fatalf("expected run %q, got %q", httpRun.ID, got.ID)
+	}
+	if got.ScheduleName != "http-check" {
+		t.Fatalf("expected schedule name, got %q", got.ScheduleName)
+	}
+	if got.TargetKind != domain.TargetKindHTTP {
+		t.Fatalf("expected HTTP target kind, got %q", got.TargetKind)
+	}
+	if got.ErrorText == nil || *got.ErrorText != "target returned 500" {
+		t.Fatalf("expected error preview, got %+v", got.ErrorText)
+	}
+	if got.RetryAvailableAt == nil {
+		t.Fatalf("expected retry availability")
+	}
+}
+
+func TestGetRunIncludesAttemptsReceiptsAndDeadLetter(t *testing.T) {
+	st := openTestStore(t)
+	ctx := context.Background()
+	schedule := insertTestSchedule(t, st)
+	now := time.Now().UTC()
+	occurrenceKey := domain.NewID("occ")
+	first := domain.Run{
+		ID:            domain.NewID("run"),
+		ScheduleID:    schedule.ID,
+		OccurrenceKey: occurrenceKey,
+		NominalTime:   now,
+		DueTime:       now,
+		Status:        domain.RunFailed,
+		Attempt:       1,
+		ErrorText:     ptrString("first failure"),
+		FinishedAt:    ptrTime(now),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := st.InsertRun(ctx, first); err != nil {
+		t.Fatalf("InsertRun first returned error: %v", err)
+	}
+	dead := first
+	dead.ID = domain.NewID("run")
+	dead.Status = domain.RunDeadLettered
+	dead.Attempt = 2
+	dead.ErrorText = ptrString("final failure")
+	dead.CreatedAt = now.Add(time.Second)
+	dead.UpdatedAt = dead.CreatedAt
+	if err := st.InsertRun(ctx, dead); err != nil {
+		t.Fatalf("InsertRun dead returned error: %v", err)
+	}
+	if err := st.InsertReceipt(ctx, domain.Receipt{
+		ID:          domain.NewID("rcpt"),
+		RunID:       dead.ID,
+		ReceiptKind: "stderr",
+		ContentType: "text/plain",
+		Body:        "stack trace",
+		CreatedAt:   now,
+	}); err != nil {
+		t.Fatalf("InsertReceipt returned error: %v", err)
+	}
+	if err := st.InsertDeadLetter(ctx, domain.DeadLetter{
+		ID:            domain.NewID("dlq"),
+		RunID:         dead.ID,
+		ScheduleID:    schedule.ID,
+		OccurrenceKey: occurrenceKey,
+		Reason:        "max attempts exhausted",
+		CreatedAt:     now,
+	}); err != nil {
+		t.Fatalf("InsertDeadLetter returned error: %v", err)
+	}
+
+	got, err := st.GetRun(ctx, dead.ID)
+	if err != nil {
+		t.Fatalf("GetRun returned error: %v", err)
+	}
+	if len(got.Attempts) != 2 {
+		t.Fatalf("expected 2 attempts, got %d", len(got.Attempts))
+	}
+	if len(got.Receipts) != 1 || got.Receipts[0].Body != "stack trace" {
+		t.Fatalf("expected stderr receipt, got %+v", got.Receipts)
+	}
+	if got.DeadLetter == nil || got.DeadLetter.Reason != "max attempts exhausted" {
+		t.Fatalf("expected dead letter, got %+v", got.DeadLetter)
+	}
+}
+
 func openTestStore(t *testing.T) *Store {
 	t.Helper()
 	st, err := Open(t.TempDir() + "/wakeplane.db")

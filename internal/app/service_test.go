@@ -305,7 +305,7 @@ func TestExpiredClaimedRunRecoversAndExecutesAfterRestart(t *testing.T) {
 	}
 
 	scheduleID := schedule.ID
-	items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}
@@ -401,7 +401,7 @@ func TestExpiredRunningRunRecoversAndQueuesRetryAfterRestart(t *testing.T) {
 	scheduleID := schedule.ID
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+		items, _, err := reopened.store.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 		if err != nil {
 			t.Fatalf("ListRuns returned error: %v", err)
 		}

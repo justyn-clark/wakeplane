@@ -40,7 +40,7 @@ func TestPlannerMisfirePolicies(t *testing.T) {
 			}
 
 			scheduleID := schedule.ID
-			items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+			items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 			if err != nil {
 				t.Fatalf("ListRuns returned error: %v", err)
 			}
@@ -106,7 +106,7 @@ func TestPlannerMisfirePoliciesAcrossReopenAfterDowntime(t *testing.T) {
 			}
 
 			scheduleID := schedule.ID
-			items, _, err := reopened.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+			items, _, err := reopened.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 			if err != nil {
 				t.Fatalf("ListRuns returned error: %v", err)
 			}
@@ -166,7 +166,7 @@ func TestPlannerOnceScheduleMaterializesOnlyOnce(t *testing.T) {
 	}
 
 	scheduleID := schedule.ID
-	items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}

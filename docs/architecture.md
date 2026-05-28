@@ -5,8 +5,9 @@ Wakeplane is built as a single-process control plane with explicit runtime bound
 - planner loop
 - dispatcher loop
 - executor registry
-- SQLite-backed durable store
+- SQLite-backed durable store with optional Postgres backend
 - HTTP JSON API
+- embedded single-operator console
 - CLI client against the daemon
 
 The scheduler decides what is due. The dispatcher decides what can run now. Executors only perform work after a durable claim and run record exist.
@@ -14,7 +15,7 @@ The scheduler decides what is due. The dispatcher decides what can run now. Exec
 ## Package shape
 
 - `internal/domain`: stable schedule, target, policy, retry, run, and API contract types
-- `internal/store`: SQLite repository and embedded migrations
+- `internal/store`: SQLite/Postgres repository and embedded dialect migrations
 - `internal/timecalc`: timezone-aware next-fire calculation for cron, interval, and once schedules
 - `internal/planner`: due-occurrence materialization and misfire handling
 - `internal/dispatcher`: claim, lease renewal, execution dispatch, retries, and dead-lettering
@@ -25,7 +26,7 @@ The scheduler decides what is due. The dispatcher decides what can run now. Exec
 
 ## Runtime flow
 
-1. Schedule definitions are persisted in SQLite with typed schedule and target specs encoded as JSON.
+1. Schedule definitions are persisted in the configured store with typed schedule and target specs encoded as JSON.
 2. The planner loop computes due occurrences from `next_run_at`, schedule timezone, and policy.
 3. Due logical occurrences are materialized into `schedule_runs` with deterministic occurrence keys.
 4. The dispatcher claims eligible runs, creates or renews worker leases, and transitions runs to `running`.
@@ -33,7 +34,7 @@ The scheduler decides what is due. The dispatcher decides what can run now. Exec
 
 ## Actual v1 behavior
 
-- The service runs as a single process with one SQLite connection writer (`SetMaxOpenConns(1)`).
+- The service runs as a single process. SQLite local mode uses one writer (`SetMaxOpenConns(1)`); Postgres production mode uses the same store boundary with transactional row locks for claims.
 - The workflow executor is an in-process registry. Handlers are registered explicitly; v1 does not load workflows dynamically or out-of-process.
 - Manual triggers create `manual:<run_id>` occurrence keys outside the scheduled occurrence identity space.
 - Metrics are exposed in Prometheus text format.
@@ -55,7 +56,7 @@ Non-cooperative executors (those that ignore `ctx.Done()`) are handled by the ti
 
 ## Current limits
 
-- No auth, RBAC, or multi-tenant model.
+- Single-operator bearer auth is available for `/v1/...`; there is no RBAC or multi-tenant model.
 - No distributed worker coordination beyond SQLite-backed claims and leases.
-- No UI, DAG orchestration, or calendar/business-rule engine.
+- No visual schedule builder, DAG orchestration, or calendar/business-rule engine.
 - `replace` overlap is cooperative and best-effort; if a running executor cannot be interrupted, the practical result is queued-latest behavior until the active run exits.

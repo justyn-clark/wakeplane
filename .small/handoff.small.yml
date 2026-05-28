@@ -1,10 +1,10 @@
 small_version: "1.0.0"
 owner: agent
-summary: Wakeplane has completed the post-beta production track implementation and final local audit described by plans/prod-phase.md. The source repo now has bounded receipt storage, optional terminal-run retention pruning, single-operator bearer auth, HTTP request audit logging, a live status/watch CLI surface, import-compatible schedule export/import ergonomics, a documented SQLite-to-Postgres schedule bridge, a verified Postgres storage dialect behind the existing store boundary, CI/release Postgres integration coverage, and verified local soak/restart/backup-restore drill scripts that emit receipts.
+summary: Wakeplane has completed the first local single-operator console phase on top of the production-track backend. The daemon now serves /console/ with a compact ledger-first operator UI for runs, schedules, receipts, failures, retries, dead letters, status, storage backend, auth posture, request audit posture, workers, due work, and retention. The API now exposes richer run summaries, target_kind filtering, run attempt history, receipts, and dead-letter details for the console without bypassing the existing scheduler/dispatcher/store boundaries.
 resume:
-  current_task_id: task-47
+  current_task_id: task-48
   next_steps:
-    - "Key receipts: artifacts/drills/soak-20260527T221138Z/receipt.json, artifacts/drills/restart-20260527T221800Z/receipt.json, artifacts/drills/backup-restore-20260527T221658Z/receipt.json, artifacts/drills/postgres-backup-restore-20260527T221838Z/receipt.json."
+    - Commit the operator console work if the user asks.
     - Sync updated source docs into wakeplane.dev before public deploy.
     - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.
 links: []

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -216,6 +217,99 @@ func TestListRunsStatusAndCursorValidation(t *testing.T) {
 				t.Fatalf("expected run %q, got %q", run.ID, body.Items[0].ID)
 			}
 		})
+	}
+}
+
+func TestListRunsTargetKindFilterAndSummaryFields(t *testing.T) {
+	service, err := newTestService(t)
+	if err != nil {
+		t.Fatalf("app.New returned error: %v", err)
+	}
+	defer service.Close()
+
+	httpSchedule, errs, err := service.CreateSchedule(context.Background(), domain.CreateScheduleRequest{
+		Name:     "http-target",
+		Enabled:  true,
+		Timezone: "UTC",
+		Schedule: domain.ScheduleSpec{Kind: domain.ScheduleKindInterval, EverySeconds: 60},
+		Target:   domain.TargetSpec{Kind: domain.TargetKindHTTP, Method: "POST", URL: "https://example.test/hook"},
+		Policy:   domain.DefaultPolicy(),
+		Retry:    domain.DefaultRetryPolicy(),
+	})
+	if err != nil {
+		t.Fatalf("CreateSchedule returned error: %v", err)
+	}
+	if len(errs) > 0 {
+		t.Fatalf("CreateSchedule returned validation errors: %+v", errs)
+	}
+	workflowID := createScheduleForListTest(t, service, "workflow-target", true)
+	httpRun, err := service.TriggerSchedule(context.Background(), httpSchedule.ID, "http test")
+	if err != nil {
+		t.Fatalf("TriggerSchedule HTTP returned error: %v", err)
+	}
+	if _, err := service.TriggerSchedule(context.Background(), workflowID, "workflow test"); err != nil {
+		t.Fatalf("TriggerSchedule workflow returned error: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/runs?target_kind=http", nil)
+	rec := httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	var body domain.ListResponse[domain.RunSummary]
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("json.Unmarshal returned error: %v", err)
+	}
+	if len(body.Items) != 1 {
+		t.Fatalf("expected 1 run, got %d", len(body.Items))
+	}
+	if body.Items[0].ID != httpRun.ID {
+		t.Fatalf("expected run %q, got %q", httpRun.ID, body.Items[0].ID)
+	}
+	if body.Items[0].ScheduleName != "http-target" {
+		t.Fatalf("expected schedule name, got %q", body.Items[0].ScheduleName)
+	}
+	if body.Items[0].TargetKind != domain.TargetKindHTTP {
+		t.Fatalf("expected HTTP target kind, got %q", body.Items[0].TargetKind)
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/v1/runs?target_kind=ftp", nil)
+	rec = httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+	assertErrorResponse(t, rec, http.StatusBadRequest, "bad_request", `invalid target_kind value "ftp"`)
+}
+
+func TestConsoleRouteServesEmbeddedUIWithoutAuth(t *testing.T) {
+	service, err := app.New(context.Background(), config.Config{
+		DatabasePath:       filepath.Join(t.TempDir(), "wakeplane.db"),
+		HTTPAddress:        "127.0.0.1:0",
+		SchedulerInterval:  time.Second,
+		DispatcherInterval: time.Second,
+		LeaseTTL:           time.Second,
+		WorkerID:           "wrk_test",
+		Version:            "test",
+		AuthToken:          "secret-token",
+		RequestAudit:       true,
+	})
+	if err != nil {
+		t.Fatalf("app.New returned error: %v", err)
+	}
+	defer service.Close()
+
+	req := httptest.NewRequest(http.MethodGet, "/console/", nil)
+	rec := httptest.NewRecorder()
+	NewMux(service).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "Wakeplane Console") {
+		t.Fatalf("expected console HTML, got %q", rec.Body.String())
+	}
+	if got := rec.Header().Get("Content-Type"); !strings.Contains(got, "text/html") {
+		t.Fatalf("expected text/html content type, got %q", got)
 	}
 }
 

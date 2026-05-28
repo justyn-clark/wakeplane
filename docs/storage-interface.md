@@ -33,15 +33,15 @@ These are the operations that any storage backend must implement:
 
 ### Run Operations
 
-| Method                                             | Contract                                                                                              |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `InsertRun(ctx, run)`                              | Insert run. `ErrAlreadyExists` if `(occurrence_key, attempt)` exists.                                 |
-| `GetRun(ctx, id)`                                  | Return run by ID. `ErrNotFound` if missing.                                                           |
-| `ListRuns(ctx, scheduleID, status, limit, cursor)` | Paginated list, ordered by `created_at DESC, id DESC`.                                                |
-| `ListCandidateRuns(ctx, now, limit)`               | Runs with `status=pending AND due_time<=now` OR `status=retry_scheduled AND retry_available_at<=now`. |
-| `FinishRun(ctx, run)`                              | Update run with terminal status, result fields, timestamps. Delete lease if finished.                 |
-| `MarkRunRunning(ctx, runID, now)`                  | Set `status=running`, `started_at=COALESCE(started_at, now)`.                                         |
-| `UpdateScheduleRuntime(ctx, ...)`                  | Update `next_run_at`, `last_run_at`, `enabled`, `paused_at`.                                          |
+| Method                                                         | Contract                                                                                              |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `InsertRun(ctx, run)`                                          | Insert run. `ErrAlreadyExists` if `(occurrence_key, attempt)` exists.                                 |
+| `GetRun(ctx, id)`                                              | Return run by ID with receipts, attempt history, and dead-letter details. `ErrNotFound` if missing.   |
+| `ListRuns(ctx, scheduleID, status, targetKind, limit, cursor)` | Paginated list, ordered by `created_at DESC, id DESC`, with operator summary fields.                  |
+| `ListCandidateRuns(ctx, now, limit)`                           | Runs with `status=pending AND due_time<=now` OR `status=retry_scheduled AND retry_available_at<=now`. |
+| `FinishRun(ctx, run)`                                          | Update run with terminal status, result fields, timestamps. Delete lease if finished.                 |
+| `MarkRunRunning(ctx, runID, now)`                              | Set `status=running`, `started_at=COALESCE(started_at, now)`.                                         |
+| `UpdateScheduleRuntime(ctx, ...)`                              | Update `next_run_at`, `last_run_at`, `enabled`, `paused_at`.                                          |
 
 ### Claim and Lease Operations
 

@@ -29,9 +29,9 @@ Beta means:
 Beta does **not** mean:
 
 - stable semver guarantees
-- auth or RBAC
+- RBAC or multi-user auth
 - distributed coordination
-- a web UI
+- visual schedule creation/editing
 
 ## Beta gate
 
@@ -61,10 +61,9 @@ Wakeplane should not be labeled stable until all of these are true:
 
 The most practical path beyond beta is:
 
-1. Add single-operator authentication and HTTP request audit logging before recommending broader trusted-network exposure.
-2. Add import/export and schedule update ergonomics so operators can manage real fleets without hand-editing API calls.
-3. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0.
-4. Decide whether the embedding surface becomes a stable public Go package or remains source-level for the current release line.
+1. Keep improving the operator console until failed-run diagnosis and schedule posture are fully inspectable without falling back to CLI/API calls.
+2. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0.
+3. Decide whether the embedding surface becomes a stable public Go package or remains source-level for the current release line.
 
 ## Explicitly out of scope today
 

@@ -403,8 +403,8 @@ func (s *Service) TriggerSchedule(ctx context.Context, id, reason string) (domai
 	return run, s.store.InsertRun(ctx, run)
 }
 
-func (s *Service) ListRuns(ctx context.Context, scheduleID *string, status *domain.RunStatus, limit int, cursor string) ([]domain.RunSummary, *string, error) {
-	return s.store.ListRuns(ctx, scheduleID, status, limit, cursor)
+func (s *Service) ListRuns(ctx context.Context, scheduleID *string, status *domain.RunStatus, targetKind *domain.TargetKind, limit int, cursor string) ([]domain.RunSummary, *string, error) {
+	return s.store.ListRuns(ctx, scheduleID, status, targetKind, limit, cursor)
 }
 
 func (s *Service) GetRun(ctx context.Context, id string) (domain.Run, error) {

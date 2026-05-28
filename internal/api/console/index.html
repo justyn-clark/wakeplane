@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Wakeplane Console</title>
+		<link rel="stylesheet" href="/console/styles.css" />
+	</head>
+	<body>
+		<header class="topbar">
+			<div>
+				<h1>Wakeplane</h1>
+				<p id="postureLine">Loading daemon posture...</p>
+			</div>
+			<div class="topbar-actions">
+				<button id="refreshButton" class="icon-button" type="button" title="Refresh">↻</button>
+				<button id="tokenButton" class="secondary" type="button">Token</button>
+			</div>
+		</header>
+
+		<main class="layout">
+			<nav class="tabs" aria-label="Console sections">
+				<button class="tab active" type="button" data-view="ledger">Run Ledger</button>
+				<button class="tab" type="button" data-view="schedules">Schedules</button>
+				<button class="tab" type="button" data-view="status">Status</button>
+			</nav>
+
+			<section id="ledgerView" class="view active" aria-labelledby="ledgerTitle">
+				<div class="section-head">
+					<div>
+						<h2 id="ledgerTitle">Run Ledger</h2>
+						<p>Reverse chronological execution history from the Wakeplane API.</p>
+					</div>
+					<button id="loadMoreRuns" class="secondary" type="button">Load more</button>
+				</div>
+				<div class="filters sticky">
+					<label>
+						Status
+						<select id="statusFilter">
+							<option value="">Any</option>
+							<option value="pending">pending</option>
+							<option value="claimed">claimed</option>
+							<option value="running">running</option>
+							<option value="succeeded">succeeded</option>
+							<option value="failed">failed</option>
+							<option value="retry_scheduled">retry_scheduled</option>
+							<option value="dead_lettered">dead_lettered</option>
+							<option value="cancelled">cancelled</option>
+							<option value="skipped">skipped</option>
+						</select>
+					</label>
+					<label>
+						Schedule
+						<select id="scheduleFilter">
+							<option value="">All schedules</option>
+						</select>
+					</label>
+					<label>
+						Target
+						<select id="targetFilter">
+							<option value="">Any</option>
+							<option value="http">http</option>
+							<option value="shell">shell</option>
+							<option value="workflow">workflow</option>
+						</select>
+					</label>
+				</div>
+				<div id="runLedger" class="ledger-table" aria-live="polite"></div>
+			</section>
+
+			<section id="schedulesView" class="view" aria-labelledby="schedulesTitle">
+				<div class="section-head">
+					<div>
+						<h2 id="schedulesTitle">Schedules</h2>
+						<p>Inspect posture and perform basic operator actions.</p>
+					</div>
+				</div>
+				<div id="scheduleGrid" class="schedule-grid" aria-live="polite"></div>
+			</section>
+
+			<section id="statusView" class="view" aria-labelledby="statusTitle">
+				<div class="section-head">
+					<div>
+						<h2 id="statusTitle">Status</h2>
+						<p>Daemon health, backend, workers, run pressure, and security posture.</p>
+					</div>
+				</div>
+				<div id="statusGrid" class="status-grid" aria-live="polite"></div>
+				<pre id="statusJSON" class="json-panel"></pre>
+			</section>
+		</main>
+
+		<aside id="drawer" class="drawer" aria-hidden="true">
+			<div class="drawer-panel">
+				<div class="drawer-head">
+					<div>
+						<p id="drawerKicker" class="kicker"></p>
+						<h2 id="drawerTitle"></h2>
+					</div>
+					<button id="closeDrawer" class="icon-button" type="button" title="Close">×</button>
+				</div>
+				<div id="drawerBody" class="drawer-body"></div>
+			</div>
+		</aside>
+
+		<div id="toast" class="toast" role="status" aria-live="polite"></div>
+		<script src="/console/app.js"></script>
+	</body>
+</html>

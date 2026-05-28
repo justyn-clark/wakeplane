@@ -114,4 +114,4 @@ Triggering a schedule with `POST /v1/schedules/{id}/trigger` creates a run immed
 
 ## Alpha scope
 
-Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC, no UI, no multi-tenancy, and no distributed coordination. See [Security](security.md) for binding guidance.
+Wakeplane supports single-operator bearer auth for `/v1/...` and serves a local operator console at `/console/`, but it has no RBAC, no multi-tenancy, and no distributed coordination. See [Security](security.md) for binding guidance.

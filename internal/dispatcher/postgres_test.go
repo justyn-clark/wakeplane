@@ -91,7 +91,7 @@ func TestPostgresRecoverExpiredRunningRunSchedulesRetry(t *testing.T) {
 	}
 	scheduleID := schedule.ID
 	retryStatus := domain.RunRetryScheduled
-	retries, _, err := st.ListRuns(context.Background(), &scheduleID, &retryStatus, 10, "")
+	retries, _, err := st.ListRuns(context.Background(), &scheduleID, &retryStatus, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}

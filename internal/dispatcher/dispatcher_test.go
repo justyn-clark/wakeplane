@@ -108,7 +108,7 @@ func TestRecoverExpiredRunningRunSchedulesRetry(t *testing.T) {
 		t.Fatalf("expected failed original run, got %s", got.Status)
 	}
 	scheduleID := schedule.ID
-	items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	items, _, err := st.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}
@@ -343,7 +343,7 @@ func TestRecoverRunningBeforeFinishAcrossReopen(t *testing.T) {
 
 	// Verify retry was scheduled.
 	scheduleID := schedule.ID
-	items, _, err := st2.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	items, _, err := st2.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}
@@ -472,7 +472,7 @@ func TestFailedRunWithoutRetryIsStableAfterReopen(t *testing.T) {
 		t.Fatalf("expected no candidates for failed run without retry, got %d", len(candidates))
 	}
 	scheduleID := schedule.ID
-	items, _, err := st2.ListRuns(context.Background(), &scheduleID, nil, 10, "")
+	items, _, err := st2.ListRuns(context.Background(), &scheduleID, nil, nil, 10, "")
 	if err != nil {
 		t.Fatalf("ListRuns returned error: %v", err)
 	}

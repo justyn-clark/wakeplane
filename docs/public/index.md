@@ -2,12 +2,13 @@
 
 Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the current public beta release line.
 
-> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres work in progress behind the store seam. See [Security](security.md) and [Status](status.md).
+> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
 
 ## Start here
 
 - [Install](install.md) - release downloads, `go install`, source builds, checksum verification, and a smoke test
 - [Quickstart](quickstart.md) - start the daemon, create a schedule, inspect runs in under five minutes
+- [Operator Console](console.md) - inspect runs, schedules, receipts, failures, retries, and daemon posture
 - [GitHub](https://github.com/justyn-clark/wakeplane) - canonical public repository
 
 ## Use cases
@@ -54,6 +55,7 @@ The current public beta line ships as:
 - SQLite-first storage with embedded migrations and a Postgres backend seam
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
+- Embedded single-operator console
 - Planner and dispatcher loops with durable run ledger
 - Metrics, health, readiness, and status endpoints
 - Structured shutdown and drain logging
@@ -70,7 +72,6 @@ Wakeplane is beta because the release discipline is now real:
 Not yet shipped:
 
 - RBAC or multi-tenancy
-- UI
 - Distributed coordination
 - Dynamic plugin loading
 

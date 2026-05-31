@@ -71,9 +71,9 @@ List endpoints use cursor-based pagination with newest-first ordering (`created_
 |---|---|---|
 | `limit` | schedule and run list endpoints | Default `50`. Invalid or non-positive values fall back to `50`. |
 | `cursor` | schedule and run list endpoints | Opaque cursor from a previous response. Invalid values return `400 bad_request`. |
-| `enabled=true|false` | `GET /v1/schedules` | Strict boolean filter. Any other value returns `400 bad_request`. |
+| `enabled=true\|false` | `GET /v1/schedules` | Strict boolean filter. Any other value returns `400 bad_request`. |
 | `schedule_id=<id>` | `GET /v1/runs` | Filter runs to a single schedule. |
-| `target_kind=http|shell|workflow` | run list endpoints | Filter runs by typed target kind. Any other value returns `400 bad_request`. |
+| `target_kind=http\|shell\|workflow` | run list endpoints | Filter runs by typed target kind. Any other value returns `400 bad_request`. |
 | `status=<value>` | run list endpoints | Accepted values: `cancelled`, `claimed`, `dead_lettered`, `failed`, `pending`, `retry_scheduled`, `running`, `skipped`, `succeeded`. Invalid values return `400 bad_request`. |
 
 Run list responses include operator-console fields: `schedule_name`, `target_kind`, `claimed_by_worker_id`, `retry_available_at`, and `error_text` when available. `GET /v1/runs/{id}` returns the full run plus `receipts`, `attempts`, and `dead_letter` when present so the UI and API expose the same execution truth.

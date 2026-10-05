@@ -1654,3 +1654,7 @@ entries:
     status: in_progress
     timestamp: "2026-10-05T21:56:43.000001Z"
     evidence: "PR now triggers the repository CI on Ubuntu and Postgres 16. Monitor the latest pushed tip until all checks complete; fix concrete failures within the authorized implementation scope."
+  - task_id: meta/hosted-ci
+    status: completed
+    timestamp: "2026-10-05T22:00:12.000000Z"
+    evidence: "All GitHub checks passed on fd15588d44d22ffb752a2b2e34d0b8b4f0dfb503: lint/format/13 console tests, Go vet, generated docs, full Go race suite, real Postgres 16 integration and Linux binary builds. CI run 37379305435 concluded success; GitGuardian passed. Exact run/job/PR metadata and full CI logs saved under artifacts/validation-2026-10-05. This follow-up changes only handoff/progress records; verify automated checks on its final pushed tip before marking PR ready."

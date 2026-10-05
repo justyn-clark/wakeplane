@@ -1,10 +1,11 @@
 small_version: "1.0.0"
 owner: agent
-summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. MCP, guided schedules, tracked HTTP jobs with recovery, events, runnable recipes and notifications implemented. Full local validation and packaged browser demo passed. User authorized committing and pushing this branch to GitHub on 2026-10-05; public beta tagging and hosted deployment remain separate.
+summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. Implementation commit fb742fe652c6e6d17ffb0435c317b6caa7b73627 pushed to origin and remote SHA verified on 2026-10-05. Full local validation and packaged browser demo passed. Pull request creation was rejected with GitHub 403 Resource not accessible by integration, so hosted CI has not run. No merge, beta tag or deployment performed.
 resume:
   current_task_id: task-54
   next_steps:
-    - Review the GitHub branch and pull request against main, including remote CI; local validation is recorded in artifacts/validation-2026-10-05/receipt.json.
+    - "Hosted CI is blocked pending a pull request: the GitHub connector cannot create it (403 Resource not accessible by integration). Open the pushed branch as a pull request or restore integration permissions before attempting that action again."
+    - Review codex/automation-product-layer against main; local validation is recorded in artifacts/validation-2026-10-05/receipt.json.
     - "Public promotion remains separate: matching beta tag/archive release and wakeplane.dev content/deploy synchronization when authorized."
     - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
 links: []

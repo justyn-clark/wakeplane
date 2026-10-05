@@ -1,0 +1,27 @@
+name: weekly-reading-list
+enabled: false
+timezone: America/Los_Angeles
+schedule:
+  kind: cron
+  expr: "0 9 * * 1"
+target:
+  kind: http
+  method: POST
+  url: http://127.0.0.1:8091/jobs
+  http_job:
+    poll_interval_seconds: 2
+    lookup_url: http://127.0.0.1:8091/jobs/lookup
+  body:
+    task: weekly-summary
+    feeds:
+      - https://github.blog/feed/
+policy:
+  overlap: forbid
+  misfire: skip
+  timeout_seconds: 180
+  max_concurrency: 1
+retry:
+  max_attempts: 3
+  strategy: exponential
+  initial_delay_seconds: 2
+  max_delay_seconds: 10

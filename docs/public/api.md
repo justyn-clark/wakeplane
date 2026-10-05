@@ -16,6 +16,10 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 
 | Method | Path | Description |
 |---|---|---|
+| `POST` | `/v1/mcp` | Stateless MCP Streamable HTTP endpoint for assistant tools. Shares bearer authentication and request auditing. |
+| `GET` | `/v1/mcp` | MCP transport route; standalone server push is not supported by this stateless endpoint. |
+| `DELETE` | `/v1/mcp` | MCP transport route; no persistent transport sessions are allocated. |
+| `GET` | `/v1/templates` | List guided schedule recipes. Fill in your target and review before enabling. |
 | `GET` | `/v1/status` | Operational status including active store dialect, scheduler timing, worker counts, run counts, retention, and security posture. |
 | `GET` | `/v1/metrics` | Prometheus text metrics for schedules, runs, leases, and executor outcomes. |
 
@@ -23,6 +27,8 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 
 | Method | Path | Description |
 |---|---|---|
+| `POST` | `/v1/schedules/preview` | Validate a draft and return up to five timezone-aware slots without storing or executing it. |
+| `POST` | `/v1/schedules/{id}/events` | Record one event-triggered occurrence. Returns 201 on first delivery, 200 on identical redelivery, or 409 for conflicting data or a paused schedule. |
 | `POST` | `/v1/schedules` | Create a schedule. Returns `201` with the full schedule. |
 | `GET` | `/v1/schedules` | List schedules. Supports `enabled`, `limit`, and `cursor` query params. |
 | `GET` | `/v1/schedules/{id}` | Get one schedule including computed `next_run_at`. |
@@ -38,6 +44,7 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 
 | Method | Path | Description |
 |---|---|---|
+| `POST` | `/v1/runs/{id}/reconcile` | Observe an unresolved external job for a locally terminal run, append a receipt, and release its overlap slot only on authoritative remote completion. Does not submit work or change the original run outcome. |
 | `GET` | `/v1/runs` | List runs across all schedules. Supports `schedule_id`, `status`, `target_kind`, `limit`, and `cursor`. |
 | `GET` | `/v1/runs/{id}` | Get one run including result fields, receipts, attempt history, and dead-letter details when present. |
 | `GET` | `/v1/runs/{id}/receipts` | List execution receipts for a run. |
@@ -59,9 +66,15 @@ All API errors return JSON with this shape:
 | 400 | `bad_request` | Malformed JSON, invalid query parameters, or invalid trigger reason |
 | 400 | `validation_failed` | Schedule create or patch validation failed |
 | 404 | `not_found` | Schedule or run ID does not exist |
+| 401 | `unauthorized` | Missing or invalid configured bearer token |
+| 409 | `conflict` | Conflicting event replay, paused event target, or active/changed remote tracking during reconciliation |
+| 410 | `history_pruned` | Event already processed and its original run history was pruned |
 | 500 | `internal_error` | Unexpected server error |
+| 502 | `runner_observation_failed` | Runner status or lookup could not be safely observed; checkpoint and overlap reservation remain unchanged |
 
 Go's default `404 method not allowed` and malformed transport-level responses do not use the JSON envelope.
+
+MCP uses its own JSON-RPC transport and tool-result envelopes after the shared HTTP auth boundary. See [Assistant integration](automation.md).
 
 ## Pagination and filtering
 
@@ -89,7 +102,7 @@ Run list responses include operator-console fields: `schedule_name`, `target_kin
 ```json
 {
   "service": "wakeplane",
-  "version": "0.2.0-beta.1",
+  "version": "0.3.0-beta.1",
   "started_at": "2026-03-25T12:00:00Z",
   "database": {
     "driver": "sqlite",

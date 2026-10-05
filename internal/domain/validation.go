@@ -18,11 +18,14 @@ func ValidateCreateSchedule(req CreateScheduleRequest) []ValidationError {
 	if strings.TrimSpace(req.Name) == "" {
 		errs = append(errs, ValidationError{Field: "name", Message: "must be non-empty"})
 	}
-	if _, err := time.LoadLocation(req.Timezone); err != nil {
+	if _, err := time.LoadLocation(req.Timezone); strings.TrimSpace(req.Timezone) == "" || req.Timezone == "Local" || err != nil {
 		errs = append(errs, ValidationError{Field: "timezone", Message: "must be a valid IANA timezone"})
 	}
 	errs = append(errs, validateScheduleSpec(req.Schedule)...)
 	errs = append(errs, validateTargetSpec(req.Target)...)
+	if req.Target.HTTPJob != nil && req.Policy.Overlap == OverlapReplace {
+		errs = append(errs, ValidationError{Field: "policy.overlap", Message: "replace is unsupported for external jobs without remote cancellation"})
+	}
 	errs = append(errs, validatePolicy(req.Policy)...)
 	errs = append(errs, validateRetry(req.Retry)...)
 	if req.StartAt != nil && req.EndAt != nil && req.StartAt.After(*req.EndAt) {
@@ -113,6 +116,9 @@ func validateScheduleSpec(spec ScheduleSpec) []ValidationError {
 		if spec.EverySeconds <= 0 {
 			return []ValidationError{{Field: "schedule.every_seconds", Message: "must be > 0"}}
 		}
+		if !safeDurationSeconds(spec.EverySeconds) {
+			return []ValidationError{{Field: "schedule.every_seconds", Message: "exceeds the supported duration"}}
+		}
 	case ScheduleKindOnce:
 		if spec.At == nil {
 			return []ValidationError{{Field: "schedule.at", Message: "is required for once"}}
@@ -124,6 +130,9 @@ func validateScheduleSpec(spec ScheduleSpec) []ValidationError {
 }
 
 func validateTargetSpec(spec TargetSpec) []ValidationError {
+	if spec.HTTPJob != nil && spec.Kind != TargetKindHTTP {
+		return []ValidationError{{Field: "target.http_job", Message: "is only supported for http targets"}}
+	}
 	switch spec.Kind {
 	case TargetKindHTTP:
 		var errs []ValidationError
@@ -136,6 +145,24 @@ func validateTargetSpec(spec TargetSpec) []ValidationError {
 			errs = append(errs, ValidationError{Field: "target.url", Message: "is required for http"})
 		} else if _, err := url.ParseRequestURI(spec.URL); err != nil {
 			errs = append(errs, ValidationError{Field: "target.url", Message: "must be a valid URL"})
+		}
+		if spec.HTTPJob != nil {
+			if strings.ToUpper(spec.Method) != http.MethodPost {
+				errs = append(errs, ValidationError{Field: "target.method", Message: "must be POST for external jobs"})
+			}
+			parsed, err := url.Parse(spec.URL)
+			if err != nil || parsed.Host == "" || parsed.Hostname() == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.User != nil || parsed.Fragment != "" {
+				errs = append(errs, ValidationError{Field: "target.url", Message: "external jobs require an absolute HTTP(S) URL without credentials or a fragment"})
+			}
+			if spec.HTTPJob.LookupURL != "" && !sameHTTPOrigin(spec.URL, spec.HTTPJob.LookupURL) {
+				errs = append(errs, ValidationError{Field: "target.http_job.lookup_url", Message: "must be an absolute HTTP(S) URL with the same origin as target.url, without credentials or a fragment"})
+			}
+			if spec.HTTPJob.PollIntervalSeconds < 0 || spec.HTTPJob.PollIntervalSeconds > 300 {
+				errs = append(errs, ValidationError{Field: "target.http_job.poll_interval_seconds", Message: "must be 0 (default) or between 1 and 300"})
+			}
+			if _, reserved := spec.Body["_wakeplane_event"]; reserved {
+				errs = append(errs, ValidationError{Field: "target.body._wakeplane_event", Message: "is reserved for the event envelope"})
+			}
 		}
 		return errs
 	case TargetKindShell:
@@ -167,6 +194,9 @@ func validatePolicy(policy Policy) []ValidationError {
 	if policy.TimeoutSeconds <= 0 {
 		errs = append(errs, ValidationError{Field: "policy.timeout_seconds", Message: "must be > 0"})
 	}
+	if !safeDurationSeconds(policy.TimeoutSeconds) {
+		errs = append(errs, ValidationError{Field: "policy.timeout_seconds", Message: "exceeds the supported duration"})
+	}
 	if policy.MaxConcurrency < 1 {
 		errs = append(errs, ValidationError{Field: "policy.max_concurrency", Message: "must be >= 1"})
 	}
@@ -177,6 +207,9 @@ func validateRetry(retry RetryPolicy) []ValidationError {
 	var errs []ValidationError
 	if retry.MaxAttempts < 0 {
 		errs = append(errs, ValidationError{Field: "retry.max_attempts", Message: "must be >= 0"})
+	}
+	if !safeDurationSeconds(retry.InitialDelaySeconds) || !safeDurationSeconds(retry.MaxDelaySeconds) {
+		errs = append(errs, ValidationError{Field: "retry", Message: "delay exceeds the supported duration"})
 	}
 	switch retry.Strategy {
 	case RetryNone, RetryExponential:
@@ -195,6 +228,28 @@ func validateRetry(retry RetryPolicy) []ValidationError {
 		}
 	}
 	return errs
+}
+
+func safeDurationSeconds(seconds int) bool {
+	return int64(seconds) <= int64((1<<63-1)/int64(time.Second))
+}
+
+func sameHTTPOrigin(left, right string) bool {
+	a, errA := url.Parse(left)
+	b, errB := url.Parse(right)
+	if errA != nil || errB != nil || a.Hostname() == "" || b.Hostname() == "" || a.User != nil || b.User != nil || a.Fragment != "" || b.Fragment != "" || (a.Scheme != "http" && a.Scheme != "https") || a.Scheme != b.Scheme {
+		return false
+	}
+	port := func(u *url.URL) string {
+		if u.Port() != "" {
+			return u.Port()
+		}
+		if u.Scheme == "https" {
+			return "443"
+		}
+		return "80"
+	}
+	return strings.EqualFold(a.Hostname(), b.Hostname()) && port(a) == port(b)
 }
 
 func RequireNoValidationErrors(errs []ValidationError) error {

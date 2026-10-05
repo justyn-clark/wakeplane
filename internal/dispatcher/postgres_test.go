@@ -187,6 +187,8 @@ func resetPostgresDispatcherTestDB(t *testing.T, databaseURL string) {
 	}
 	defer db.Close()
 	for _, table := range []string{
+		"external_jobs",
+		"trigger_events",
 		"request_audit_logs",
 		"execution_receipts",
 		"dead_letters",

@@ -1,6 +1,7 @@
 package examples_test
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -29,8 +30,13 @@ func TestExampleManifestsParse(t *testing.T) {
 				t.Fatalf("read file: %v", err)
 			}
 			var req domain.CreateScheduleRequest
-			if err := yaml.Unmarshal(data, &req); err != nil {
+			decoder := yaml.NewDecoder(bytes.NewReader(data))
+			decoder.KnownFields(true)
+			if err := decoder.Decode(&req); err != nil {
 				t.Fatalf("unmarshal: %v", err)
+			}
+			if errs := domain.ValidateCreateSchedule(req); len(errs) > 0 {
+				t.Fatalf("manifest fails real schedule validation: %+v", errs)
 			}
 			if req.Name == "" {
 				t.Fatal("expected name to be set")

@@ -26,6 +26,9 @@ func (e *Executor) Kind() domain.TargetKind {
 }
 
 func (e *Executor) Execute(ctx context.Context, req executors.ExecuteRequest) executors.Result {
+	if req.Schedule.Target.HTTPJob != nil || req.Run.ExternalJob != nil {
+		return e.executeJob(ctx, req)
+	}
 	var body []byte
 	if req.Schedule.Target.Body != nil {
 		body, _ = json.Marshal(req.Schedule.Target.Body)
@@ -37,6 +40,7 @@ func (e *Executor) Execute(ctx context.Context, req executors.ExecuteRequest) ex
 	for k, v := range req.Schedule.Target.Headers {
 		httpReq.Header.Set(k, v)
 	}
+	setEventHeaders(httpReq, req.Run)
 	resp, err := e.client.Do(httpReq)
 	if err != nil {
 		cancelled := ctx.Err() != nil
@@ -51,6 +55,15 @@ func (e *Executor) Execute(ctx context.Context, req executors.ExecuteRequest) ex
 		Receipts:       []executors.Receipt{receipt},
 		ErrorText:      httpError(resp.StatusCode),
 	}
+}
+
+func setEventHeaders(req *stdhttp.Request, run domain.Run) {
+	if run.Event == nil {
+		return
+	}
+	req.Header.Set("X-Wakeplane-Event-ID", run.Event.ID)
+	req.Header.Set("X-Wakeplane-Event-Source", run.Event.Source)
+	req.Header.Set("X-Wakeplane-Event-Key", run.OccurrenceKey)
 }
 
 func httpError(code int) string {

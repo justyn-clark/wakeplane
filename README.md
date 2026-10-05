@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public beta - pre-stable release line.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. See [SECURITY.md](SECURITY.md).
+> **Public beta - `v0.3.0-beta.1` source line.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Use a matching tagged release for these capabilities. See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 
@@ -35,6 +35,10 @@ Current shipped state:
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
 - embedded single-operator console at `/console/`
+- guided schedule creation/editing, reusable recipes, and next-run previews
+- MCP assistant tools at `/v1/mcp`, sharing the API auth and audit boundary
+- durable asynchronous HTTP job tracking with progress, results, and artifacts
+- idempotent event delivery to enabled schedules
 - metrics, health, readiness, and status endpoints
 - structured shutdown and drain logging
 - restart, stale-lease, contention, and non-cooperative shutdown coverage
@@ -42,7 +46,9 @@ Current shipped state:
 Current limits:
 
 - native Postgres column types are still conservative/text-compatible in this first production backend slice
-- no RBAC, distributed coordination, visual schedule editor, or plugin loading
+- no RBAC, distributed coordination, DAG editor, or plugin loading
+- remote job runners must implement the documented idempotency and status contract
+- remote cancellation, OAuth account connections, and enforced provider spending budgets are not implemented
 - workflow handlers must be registered explicitly by the embedding application or tests
 - `replace` is cooperative and best-effort, not forceful
 - shell targets inherit the daemon environment; per-target env or secret injection is not implemented
@@ -112,6 +118,8 @@ Durability and audit:
 3. Create schedules from a YAML manifest.
 4. Inspect schedules and runs with the console, CLI, or HTTP API.
 5. Register workflow handlers explicitly if you use workflow targets.
+
+For assistant access, event-triggered work, and remote job tracking, see [Automation](docs/public/automation.md). The [runnable recipes](docs/public/recipes.md) demonstrate a read-only repository watch and a weekly RSS/Atom reading summary with optional webhook notification. Connector and agent logic stays in the runner, outside Wakeplane's core.
 
 Build both entry points:
 

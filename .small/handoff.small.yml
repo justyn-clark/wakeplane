@@ -1,12 +1,12 @@
 small_version: "1.0.0"
 owner: agent
-summary: Wakeplane has completed the first local single-operator console phase on top of the production-track backend. The daemon now serves /console/ with a compact ledger-first operator UI for runs, schedules, receipts, failures, retries, dead letters, status, storage backend, auth posture, request audit posture, workers, due work, and retention. The API now exposes richer run summaries, target_kind filtering, run attempt history, receipts, and dead-letter details for the console without bypassing the existing scheduler/dispatcher/store boundaries.
+summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. MCP, guided schedules, tracked HTTP jobs with recovery, events, runnable recipes and notifications implemented. Full local validation and packaged browser demo passed. User authorized committing and pushing this branch to GitHub on 2026-10-05; public beta tagging and hosted deployment remain separate.
 resume:
-  current_task_id: task-48
+  current_task_id: task-54
   next_steps:
-    - Commit the operator console work if the user asks.
-    - Sync updated source docs into wakeplane.dev before public deploy.
-    - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.
+    - Review the GitHub branch and pull request against main, including remote CI; local validation is recorded in artifacts/validation-2026-10-05/receipt.json.
+    - "Public promotion remains separate: matching beta tag/archive release and wakeplane.dev content/deploy synchronization when authorized."
+    - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
 links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

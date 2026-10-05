@@ -1,97 +1,32 @@
 # Wakeplane Current Status
 
-As of 2026-05-28, Wakeplane is a coherent public-beta scheduling control plane with working planner, dispatcher, durable run ledger, typed executors, HTTP API, CLI, embedded operator console, and embedding surface.
+As of 2026-10-05, the source version is `0.3.0-beta.1`. The last published release remains `v0.2.0-beta.1` until the matching new tag and archives are published. Source capability and public availability are separate claims.
 
-## What it is
+## Implemented product surface
 
-Wakeplane is the control plane above cron-like cadence definitions. It decides when work is due, materializes each occurrence as a durable run record, claims execution through a dispatcher, enforces policy, and preserves append-only attempt history plus executor receipts.
+Wakeplane preserves its scheduling-control-plane boundary: the planner materializes occurrences, the dispatcher enforces policy, and storage records ownership, attempts, receipts, and recovery before execution. SQLite and Postgres are supported. HTTP, shell, and explicitly registered Go workflow targets remain typed.
 
-This repository is not a reminder app, not a thin cron wrapper, and not a general workflow orchestrator. The current product boundary in code still matches the intended boundary:
+The source adds:
 
-- scheduler and planner materialize due work
-- dispatcher claims and runs work
-- the store owns durability and lease semantics
-- policy is enforced before execution
-- operator surfaces are HTTP and CLI
+- Guided schedule creation and editing, paused drafts, explicit timezones, recipes, and non-mutating timing previews.
+- A stateless MCP endpoint that shares REST authentication, auditing, validation, and application operations.
+- Opt-in tracked HTTP jobs with persisted identity, submission intent, deadlines, progress, results, artifacts, fenced ownership, and recovery.
+- Deduplicated events whose identity survives run retention; event payloads reach HTTP adapters without losing large JSON numbers.
+- A separate example runner for repository activity and weekly RSS/Atom reading lists, with durable deduplication and optional notification delivery.
+- An operator reconciliation action for unresolved remote work after local tracking has ended.
 
-## Current deployments
+The May backend improvements are included: optional single-operator bearer authentication, request audit, bounded receipts, terminal run retention, export/import, and an embedded console.
 
-Wakeplane has a real local-operator deployment that validates single-machine scheduling, typed execution, and operator visibility.
+## Operational boundaries
 
-Wakeplane is not documented as an environment-specific subsystem. The same product is expected to run:
+A successful submit response is not a completed job. Remote side effects require the runner to honor the stable idempotency key. Tracking timeout and daemon shutdown do not cancel remote work. Unresolved jobs continue consuming overlap capacity until authoritative completion is observed. Operators can reconcile them without resubmitting or rewriting the original outcome.
 
-- on a local machine for personal scheduling and agent support
-- as a standalone control plane other operators can run in their own environments
+Terminal external checkpoints are compacted when their run history is pruned. Unresolved jobs retain the data needed for recovery; event identity tombstones survive until schedule deletion. Back up before upgrades and retain an older-version backup for rollback.
 
-That means local-system safety matters. Regressing the single-node local deployment model would be a product regression, not an acceptable trade for future scale.
+The product remains beta. It has no RBAC, multi-tenancy, OAuth account onboarding, provider cost enforcement, distributed coordination, DAG engine, or remote cancellation contract. Hosted assistants that require OAuth need additional infrastructure. The example runner is a bounded single-process demonstration, not a replacement for a production connector or agent engine.
 
-## How to use it today
+## Validation and release discipline
 
-Run from source:
+CI and the release workflow require formatting/lint, console tests, Go vet, race tests, Postgres integration, generated documentation, and version-matched archive smoke checks. Local evidence is recorded in `.small/progress.small.yml`; historical deployment receipts are not evidence of the new features being deployed.
 
-```bash
-go run ./cmd/wakeplane serve
-```
-
-Or build binaries:
-
-```bash
-go build -o dist/wakeplane ./cmd/wakeplane
-go build -o dist/wakeplaned ./cmd/wakeplaned
-```
-
-Then:
-
-1. Start the daemon with `WAKEPLANE_DB_PATH`, `WAKEPLANE_HTTP_ADDR`, and `WAKEPLANE_WORKER_ID`.
-2. Create a schedule from YAML with `wakeplane schedule create -f <file>`.
-3. Inspect schedules, runs, receipts, status, and metrics through the console, CLI, or `/v1/...` API.
-4. If using workflow targets, register handlers explicitly through `app.NewWithOptions(..., app.WithWorkflowHandler(...))`.
-
-## Intent and Implementation Coherence
-
-The code and product intent are aligned on the important boundaries:
-
-- Durable-first execution: the dispatcher only starts work after `ClaimRun`.
-- Duplicate protection: scheduled occurrence identity is deterministic and retries reuse `occurrence_key` with incremented attempts.
-- Typed execution: targets are constrained to `http`, `shell`, and `workflow`.
-- Timezone discipline: timezone is required and validated.
-- Append-only audit shape: retries create new run rows and receipts are attached as separate artifacts.
-- Operator legibility: health, readiness, status, metrics, receipts, and structured shutdown logging are present.
-- Bounded ledger controls: receipt bodies have a configurable byte limit, and terminal run retention can be enabled by environment.
-
-Documentation drift found in this audit was concentrated in the public docs, not the runtime:
-
-- `once` schedules were documented as `schedule.run_at`, but the actual field is `schedule.at`.
-- shell targets were documented with `env`, which is not implemented.
-- one concepts page described attempts as 0-indexed, but the code starts at attempt `1`.
-- some docs described `claimed_at`, but the runtime currently exposes claim ownership and lease expiry instead.
-
-## Coherency Gaps
-
-The main gaps are structural, not semantic:
-
-- There are two doc surfaces, `docs/` and `docs/public/`, which increases drift risk.
-- The public docs had examples that overstated target capabilities compared with the actual typed schema.
-- The current repo explains alpha constraints across several files, but the hardening and scale path was not centralized before this audit.
-
-## Hardening Opportunities
-
-- Extend authorization beyond the current single-operator bearer token only if deployment needs become more complex.
-- Add archival policy for pruned runs, receipts, and dead letters if operators need long-term cold storage beyond the local database.
-- Expand store-level and lifecycle testing from correctness into load, long-run soak, and backup/restore verification.
-- Tighten operator ergonomics around schedule mutation and export/import so the CLI is useful beyond basic create/list/get/trigger flows.
-
-## Paths for Future Scale
-
-- Add a Postgres dialect behind the existing store seam first. That is the narrowest scale lever already designed into the repo.
-- After Postgres, move toward multi-process coordination only if lease, claim, and recovery semantics remain the source of truth in storage.
-- Keep the executor boundary typed. If out-of-process workers are added, preserve the dispatcher and ledger model rather than collapsing into arbitrary blobs.
-- Add retention, partitioning, and archival before chasing higher run volume so the ledger remains legible and bounded.
-- Split daemon and operator binaries only when there is a real operational need, not pre-emptively.
-
-## Recommended Next Steps
-
-1. Keep install friction low: maintain the hosted `https://wakeplane.dev/install.sh` path alongside tagged release archives and checksum verification.
-2. Improve operator ergonomics around schedule export/import, update, and fleet inspection.
-3. Continue hardening production operations with longer soak windows, more varied executor workloads, and hosted deployment receipts.
-4. Decide whether to promote a stable public Go embedding package or keep embedding source-level only in the current release line.
+See [Automation](public/automation.md), [Recipes](public/recipes.md), [Console](public/console.md), and the [release notes](public/releases/v0.3.0-beta.1.md). Longer operator soak, a published release, and hosted-documentation synchronization remain distinct promotion steps; beta is not a 1.0 guarantee.

@@ -4,6 +4,8 @@ Use one of these supported install paths for Wakeplane. The canonical repository
 
 > **Operator warning:** installability does not change the security model. Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
+The commands below pin the last published release, `v0.2.0-beta.1`. The new automation capabilities are in the `v0.3.0-beta.1` source line; build that source until a matching release is published.
+
 ## Option 1: GitHub Releases
 
 Preferred for operators. Tagged releases publish platform archives and a checksum file on the [GitHub Releases page](https://github.com/justyn-clark/wakeplane/releases).

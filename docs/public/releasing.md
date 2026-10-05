@@ -16,8 +16,8 @@ Wakeplane follows [Semantic Versioning](https://semver.org/):
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` - `const version = "0.2.0-beta.1"`
-- `cmd/wakeplaned/main.go` - `const version = "0.2.0-beta.1"`
+- `cmd/wakeplane/main.go` - `const version = "0.3.0-beta.1"`
+- `cmd/wakeplaned/main.go` - `const version = "0.3.0-beta.1"`
 
 Both must be updated in lockstep before tagging. The version is surfaced in:
 
@@ -28,7 +28,7 @@ Both must be updated in lockstep before tagging. The version is surfaced in:
 
 Before tagging a release:
 
-1. **All tests pass**: `go test ./... -count=1`
+1. **All tests pass**: `go test -race ./... -count=1`
 2. **Build succeeds**: `go build ./...`
 3. **SMALL strict check passes**: `small check --strict`
 4. **Generated docs are current**: `go run ./tools/docsgen --check`
@@ -66,6 +66,7 @@ Current release notes:
 
 - [v0.1.0](releases/v0.1.0.md)
 - [v0.2.0-beta.1 (published public beta)](releases/v0.2.0-beta.1.md)
+- [v0.3.0-beta.1 (source release candidate)](releases/v0.3.0-beta.1.md)
 
 ## What constitutes a breaking change
 
@@ -84,7 +85,7 @@ Adding new optional fields, new endpoints, new policy types, or new executor kin
 
 ## Two binaries: `wakeplane` and `wakeplaned`
 
-Both binaries are identical in `v0.2.0-beta.1`. They share the same command surface and configuration.
+Both binaries share the same command surface in `v0.3.0-beta.1`. They share the same command surface and configuration.
 
 `wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking - they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
 

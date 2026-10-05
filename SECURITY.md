@@ -19,6 +19,12 @@ Bind it to a trusted network boundary. Acceptable deployment models for the curr
 
 A reverse proxy or VPN gateway that enforces auth/TLS is the recommended pattern for any multi-user or network-accessible deployment.
 
+## Assistant and runner access
+
+The MCP endpoint at `/v1/mcp` uses the same operator token and request audit as REST. Tool annotations are client hints, not an approval or authorization layer. Connecting an assistant grants that operator's schedule and target authority. Configure client secrets outside source control. There is no OAuth server or per-tool authorization.
+
+Tracked HTTP jobs follow only same-origin status URLs and reject redirects. Their frozen target snapshot, including configured headers and body, remains in the database while recovery may need it; secure backups and database access accordingly. Public run responses omit that snapshot. Retention compacts confirmed terminal checkpoints after run pruning, while unresolved remote jobs retain recovery data. The example runner and notification receiver should remain on trusted infrastructure.
+
 ## Current scope
 
 The following are **out of scope** in the current beta release line:

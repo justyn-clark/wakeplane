@@ -25,6 +25,13 @@ type Route struct {
 }
 
 var routeDescriptions = map[string]string{
+	"POST /v1/runs/{id}/reconcile":    "Observe an unresolved external job for a locally terminal run, append a receipt, and release its overlap slot only on authoritative remote completion. Does not submit work or change the original run outcome.",
+	"GET /v1/templates":               "List guided schedule recipes. Fill in your target and review before enabling.",
+	"POST /v1/schedules/preview":      "Validate a draft and return up to five timezone-aware slots without storing or executing it.",
+	"POST /v1/schedules/{id}/events":  "Record one event-triggered occurrence. Returns 201 on first delivery, 200 on identical redelivery, or 409 for conflicting data or a paused schedule.",
+	"POST /v1/mcp":                    "Stateless MCP Streamable HTTP endpoint for assistant tools. Shares bearer authentication and request auditing.",
+	"GET /v1/mcp":                     "MCP transport route; standalone server push is not supported by this stateless endpoint.",
+	"DELETE /v1/mcp":                  "MCP transport route; no persistent transport sessions are allocated.",
 	"GET /healthz":                    "Liveness probe. Returns `{\"ok\":true}`.",
 	"GET /readyz":                     "Readiness probe. Returns `{\"ok\":true,\"storage\":\"ok\"}` when the store is reachable.",
 	"GET /v1/status":                  "Operational status including active store dialect, scheduler timing, worker counts, run counts, retention, and security posture.",
@@ -194,8 +201,13 @@ func generateAPIReference(version string, routes []Route) string {
 	b.WriteString("| 400 | `bad_request` | Malformed JSON, invalid query parameters, or invalid trigger reason |\n")
 	b.WriteString("| 400 | `validation_failed` | Schedule create or patch validation failed |\n")
 	b.WriteString("| 404 | `not_found` | Schedule or run ID does not exist |\n")
-	b.WriteString("| 500 | `internal_error` | Unexpected server error |\n\n")
+	b.WriteString("| 401 | `unauthorized` | Missing or invalid configured bearer token |\n")
+	b.WriteString("| 409 | `conflict` | Conflicting event replay, paused event target, or active/changed remote tracking during reconciliation |\n")
+	b.WriteString("| 410 | `history_pruned` | Event already processed and its original run history was pruned |\n")
+	b.WriteString("| 500 | `internal_error` | Unexpected server error |\n")
+	b.WriteString("| 502 | `runner_observation_failed` | Runner status or lookup could not be safely observed; checkpoint and overlap reservation remain unchanged |\n\n")
 	b.WriteString("Go's default `404 method not allowed` and malformed transport-level responses do not use the JSON envelope.\n\n")
+	b.WriteString("MCP uses its own JSON-RPC transport and tool-result envelopes after the shared HTTP auth boundary. See [Assistant integration](automation.md).\n\n")
 
 	b.WriteString("## Pagination and filtering\n\n")
 	b.WriteString("List endpoints use cursor-based pagination with newest-first ordering (`created_at DESC, id DESC`).\n\n")
@@ -268,7 +280,7 @@ func groupRoutes(routes []Route) (health []Route, operational []Route, schedules
 		switch {
 		case route.Path == "/healthz" || route.Path == "/readyz":
 			health = append(health, route)
-		case route.Path == "/v1/status" || route.Path == "/v1/metrics":
+		case route.Path == "/v1/status" || route.Path == "/v1/metrics" || route.Path == "/v1/templates" || route.Path == "/v1/mcp":
 			operational = append(operational, route)
 		case strings.HasPrefix(route.Path, "/v1/schedules"):
 			schedules = append(schedules, route)

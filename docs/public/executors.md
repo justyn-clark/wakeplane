@@ -34,6 +34,10 @@ target:
 
 **Cancellation:** If the run is cancelled (shutdown or `replace` policy), the HTTP request is aborted via context cancellation. Most HTTP clients abort promptly.
 
+## Tracked HTTP jobs
+
+Add `target.http_job` to a POST target to track external work through terminal completion. The runner must durably honor `Idempotency-Key`; Wakeplane persists submission intent, job identity, progress, and an absolute deadline, then resumes polling after recovery. A 202 response is not success. Timeout does not cancel remote work, and `replace` is unsupported for this mode. See [Automation](automation.md) for the contract and [Recipes](recipes.md) for a runnable adapter.
+
 ## Shell executor
 
 Runs a command with arguments. Useful for scripts, backups, and any process that can be invoked from a shell.
@@ -114,11 +118,11 @@ The response is an array of receipt objects. Each receipt has a `receipt_kind` f
 | Timeout enforcement | Via context                                   | Via exec.CommandContext  | Via context                         |
 | Receipt kind        | HTTP response summary                         | stdout/stderr/exit code  | Handler return value                |
 | Registration        | None needed                                   | None needed              | Must register explicitly            |
-| Alpha limits        | Static headers/body only; no secret injection | Inherits daemon user/env | In-process only, no dynamic loading |
+| Current limits      | Static headers/body only; no secret injection | Inherits daemon user/env | In-process only, no dynamic loading |
 
 ## Not shipped yet
 
-- Per-target credential injection (API keys, bearer tokens)
+- Managed secret/account references (static HTTP headers are already supported)
 - Dynamic workflow handler loading (plugins, out-of-process execution)
 - gRPC executor
 - Executor timeout handling for non-cooperative HTTP servers

@@ -13,7 +13,7 @@
 				<p id="postureLine">Loading daemon posture...</p>
 			</div>
 			<div class="topbar-actions">
-				<button id="refreshButton" class="icon-button" type="button" title="Refresh">↻</button>
+				<button id="refreshButton" class="icon-button" type="button" title="Refresh" aria-label="Refresh console">↻</button>
 				<button id="tokenButton" class="secondary" type="button">Token</button>
 			</div>
 		</header>
@@ -72,8 +72,13 @@
 				<div class="section-head">
 					<div>
 						<h2 id="schedulesTitle">Schedules</h2>
-						<p>Inspect posture and perform basic operator actions.</p>
+						<p>Choose when work happens, preview upcoming runs, and follow its outcome.</p>
 					</div>
+					<button id="createSchedule" type="button">Create automation</button>
+				</div>
+				<div class="getting-started">
+					<div><span class="kicker">START WITH A USE CASE</span><h3>What would you like to automate?</h3><p>Use your own runner or service. Wakeplane schedules the work and records the result.</p></div>
+					<div id="templateCards" class="template-grid" aria-live="polite"></div>
 				</div>
 				<div id="scheduleGrid" class="schedule-grid" aria-live="polite"></div>
 			</section>
@@ -90,18 +95,32 @@
 			</section>
 		</main>
 
-		<aside id="drawer" class="drawer" aria-hidden="true">
+		<aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" inert>
 			<div class="drawer-panel">
 				<div class="drawer-head">
 					<div>
 						<p id="drawerKicker" class="kicker"></p>
 						<h2 id="drawerTitle"></h2>
 					</div>
-					<button id="closeDrawer" class="icon-button" type="button" title="Close">×</button>
+					<button id="closeDrawer" class="icon-button" type="button" title="Close" aria-label="Close details">×</button>
 				</div>
 				<div id="drawerBody" class="drawer-body"></div>
 			</div>
 		</aside>
+
+		<dialog id="scheduleDialog" class="schedule-dialog" aria-labelledby="scheduleFormTitle">
+			<form id="scheduleForm">
+				<div class="drawer-head">
+					<div><p class="kicker">AUTOMATION</p><h2 id="scheduleFormTitle">Create automation</h2></div>
+					<button id="closeScheduleForm" class="icon-button secondary" type="button" aria-label="Close automation form">×</button>
+				</div>
+				<div id="scheduleFormFields" class="form-body"></div>
+				<div class="form-footer">
+					<p id="scheduleFormError" class="form-error" role="alert"></p>
+					<div class="action-row"><button id="previewSchedule" class="secondary" type="button">Preview next runs</button><button id="saveSchedule" type="submit">Save automation</button><button id="cancelScheduleForm" class="secondary" type="button">Cancel</button></div>
+				</div>
+			</form>
+		</dialog>
 
 		<div id="toast" class="toast" role="status" aria-live="polite"></div>
 		<script src="/console/app.js"></script>

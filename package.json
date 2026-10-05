@@ -3,6 +3,7 @@
 	"private": true,
 	"packageManager": "pnpm@10.33.0",
 	"scripts": {
+		"test:console": "node --test tools/console-test.mjs",
 		"lint": "biome check .",
 		"format": "pnpm run format:code && pnpm run format:docs",
 		"format:check": "pnpm run format:code:check && pnpm run format:docs:check",
@@ -10,7 +11,7 @@
 		"format:code:check": "biome check .",
 		"format:docs": "prettier --write \"**/*.md\"",
 		"format:docs:check": "prettier --check \"**/*.md\"",
-		"check": "pnpm run format:code:check && pnpm run format:docs:check"
+		"check": "pnpm run format:code:check && pnpm run format:docs:check && pnpm run test:console"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.9",

@@ -305,7 +305,7 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 	if len(items) <= limit {
 		return items, nil, nil
 	}
-	last := items[limit]
+	last := items[limit-1]
 	items = items[:limit]
 	nextCursor := domain.EncodeCursor(last.CreatedAt, last.ID)
 	return items, &nextCursor, nil
@@ -397,6 +397,14 @@ func (s *Store) GetRun(ctx context.Context, id string) (domain.Run, error) {
 		return domain.Run{}, err
 	}
 	run.DeadLetter = deadLetter
+	run.ExternalJob, err = s.GetExternalJob(ctx, run.OccurrenceKey)
+	if err != nil {
+		return domain.Run{}, err
+	}
+	run.Event, err = s.GetRunEvent(ctx, run.OccurrenceKey)
+	if err != nil {
+		return domain.Run{}, err
+	}
 	return run, nil
 }
 
@@ -454,7 +462,7 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 	if len(items) <= limit {
 		return items, nil, nil
 	}
-	last := items[limit]
+	last := items[limit-1]
 	items = items[:limit]
 	nextCursor := domain.EncodeCursor(last.CreatedAt, last.ID)
 	return items, &nextCursor, nil
@@ -541,16 +549,35 @@ func (s *Store) InsertReceipt(ctx context.Context, receipt domain.Receipt) error
 }
 
 func (s *Store) PruneTerminalRunsBefore(ctx context.Context, cutoff time.Time) (int64, error) {
-	result, err := s.exec(ctx, `
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	result, err := s.txExec(ctx, tx, `
 		DELETE FROM schedule_runs
 		WHERE finished_at IS NOT NULL
 		  AND finished_at < ?
 		  AND status IN ('succeeded', 'failed', 'dead_lettered', 'cancelled', 'skipped')
+		  AND NOT EXISTS (
+		      SELECT 1 FROM external_jobs ej WHERE ej.occurrence_key = schedule_runs.occurrence_key
+		      AND ej.job_status IN ('submitting', 'queued', 'running')
+		  )
 	`, timeString(cutoff))
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected()
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	if err := s.compactPrunedExternalJobs(ctx, tx); err != nil {
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return deleted, nil
 }
 
 func truncateReceiptBody(body string, maxBytes int) string {
@@ -616,52 +643,62 @@ func (s *Store) ListCandidateRuns(ctx context.Context, now time.Time, limit int)
 }
 
 func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, workerID string, now time.Time, ttl time.Duration) (bool, error) {
+	claimed, _, err := s.ClaimRunWithToken(ctx, schedule, runID, workerID, now, ttl)
+	return claimed, err
+}
+
+func (s *Store) ClaimRunWithToken(ctx context.Context, schedule domain.Schedule, runID, workerID string, now time.Time, ttl time.Duration) (bool, string, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	defer func() { _ = tx.Rollback() }()
 	var (
-		status     domain.RunStatus
-		scheduleID string
+		status        domain.RunStatus
+		scheduleID    string
+		occurrenceKey string
 	)
 	if s.dialect == "postgres" {
 		var lockedScheduleID string
 		if err := s.txQueryRow(ctx, tx, `SELECT id FROM schedules WHERE id = ? FOR UPDATE`, schedule.ID).Scan(&lockedScheduleID); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return false, ErrNotFound
+				return false, "", ErrNotFound
 			}
-			return false, err
+			return false, "", err
 		}
 	}
-	runQuery := `SELECT schedule_id, status FROM schedule_runs WHERE id = ?`
+	runQuery := `SELECT schedule_id, status, occurrence_key FROM schedule_runs WHERE id = ?`
 	if s.dialect == "postgres" {
 		runQuery += ` FOR UPDATE`
 	}
-	if err := s.txQueryRow(ctx, tx, runQuery, runID).Scan(&scheduleID, &status); err != nil {
+	if err := s.txQueryRow(ctx, tx, runQuery, runID).Scan(&scheduleID, &status, &occurrenceKey); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return false, ErrNotFound
+			return false, "", ErrNotFound
 		}
-		return false, err
+		return false, "", err
 	}
 	if scheduleID != schedule.ID {
-		return false, ErrConflict
+		return false, "", ErrConflict
 	}
 	if status != domain.RunPending && status != domain.RunRetryScheduled {
-		return false, nil
+		return false, "", nil
+	}
+	var sameOccurrenceActive int
+	if err := s.txQueryRow(ctx, tx, `SELECT COUNT(*) FROM schedule_runs WHERE occurrence_key = ? AND id <> ? AND status IN ('claimed', 'running')`, occurrenceKey, runID).Scan(&sameOccurrenceActive); err != nil {
+		return false, "", err
+	}
+	if sameOccurrenceActive > 0 {
+		return false, "", nil
 	}
 	var activeCount int
-	if err := s.txQueryRow(ctx, tx, `
-		SELECT COUNT(*) FROM schedule_runs
-		WHERE schedule_id = ? AND id <> ? AND status IN ('claimed', 'running')
-	`, schedule.ID, runID).Scan(&activeCount); err != nil {
-		return false, err
+	if err := s.txQueryRow(ctx, tx, activeOccurrenceQuery, schedule.ID, occurrenceKey, schedule.ID, occurrenceKey).Scan(&activeCount); err != nil {
+		return false, "", err
 	}
 	if activeCount >= schedule.Policy.MaxConcurrency {
-		return false, nil
+		return false, "", nil
 	}
 	if activeCount > 0 && schedule.Policy.Overlap != domain.OverlapAllow {
-		return false, nil
+		return false, "", nil
 	}
 	expires := now.Add(ttl)
 	res, err := s.txExec(ctx, tx, `
@@ -670,22 +707,23 @@ func (s *Store) ClaimRun(ctx context.Context, schedule domain.Schedule, runID, w
 		WHERE id = ? AND status IN ('pending', 'retry_scheduled')
 	`, workerID, timeString(expires), timeString(now), runID)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	if rowsAffected == 0 {
-		return false, nil
+		return false, "", nil
 	}
-	if err := s.upsertLease(ctx, tx, workerID, runID, now, expires); err != nil {
-		return false, err
+	token := domain.NewID("lease")
+	if err := s.upsertLease(ctx, tx, token, workerID, runID, now, expires); err != nil {
+		return false, "", err
 	}
-	return true, tx.Commit()
+	return true, token, tx.Commit()
 }
 
-func (s *Store) upsertLease(ctx context.Context, tx *sql.Tx, workerID, runID string, acquiredAt, expiresAt time.Time) error {
+func (s *Store) upsertLease(ctx context.Context, tx *sql.Tx, token, workerID, runID string, acquiredAt, expiresAt time.Time) error {
 	query := `
 		INSERT OR REPLACE INTO worker_leases (id, worker_id, run_id, lease_key, acquired_at, expires_at, heartbeat_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -703,7 +741,7 @@ func (s *Store) upsertLease(ctx context.Context, tx *sql.Tx, workerID, runID str
 			    heartbeat_at = EXCLUDED.heartbeat_at
 		`
 	}
-	_, err := s.txExec(ctx, tx, query, domain.NewID("lease"), workerID, runID, runID, timeString(acquiredAt), timeString(expiresAt), timeString(acquiredAt))
+	_, err := s.txExec(ctx, tx, query, token, workerID, runID, runID, timeString(acquiredAt), timeString(expiresAt), timeString(acquiredAt))
 	return err
 }
 
@@ -859,7 +897,33 @@ func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]Expired
 }
 
 func (s *Store) ResetClaimedRun(ctx context.Context, runID string, now time.Time) error {
-	_, err := s.exec(ctx, `
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	query := `SELECT status FROM schedule_runs WHERE id = ?`
+	if s.dialect == "postgres" {
+		query += ` FOR UPDATE`
+	}
+	var status domain.RunStatus
+	if err := s.txQueryRow(ctx, tx, query, runID).Scan(&status); err != nil {
+		return err
+	}
+	if status != domain.RunClaimed {
+		return nil
+	}
+	var token, expires string
+	if err := s.txQueryRow(ctx, tx, `SELECT id, expires_at FROM worker_leases WHERE run_id = ?`, runID).Scan(&token, &expires); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return err
+	}
+	if mustParseTime(expires).After(now) {
+		return nil
+	}
+	_, err = s.txExec(ctx, tx, `
 		UPDATE schedule_runs
 		SET status = 'pending', claimed_by_worker_id = NULL, claim_expires_at = NULL, updated_at = ?
 		WHERE id = ? AND status = 'claimed'
@@ -867,8 +931,10 @@ func (s *Store) ResetClaimedRun(ctx context.Context, runID string, now time.Time
 	if err != nil {
 		return err
 	}
-	_, err = s.exec(ctx, `DELETE FROM worker_leases WHERE run_id = ?`, runID)
-	return err
+	if _, err := s.txExec(ctx, tx, `DELETE FROM worker_leases WHERE id = ?`, token); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (s *Store) ClearLease(ctx context.Context, runID string) error {

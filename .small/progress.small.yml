@@ -1646,3 +1646,11 @@ entries:
     status: blocked
     timestamp: "2026-10-05T20:49:01.000001Z"
     evidence: "GitHub connector rejected draft pull request creation with 403 Resource not accessible by integration. Repository CI triggers only main pushes or pull requests, so this branch push has not started hosted CI. Branch publication is complete; stop PR creation attempts until permissions or a user-created PR unblock it."
+  - task_id: meta/github-pull-request
+    status: completed
+    timestamp: "2026-10-05T21:56:43.000000Z"
+    evidence: "User directed retry via GitHub abilities and local git/gh. Network-enabled gh auth status verified justyn-clark with repo/workflow permissions; no existing branch PR. Created draft PR https://github.com/justyn-clark/wakeplane/pull/1 via gh --body-file, attached it to this chat, and verified head 176fe22f9aea5c1b42f4e05208c162062bd82d88. Hosted CI run 37379187185 and GitGuardian checks started; prior connector permission blocker resolved through the authorized CLI."
+  - task_id: meta/hosted-ci
+    status: in_progress
+    timestamp: "2026-10-05T21:56:43.000001Z"
+    evidence: "PR now triggers the repository CI on Ubuntu and Postgres 16. Monitor the latest pushed tip until all checks complete; fix concrete failures within the authorized implementation scope."

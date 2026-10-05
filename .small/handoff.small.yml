@@ -1,11 +1,11 @@
 small_version: "1.0.0"
 owner: agent
-summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. Implementation commit fb742fe652c6e6d17ffb0435c317b6caa7b73627 pushed to origin and remote SHA verified on 2026-10-05. Full local validation and packaged browser demo passed. Pull request creation was rejected with GitHub 403 Resource not accessible by integration, so hosted CI has not run. No merge, beta tag or deployment performed.
+summary: Completed and locally validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. Implementation commit fb742fe652c6e6d17ffb0435c317b6caa7b73627 pushed to origin. GitHub PR 1 created using authenticated gh after the connector's 403; hosted CI is now running. Validation and publication results are recorded in artifacts/validation-2026-10-05/receipt.json. No merge, beta tag or deployment performed.
 resume:
   current_task_id: task-54
   next_steps:
-    - "Hosted CI is blocked pending a pull request: the GitHub connector cannot create it (403 Resource not accessible by integration). Open the pushed branch as a pull request or restore integration permissions before attempting that action again."
-    - Review codex/automation-product-layer against main; local validation is recorded in artifacts/validation-2026-10-05/receipt.json.
+    - Review https://github.com/justyn-clark/wakeplane/pull/1 and its checks on the current branch tip.
+    - Use network-enabled authenticated gh for GitHub writes; the connected app returns 403 for PR creation, while the local CLI has repository permissions.
     - "Public promotion remains separate: matching beta tag/archive release and wakeplane.dev content/deploy synchronization when authorized."
     - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
 links: []

@@ -165,4 +165,4 @@ tasks:
     status: completed
   - id: task-55
     title: Correct source documentation and synchronize verified live site content
-    status: in_progress
+    status: blocked

@@ -1,16 +1,20 @@
 small_version: "1.0.0"
 owner: agent
-summary: Automation application PR1 remains open on verified tip4628e66. Documentation corrections and isolated site synchronization are prepared on codex/docs-site-parity and /private/tmp/wakeplane-docs-sync-20261006. Source docs/generator checks and lint pass; site parity, 12 sync tests, lint, production build, 1520 rendered links/assets, desktop/mobile navigation and search pass. Published binaries remain v0.2.0-beta.1; source version is v0.3.0-beta.1. No application merge, binary release or production site promotion performed. Evidence is saved under artifacts/docs-site-sync-2026-10-06.
+summary: Documentation preparation validated and pushed, production promotion blocked on user-owned application PR1 still OPEN at4628e66. Canonical corrections are PR2 at9411724, stacked on PR1; site draft PR1 at6922e27 has a READY Vercel preview. Source docs/generator and lint checks pass; site local parity, 12 tests, lint, build, 1520 links/assets and desktop/mobile browser checks pass. Hosted CI37512218633 correctly fails canonical-main parity because new source pages are absent on main. Published binaries remain v0.2.0-beta.1; source version is v0.3.0-beta.1. Production unchanged and no tags published. Evidence is saved under artifacts/docs-site-sync-2026-10-06.
 resume:
   current_task_id: task-55
   next_steps:
-    - Publish the documentation correction branch and coordinated site branch for review; rerun parity after final source commits.
-    - Confirm user merge of PR1 before publishing site claims against main; latest check still OPEN.
-    - After PR1 merges, rebase only documentation corrections onto the actual main commit, verify and promote source docs before the site parity CI can pass.
+    - Wait for user merge of application PR1; latest check still OPEN and clarification is pending. Stop promotion until that dependency clears.
+    - Canonical PR2 currently targets codex/automation-product-layer. It can merge before PR1 so the source corrections travel with the application merge. If PR1 has already merged, promote only the docs corrections onto actual main using a new branch if squash history requires it; avoid rewriting published branch history.
+    - Resync site from actual application main after canonical corrections land, including any changed immutable source links; rerun site parity, lint, tests, build, rendered links and CI before making the site PR ready.
     - Use network-enabled authenticated gh for GitHub writes; the connected app returns 403 for PR creation, while the local CLI has repository permissions.
     - Merge and deploy the verified site update through wakeplane-web after application main contains the documented capabilities and corrections; verify the custom domain. Binary tagging is separate and not authorized by this documentation task.
     - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
-links: []
+links:
+  - https://github.com/justyn-clark/wakeplane/pull/2
+  - https://github.com/justyn-clark/wakeplane.dev/pull/1
+  - https://wakeplane-nacje2jsk-justynclarks-projects.vercel.app
+  - https://github.com/justyn-clark/wakeplane.dev/actions/runs/37512218633
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
   source: auto

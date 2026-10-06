@@ -1,6 +1,6 @@
 # Runnable automation recipes
 
-These examples require the `v0.3.0-beta.1` source line or a matching release. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
+These examples require `v0.3.0-beta.1` or its matching source build. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
 
 ## Start the separate runner
 

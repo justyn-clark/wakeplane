@@ -3,6 +3,8 @@
 
 Wakeplane exposes a JSON HTTP API for schedule and run management. The route tables on this page are generated from `internal/api/http.go` so the published surface stays aligned with the server.
 
+> **Source version:** this reference describes Wakeplane `0.3.0-beta.1`. Use a matching source build or published release; see [Install](install.md) for public binary availability. Older releases do not provide every route or security control listed here.
+
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 
 ## Health and readiness
@@ -17,8 +19,8 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/v1/mcp` | Stateless MCP Streamable HTTP endpoint for assistant tools. Shares bearer authentication and request auditing. |
-| `GET` | `/v1/mcp` | MCP transport route; standalone server push is not supported by this stateless endpoint. |
-| `DELETE` | `/v1/mcp` | MCP transport route; no persistent transport sessions are allocated. |
+| `GET` | `/v1/mcp` | Returns 405 Method Not Allowed in the configured stateless transport; standalone server push is unsupported. |
+| `DELETE` | `/v1/mcp` | Returns 405 Method Not Allowed in the configured stateless transport; no persistent transport sessions are allocated. |
 | `GET` | `/v1/templates` | List guided schedule recipes. Fill in your target and review before enabling. |
 | `GET` | `/v1/status` | Operational status including active store dialect, scheduler timing, worker counts, run counts, retention, and security posture. |
 | `GET` | `/v1/metrics` | Prometheus text metrics for schedules, runs, leases, and executor outcomes. |
@@ -32,9 +34,9 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 | `POST` | `/v1/schedules` | Create a schedule. Returns `201` with the full schedule. |
 | `GET` | `/v1/schedules` | List schedules. Supports `enabled`, `limit`, and `cursor` query params. |
 | `GET` | `/v1/schedules/{id}` | Get one schedule including computed `next_run_at`. |
-| `PUT` | `/v1/schedules/{id}` | Replace a schedule. All fields required. |
+| `PUT` | `/v1/schedules/{id}` | Replace the complete definition while preserving schedule ID and history. Required definition fields must be supplied; omitted optional fields return to defaults. |
 | `PATCH` | `/v1/schedules/{id}` | Patch a schedule. Only provided fields change. |
-| `DELETE` | `/v1/schedules/{id}` | Delete a schedule and its dependent runs, leases, receipts, and dead letters. |
+| `DELETE` | `/v1/schedules/{id}` | Delete a schedule and its runs, leases, receipts, dead letters, external checkpoints, and event deduplication records. Request audit history remains. Deletion does not cancel accepted remote work. |
 | `POST` | `/v1/schedules/{id}/pause` | Pause a schedule by setting `enabled=false` and recording `paused_at`. |
 | `POST` | `/v1/schedules/{id}/resume` | Resume a schedule by setting `enabled=true`, clearing `paused_at`, and recomputing `next_run_at`. |
 | `POST` | `/v1/schedules/{id}/trigger` | Create a manual run immediately. Requires `{"reason":"..."}`. |
@@ -51,7 +53,7 @@ Wakeplane exposes a JSON HTTP API for schedule and run management. The route tab
 
 ## Error envelope
 
-All API errors return JSON with this shape:
+Application-level REST errors return JSON with this shape:
 
 ```json
 {
@@ -72,7 +74,7 @@ All API errors return JSON with this shape:
 | 500 | `internal_error` | Unexpected server error |
 | 502 | `runner_observation_failed` | Runner status or lookup could not be safely observed; checkpoint and overlap reservation remain unchanged |
 
-Go's default `404 method not allowed` and malformed transport-level responses do not use the JSON envelope.
+Go's default `404 Not Found`, `405 Method Not Allowed`, and transport-level error responses do not use this JSON envelope.
 
 MCP uses its own JSON-RPC transport and tool-result envelopes after the shared HTTP auth boundary. See [Assistant integration](automation.md).
 

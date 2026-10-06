@@ -51,10 +51,10 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 
 ## Current scope
 
-The current public beta line ships as:
+The `v0.3.0-beta.1` source line includes the following capabilities. The published `v0.2.0-beta.1` binaries provide the older SQLite scheduler and basic CLI/API. They do not include the later authentication, request audit, receipt limits, retention, Postgres, console, status command, schedule update/export/import commands, MCP, event delivery, or tracked jobs. See [Install](install.md) for the available build paths; setting `WAKEPLANE_AUTH_TOKEN` cannot protect an older binary without authentication support.
 
 - Single-process Go daemon and CLI
-- SQLite-first storage with embedded migrations and a Postgres backend seam
+- SQLite-first storage with embedded migrations and a verified Postgres backend
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
 - Guided single-operator console with draft previews

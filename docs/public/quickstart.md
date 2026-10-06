@@ -2,6 +2,8 @@
 
 Wakeplane is a durable scheduling control plane. This guide gets you from nothing to a running daemon with a real schedule in under five minutes.
 
+This guide covers the `v0.3.0-beta.1` source line. Use its source build for the console, authentication, and Postgres options described here; the published `v0.2.0-beta.1` lacks those features. See [Install](install.md) for the available versions.
+
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 
 ## What you are setting up
@@ -22,7 +24,7 @@ If you built into `dist/` and did not install into `PATH`, prefix commands below
 
 ```bash
 WAKEPLANE_DB_PATH=./wakeplane.db \
-WAKEPLANE_HTTP_ADDR=:8080 \
+WAKEPLANE_HTTP_ADDR=127.0.0.1:8080 \
 WAKEPLANE_WORKER_ID=wrk_local \
 wakeplane serve
 ```
@@ -122,6 +124,8 @@ Pausing sets `enabled=false` on the schedule. The planner stops materializing ne
 | Variable                                | Default          | Description                                    |
 | --------------------------------------- | ---------------- | ---------------------------------------------- |
 | `WAKEPLANE_DB_PATH`                     | `./wakeplane.db` | SQLite database file                           |
+| `WAKEPLANE_STORE`                       | `sqlite`         | Storage backend: `sqlite` or `postgres`        |
+| `WAKEPLANE_DATABASE_URL`                | unset            | Connection URL for the Postgres backend        |
 | `WAKEPLANE_HTTP_ADDR`                   | `:8080`          | HTTP listen address                            |
 | `WAKEPLANE_WORKER_ID`                   | `wrk_local`      | Worker identity (used in lease records)        |
 | `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS`  | `5`              | How often the planner loop ticks               |
@@ -129,6 +133,10 @@ Pausing sets `enabled=false` on the schedule. The planner stops materializing ne
 | `WAKEPLANE_LEASE_TTL_SECONDS`           | `30`             | Worker lease TTL for stale-claim recovery      |
 | `WAKEPLANE_RECEIPT_MAX_BYTES`           | `262144`         | Maximum stored body size per receipt           |
 | `WAKEPLANE_RUN_RETENTION_DAYS`          | `0`              | Days to keep terminal runs; 0 disables pruning |
+| `WAKEPLANE_AUTH_TOKEN`                  | unset            | Require a bearer token for `/v1/...` routes    |
+| `WAKEPLANE_REQUEST_AUDIT`               | `true`           | Record control-plane request metadata          |
+
+The daemon's default listen address is `:8080`, which binds all interfaces. This quickstart explicitly binds loopback. The CLI reads `WAKEPLANE_AUTH_TOKEN` when calling a protected daemon; authenticated `curl` requests also need the matching bearer header.
 
 ## HTTP surface
 

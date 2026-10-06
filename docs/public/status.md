@@ -6,6 +6,8 @@ This page defines what Wakeplane means by alpha, beta, and 1.0. It is intentiona
 
 The published beta is `v0.2.0-beta.1`. This documentation describes the `v0.3.0-beta.1` source line. New capabilities require that source build or a matching published tag; preparing release artifacts does not publish them.
 
+The published `v0.2.0-beta.1` has no built-in authentication, request audit, configurable receipt limits, retention, Postgres backend, operator console, status command, or schedule update/export/import commands. Those features and the new automation interfaces require the newer source build. Setting `WAKEPLANE_AUTH_TOKEN` does not protect an older binary that lacks authentication support.
+
 The beta gate is now satisfied:
 
 - the repository is public at `https://github.com/justyn-clark/wakeplane`
@@ -21,7 +23,7 @@ Beta means:
 
 - the public GitHub path resolves and is the canonical source
 - trust files exist and describe how the project operates
-- public docs match shipped code exactly
+- public docs identify their source version and distinguish its capabilities from published binary releases
 - release binaries and checksums are published from tags
 - security posture is explicit on the site and in the repo
 - CI validates code, generated docs, and public-doc examples

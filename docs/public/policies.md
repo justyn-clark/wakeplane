@@ -8,7 +8,7 @@ The overlap policy controls what happens when a new occurrence becomes due while
 
 ### `forbid` (default)
 
-The new run is not claimed until the active count drops below `max_concurrency`. The pending run waits in the queue. Nothing is skipped.
+The new occurrence is not claimed while another occurrence of the schedule remains active, even when `max_concurrency` is greater than 1. The pending run waits in the queue. Nothing is skipped by this overlap policy.
 
 Use `forbid` when:
 
@@ -43,6 +43,8 @@ Active runs receive a cancellation signal (`ctx.Done()`). All pending runs excep
 - **Shell executor**: process receives `SIGKILL` via `exec.CommandContext` - reliable
 - **Workflow executor**: `ctx.Done()` is closed; the handler must check it and return
 
+Tracked HTTP jobs reject `replace` because the runner contract has no remote cancellation operation. Editing a schedule does not make previously submitted remote work cancellable; its unresolved checkpoint continues reserving capacity.
+
 If the active executor does not stop promptly:
 
 - The active run retains its `running` status
@@ -66,7 +68,7 @@ Do not use `replace` when:
 | Policy         | Active run present? | Behavior                                           |
 | -------------- | ------------------- | -------------------------------------------------- |
 | `allow`        | Ignored             | Start new run up to `max_concurrency`              |
-| `forbid`       | Block               | Wait until active count drops                      |
+| `forbid`       | Block               | Wait until other active occurrences finish         |
 | `queue_latest` | Finish naturally    | Skip all pending except most recent                |
 | `replace`      | Cancel signal       | Cancel active, skip all pending except most recent |
 
@@ -88,7 +90,7 @@ Use when: running stale work would be incorrect or wasteful. Health checks and t
 
 ### `catch_up`
 
-Materialize a run for every missed occurrence, up to a configurable limit. Runs are dispatched in order.
+Materialize a run for every missed occurrence. There is currently no configurable catch-up limit, so a long outage with a short cadence can create a large backlog. Runs are considered in due-time order, subject to overlap and concurrency policy.
 
 Use when: every occurrence must be processed and missing data is not acceptable. Carefully pair this with `forbid` overlap and a reasonable max retry limit to prevent unbounded queuing after a long outage.
 
@@ -110,6 +112,8 @@ If a run exceeds its timeout and the executor does not stop, behavior depends on
 
 The dispatcher checks the count of `claimed` + `running` runs for the schedule before claiming a new one. If the count is at the limit, the run waits (behavior depends on `overlap` policy).
 
+Unresolved tracked remote jobs also reserve capacity while waiting for a retry or after local tracking has timed out. Only a confirmed terminal remote status releases that reservation. Use [reconciliation](automation.md) to inspect a locally terminal run without resubmitting its work.
+
 ## Retry
 
 Retry settings define what happens when a run finishes with an error.
@@ -117,20 +121,22 @@ Retry settings define what happens when a run finishes with an error.
 ```yaml
 retry:
   max_attempts: 5 # total attempts including the first (0 = no retries)
-  strategy: exponential # exponential (only supported strategy currently)
+  strategy: exponential # none | exponential
   initial_delay_seconds: 30
   max_delay_seconds: 900
 ```
 
 **Exponential backoff:** Each retry delay is doubled from the previous, bounded by `max_delay_seconds`.
 
-- Attempt 0: initial execution
-- Attempt 1: delay = `initial_delay_seconds` x 2^0 = 30s
-- Attempt 2: delay = 30s x 2^1 = 60s
-- Attempt 3: delay = 30s x 2^2 = 120s
+- Attempt 1: initial execution
+- Attempt 2: delay = `initial_delay_seconds` x 2^0 = 30s
+- Attempt 3: delay = 30s x 2^1 = 60s
+- Attempt 4: delay = 30s x 2^2 = 120s
 - ...capped at `max_delay_seconds`
 
 When all attempts are exhausted, the run is dead-lettered. Dead letters are visible at `GET /v1/status` and the metrics endpoint.
+
+`max_attempts` counts total attempts, so values `0` and `1` do not allow a retry. `strategy: none` disables retries regardless of that count. Confirmed terminal remote failures are not resubmitted as fresh jobs.
 
 **Cancellation is not retried.** If a run is cancelled (shutdown or `replace` overlap), no retry is scheduled.
 

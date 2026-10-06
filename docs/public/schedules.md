@@ -54,7 +54,7 @@ schedule:
 
 ### interval
 
-Fires every N seconds. The interval is anchored to the previous `next_run_at`, not to wall clock time, so intervals do not drift on restart.
+Fires every N seconds on a fixed cadence. The anchor is `schedule.anchor_at` when supplied, otherwise `start_at`, otherwise the schedule's creation time. Restart and resume compute the next slot on that cadence rather than shifting the anchor to the current time.
 
 ```yaml
 schedule:
@@ -74,18 +74,18 @@ schedule:
 
 `schedule.at` is an absolute timestamp. Provide a full RFC3339 value with offset. If you want "9am Los Angeles time", encode that offset in the timestamp itself.
 
-After the occurrence is materialized, `next_run_at` becomes `nil`. In `v0.2.x`, the schedule is not automatically rewritten to `enabled=false`; it simply has no next occurrence left to materialize.
+After the occurrence is materialized, `next_run_at` becomes `nil`. The schedule is not automatically rewritten to `enabled=false`; it simply has no next occurrence left to materialize.
 
 ## Timezone behavior
 
-Every schedule has a `timezone` field (IANA timezone string, e.g. `America/Los_Angeles`, `UTC`, `Europe/Berlin`).
+Every schedule requires an explicit `timezone` field (IANA timezone string, e.g. `America/Los_Angeles`, `UTC`, `Europe/Berlin`). Empty values and the host-dependent `Local` value are rejected.
 
 - Cron expressions are evaluated in the schedule's timezone.
 - The `once.at` timestamp is stored as an absolute instant; include the intended offset in the value.
 - Interval schedules use UTC internally; timezone affects only display.
 - All `next_run_at` values stored in the database are UTC.
 
-**DST transitions:** When clocks spring forward, occurrences that fall into the gap are skipped. When clocks fall back, the nominal time fires once (not twice). This is consistent with standard cron DST handling.
+**DST transitions:** Cron times in a spring-forward gap are skipped. During fall-back, a repeated local clock time can produce two occurrences at distinct UTC instants. For example, `30 1 * * *` in `America/Los_Angeles` fires at both `08:30Z` and `09:30Z` on November 1, 2026. Each instant has its own occurrence identity.
 
 ## Pause and resume
 
@@ -103,7 +103,7 @@ POST /v1/schedules/{id}/resume
 
 **Pause** sets `enabled=false` and records `paused_at`. The planner stops materializing new occurrences. Existing pending or running runs are not affected.
 
-**Resume** sets `enabled=true`, clears `paused_at`, and recomputes `next_run_at` from the current time. The misfire policy governs what happens to any occurrences that were due while the schedule was paused.
+**Resume** sets `enabled=true`, clears `paused_at`, and recomputes `next_run_at` from the current time. It does not catch up occurrences missed while paused. Misfire policy applies when an enabled schedule's persisted next occurrence becomes overdue.
 
 ## Trigger-now
 
@@ -123,20 +123,22 @@ POST /v1/schedules/{id}/trigger
 
 ## Full replacement vs partial update
 
-- `PUT /v1/schedules/{id}` - full replacement. All fields required. Equivalent to delete + create.
+- `PUT /v1/schedules/{id}` - replace the complete schedule definition, preserving its ID, creation time, and run history. Omitted optional fields return to their defaults; omitted `enabled` creates a paused definition. Supply the required name, timezone, schedule, and typed target.
 - `PATCH /v1/schedules/{id}` - partial update. Only provided fields change. Useful for toggling `enabled` or updating a target URL.
 
 ## Target kinds
 
 See [Executors](executors.md) for full executor details. Brief reference:
 
-| Kind       | Required fields | Optional fields   |
-| ---------- | --------------- | ----------------- |
-| `http`     | `url`, `method` | `headers`, `body` |
-| `shell`    | `command`       | `args`            |
-| `workflow` | `workflow_id`   | `input`           |
+| Kind       | Required fields | Optional fields               |
+| ---------- | --------------- | ----------------------------- |
+| `http`     | `url`, `method` | `headers`, `body`, `http_job` |
+| `shell`    | `command`       | `args`                        |
+| `workflow` | `workflow_id`   | `input`                       |
 
 Timeout and concurrency are controlled by `policy.timeout_seconds` and `policy.max_concurrency`, not by target-specific fields.
+
+`http_job` selects tracked remote execution and requires `method: POST`. Its optional settings are `poll_interval_seconds` (default 5, allowed 1–300) and a same-origin `lookup_url` for recovery by submission key. `overlap: replace` is rejected for this mode. See [Automation](automation.md) for the runner contract.
 
 ## Default policy values
 
@@ -159,6 +161,6 @@ When policy or retry fields are omitted, these defaults apply:
 }
 ```
 
-`max_attempts: 0` means no retries. Set to a positive integer to enable retry behavior.
+`max_attempts` counts total attempts including the first. Values `0` and `1` do not schedule another attempt. Use `strategy: exponential` with `max_attempts` greater than 1 to allow retries; `strategy: none` disables them.
 
 See [Policies](policies.md) for full policy semantics.

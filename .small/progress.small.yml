@@ -1658,3 +1658,11 @@ entries:
     status: completed
     timestamp: "2026-10-05T22:00:12.000000Z"
     evidence: "All GitHub checks passed on fd15588d44d22ffb752a2b2e34d0b8b4f0dfb503: lint/format/13 console tests, Go vet, generated docs, full Go race suite, real Postgres 16 integration and Linux binary builds. CI run 37379305435 concluded success; GitGuardian passed. Exact run/job/PR metadata and full CI logs saved under artifacts/validation-2026-10-05. This follow-up changes only handoff/progress records; verify automated checks on its final pushed tip before marking PR ready."
+  - task_id: task-55
+    status: in_progress
+    timestamp: "2026-10-06T18:16:47.000000Z"
+    evidence: "User requested live documentation/application consistency while they merge PR1. PR1 remains open at latest check; source correction branch codex/docs-site-parity based on verified automation tip4628e66. Site remote main0aa9b9c isolated at /private/tmp/wakeplane-docs-sync-20261006; existing local site checkout untouched. Live site fetched and browser inspected; Vercel deploy-on-main integration and CLI account verified. Audit found stale source prose and unmapped automation/recipes/release pages. Correct source docs/generator wording, deterministic site sync coverage/links/CI, and retain installer publishedv0.2 untilmatchingreleaseexists. Validate build/browser/parity before site publication; no application behavior or release tagging in this task."
+  - task_id: task-55
+    status: in_progress
+    timestamp: "2026-10-06T18:30:37.000000Z"
+    evidence: "Canonical documentation corrected against code for source/published version limits, auth, Postgres, DST, pause/resume, overlap, retries, run recovery and API contracts. Independent final audit corrected recipe UI path. Source docs tests, generated refs, lint/format and 13 console tests pass. Site sync covers all22 canonical public pages; 12 invariant tests, exact parity, lint, production build and 1520 internal links/assets across24 HTML pages pass. Real browser verifies desktop/mobile release banner, navigation, search indexing and legacy run-ledger redirect; 390px views have no body overflow. Original PR1 remains OPEN; user merge confirmation requested while preparing reviewable branches."

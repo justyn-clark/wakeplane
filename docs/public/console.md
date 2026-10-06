@@ -22,6 +22,7 @@ The console supports the same safe schedule actions as the API:
 - trigger now with a reason
 - create or edit a schedule with validated timing, target, policy, and retry settings
 - preview up to five next-run times without storing or executing the draft
+- observe a locally terminal run's unresolved remote status when recovery is available, without resubmitting work
 - copy schedule or run IDs
 
 It does not bypass policy enforcement, durable run recording, target typing, auth, or request audit logging.

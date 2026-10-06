@@ -4,17 +4,13 @@ summary: Documentation preparation validated and pushed, production promotion bl
 resume:
   current_task_id: task-55
   next_steps:
-    - Wait for user merge of application PR1; latest check still OPEN and clarification is pending. Stop promotion until that dependency clears.
+    - Wait for user merge of https://github.com/justyn-clark/wakeplane/pull/1; latest check still OPEN and clarification is pending. Stop promotion until that dependency clears.
     - Canonical PR2 currently targets codex/automation-product-layer. It can merge before PR1 so the source corrections travel with the application merge. If PR1 has already merged, promote only the docs corrections onto actual main using a new branch if squash history requires it; avoid rewriting published branch history.
-    - Resync site from actual application main after canonical corrections land, including any changed immutable source links; rerun site parity, lint, tests, build, rendered links and CI before making the site PR ready.
+    - Source corrections https://github.com/justyn-clark/wakeplane/pull/2 and site https://github.com/justyn-clark/wakeplane.dev/pull/1 are pushed. Resync site from actual application main after canonical corrections land, including any changed immutable source links; rerun site parity, lint, tests, build, rendered links and CI before making the site PR ready.
     - Use network-enabled authenticated gh for GitHub writes; the connected app returns 403 for PR creation, while the local CLI has repository permissions.
     - Merge and deploy the verified site update through wakeplane-web after application main contains the documented capabilities and corrections; verify the custom domain. Binary tagging is separate and not authorized by this documentation task.
     - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
-links:
-  - https://github.com/justyn-clark/wakeplane/pull/2
-  - https://github.com/justyn-clark/wakeplane.dev/pull/1
-  - https://wakeplane-nacje2jsk-justynclarks-projects.vercel.app
-  - https://github.com/justyn-clark/wakeplane.dev/actions/runs/37512218633
+links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
   source: auto

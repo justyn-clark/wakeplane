@@ -1,12 +1,14 @@
 small_version: "1.0.0"
 owner: agent
-summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. Implementation commit fb742fe652c6e6d17ffb0435c317b6caa7b73627 pushed to origin. GitHub PR 1 created using authenticated gh after the connector's 403. All hosted checks passed for fd15588d44d22ffb752a2b2e34d0b8b4f0dfb503, including Ubuntu race tests, Postgres 16, builds and GitGuardian; successful CI run 37379305435. Validation and publication results are recorded in artifacts/validation-2026-10-05/receipt.json. No merge, beta tag or deployment performed.
+summary: Application PR1 merged at4b409f7 on2026-10-06T18:52:39Z with feature ancestry preserved. Canonical documentation PR2 is now retargeted to main and remains OPEN; diff verified to contain only documentation/generator wording and execution records. Production site promotion awaits canonical corrections reaching main, followed by site resync and CI. Site draft PR1 at6922e27 has a READY protected Vercel preview; prior local source/site validation passed. Published binaries remain v0.2.0-beta.1; source version is v0.3.0-beta.1. No production site deployment or tags performed. Evidence remains under artifacts/docs-site-sync-2026-10-06.
 resume:
-  current_task_id: task-54
+  current_task_id: task-55
   next_steps:
-    - Review https://github.com/justyn-clark/wakeplane/pull/1 and its checks on the current branch tip.
+    - Verify CI on canonical documentation https://github.com/justyn-clark/wakeplane/pull/2 now targeting main; it remains OPEN and the user is reviewing the next merge. No history rewrite needed because PR1 used a merge commit.
+    - Canonical content lives in application docs/public. Site sync copies it to committed MDX; Astro/Vercel builds from the separate site repo. An application merge does not automatically regenerate or deploy the site.
+    - Source corrections https://github.com/justyn-clark/wakeplane/pull/2 and site https://github.com/justyn-clark/wakeplane.dev/pull/1 are pushed. Resync site from actual application main after canonical corrections land, including any changed immutable source links; rerun site parity, lint, tests, build, rendered links and CI before making the site PR ready.
     - Use network-enabled authenticated gh for GitHub writes; the connected app returns 403 for PR creation, while the local CLI has repository permissions.
-    - "Public promotion remains separate: matching beta tag/archive release and wakeplane.dev content/deploy synchronization when authorized."
+    - Merge and deploy the verified site update through wakeplane-web after application main contains the documented capabilities and corrections; verify the custom domain. Binary tagging is separate and not authorized by this documentation task.
     - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
 links: []
 replayId:

@@ -4,63 +4,34 @@ Every execution attempt in Wakeplane is a `Run` record with an explicit status. 
 
 ## Statuses
 
-| Status            | Terminal? | Description                                                       |
-| ----------------- | --------- | ----------------------------------------------------------------- |
-| `pending`         | No        | Materialized by planner, waiting for dispatcher                   |
-| `claimed`         | No        | Dispatcher has acquired a lease; execution has not started        |
-| `running`         | No        | Executor is actively running the work                             |
-| `succeeded`       | Yes       | Execution completed without error                                 |
-| `failed`          | Yes       | Execution completed with error (retry may follow via a new run)   |
-| `retry_scheduled` | No        | A retry attempt has been created for this occurrence              |
-| `dead_lettered`   | Yes       | All retry attempts exhausted                                      |
-| `cancelled`       | Yes       | Execution was interrupted by shutdown or `replace` overlap policy |
-| `skipped`         | Yes       | Planner skipped this occurrence due to misfire policy             |
+| Status            | Terminal? | Description                                                                    |
+| ----------------- | --------- | ------------------------------------------------------------------------------ |
+| `pending`         | No        | Recorded by planner, manual trigger, or event delivery; waiting for dispatcher |
+| `claimed`         | No        | Dispatcher has acquired a lease; execution has not started                     |
+| `running`         | No        | Executor is actively running the work                                          |
+| `succeeded`       | Yes       | Execution completed without error                                              |
+| `failed`          | Yes       | Execution completed with error (retry may follow via a new run)                |
+| `retry_scheduled` | No        | A retry attempt has been created for this occurrence                           |
+| `dead_lettered`   | Yes       | All retry attempts exhausted                                                   |
+| `cancelled`       | Yes       | Execution was interrupted by shutdown or `replace` overlap policy              |
+| `skipped`         | Yes       | Misfire or queue-coalescing policy skipped unsubmitted work                    |
 
-Terminal statuses are never updated after they are set.
+A retry is a new run record, not a transition out of a terminal status. Remote-job reconciliation updates the remote checkpoint while preserving the original local run outcome.
 
 ## Transition diagram
 
 ```
-                    +----------------------------+
-                    |         PLANNER             |
-                    |  occurrence becomes due     |
-                    +------------+----------------+
-                                 |
-                          +------v------+
-                          |   pending   |<-- recovered from expired claim
-                          +------+------+
-                                 | dispatcher claims
-                          +------v------+
-                          |   claimed   |
-                          +------+------+
-                                 | mark running
-                          +------v------+
-                          |   running   |
-                          +--+--+--+--+-+
-               success -----+  |  |  +--- ctx cancelled
-                               |  |
-                      failure -+  +-- lease expired (crash recovery)
-                                              |
-+-----------+  +---------+  +-----------+   |
-| succeeded |  | failed  |  | cancelled |   | mark failed
-+-----------+  +----+----+  +-----------+   +--> failed
-                    |
-              retry available?
-               +----+----+
-           yes |         | no
-       +-------v-------+  |
-       |retry_scheduled|  |
-       +-------+-------+  |
-               |          |
-      new pending run      |
-      (next attempt)       v
-                    +--------------+
-                    | dead_lettered|
-                    +--------------+
+pending -> claimed -> running -> succeeded
+                         |----> cancelled
+                         |----> dead_lettered (no retry or terminal failure)
+                         +----> failed (retry allowed)
 
-+---------+
-| skipped |  (misfire policy - never dispatched)
-+---------+
+failed attempt remains terminal
+  + new run: retry_scheduled -> claimed -> running -> ...
+
+expired claim:          claimed -> pending
+expired remote tracker: running -> pending (resume tracking)
+misfire/queue policy:   unsubmitted occurrence -> skipped
 ```
 
 ## Transition rules
@@ -106,11 +77,15 @@ If the process crashes after claiming but before marking running, the lease even
 
 ### `running` -> `failed` (crash recovery)
 
-If the process crashes while a run is in `running` state, the lease eventually expires. Recovery marks the run as `failed` with `error_text = "worker lease expired during execution"` and schedules a retry if policy allows.
+If the process crashes while an ordinary run is in `running` state, the lease eventually expires. Recovery records `error_text = "worker lease expired during execution"`. It marks the run `failed` and creates a retry when policy allows, or marks it `dead_lettered` when no retry is available.
 
-### `skipped` (planner only)
+This describes ordinary targets. A tracked HTTP job is requeued for observation of its persisted remote identity or submission intent. It retains its target and absolute deadline; recovery does not interpret a lost local worker as remote completion.
+
+### `skipped`
 
 The planner creates a run with `status=skipped` and `finished_at` set immediately when misfire policy dictates the occurrence should not execute. This preserves the audit trail - you can see what was skipped and why.
+
+The dispatcher also skips unsubmitted pending work when `queue_latest` or `replace` coalesces a backlog. It does not discard a tracker for work already accepted remotely.
 
 ## Occurrence identity
 
@@ -118,6 +93,7 @@ Each run has an `occurrence_key`:
 
 - **Scheduled:** `{schedule_id}:{nominal_time_rfc3339}` - e.g., `sch_01HZ123ABC:2026-04-01T09:00:00Z`
 - **Manual:** `manual:{run_id}`
+- **Event:** `event:<sha256>` derived from schedule ID, source, and event ID; identical deliveries reuse the original run
 
 The database enforces a unique constraint on `(occurrence_key, attempt)`. This prevents duplicate execution for the same logical occurrence at the same attempt number.
 
@@ -127,8 +103,12 @@ The database enforces a unique constraint on `(occurrence_key, attempt)`. This p
 - **Heartbeat**: renewed at `ttl/2` by the dispatcher goroutine managing the run.
 - **Expiry recovery**: runs on every dispatcher tick. Leases older than `expires_at` trigger recovery.
 - **Claim expiry**: `claimed` -> `pending` (re-dispatchable)
-- **Running expiry**: `running` -> `failed` -> retry per policy
+- **Ordinary running expiry**: `running` -> `failed` plus a new retry, or `dead_lettered` if no retry is available
+
+Tracked remote jobs use `running` -> `pending` recovery so the next owner can resume tracking. Check `external_job.status` as well as the local run status: a local timeout does not mean remote cancellation, and reconciliation preserves the original local outcome.
 
 ## Known gap
 
-`FinishRun` and the retry `InsertRun` are not in a single database transaction. If the process is killed between these two writes, the retry is lost. The original run is `failed` with no retry scheduled. This is a known limitation of the current beta line. In practice the window is extremely small (two sequential SQLite writes).
+Normal leased-worker failure records the outcome and its retry or dead letter in one transaction, fenced by the exact lease token. Tracked-job lease recovery requeues the existing tracker.
+
+Ordinary running-lease recovery still uses a separate outcome write and retry insertion. A crash between those writes can leave a failed ordinary run with no retry scheduled; recovery does not reconstruct the missing retry. This remaining window applies to both storage backends and must not be described as an exactly-once guarantee.

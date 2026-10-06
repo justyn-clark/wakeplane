@@ -19,7 +19,7 @@ Use the standalone daemon when:
 
 ## Current boundary
 
-Wakeplane's current embedding surface is source-level and uses `internal/...` packages from this repository. In `v0.2.x`, it should be treated as an internal integration surface for this module or closely related forks, not as a stable public Go package API.
+Wakeplane's embedding surface in the `v0.3.0-beta.1` source line uses `internal/...` packages from this repository. It remains an integration surface for this module or forks retaining Go's internal-package import boundary, not a stable public Go package API.
 
 If you want a shareable, stable way to use Wakeplane today, prefer the standalone daemon and HTTP API.
 
@@ -37,7 +37,7 @@ service, err := app.NewWithOptions(ctx, cfg,
 )
 ```
 
-`NewWithOptions` opens the SQLite database, runs migrations, and wires the planner, dispatcher, and executor registry. It does not start any background loops.
+`NewWithOptions` opens the configured SQLite or Postgres backend, runs its migrations, and wires the planner, dispatcher, and executor registry. It does not start any background loops.
 
 **Registration options:**
 
@@ -74,7 +74,7 @@ err := service.CloseContext(ctx)
 1. Cancel the run context - planner and dispatcher loops stop
 2. Wait for the run loop goroutine to exit
 3. Call `dispatcher.Shutdown` - cancel all active execution contexts, wait for in-flight work to drain
-4. Close the SQLite store
+4. Close the configured store
 
 Each phase emits structured log lines so you can trace where shutdown stalled.
 

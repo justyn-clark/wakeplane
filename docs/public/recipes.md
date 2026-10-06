@@ -18,7 +18,7 @@ In another terminal, start Wakeplane on localhost and open the console:
 WAKEPLANE_HTTP_ADDR=127.0.0.1:8080 wakeplane serve
 ```
 
-Choose **Create automation**, select a recipe, supply the runner URL, review timezone and timing preview, then save the paused draft. Enable it when ready. A manual trigger is also available for inspecting a first run. Watch its remote progress, open the result, and inspect receipts.
+Open `http://127.0.0.1:8080/` (which redirects to `/console/`), select **Schedules**, then choose **Use template** on a recipe card. Supply the runner URL and task details, review timezone and timing preview, then save the paused draft. Enable it when ready. A manual trigger is also available for inspecting a first run. Watch its remote progress, open the result, and inspect receipts.
 
 ## Developer: repository activity
 

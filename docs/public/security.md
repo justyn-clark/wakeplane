@@ -4,10 +4,13 @@
 
 **Wakeplane supports single-operator bearer authentication when configured, but it does not provide RBAC or multi-tenant access control.**
 
+This page covers the `v0.3.0-beta.1` source line. The published `v0.2.0-beta.1` has no built-in authentication: setting `WAKEPLANE_AUTH_TOKEN` does not protect that older binary. Use the matching source build for the controls described here, and check [Install](install.md) before choosing a binary.
+
 This is a deliberate and explicit constraint in the current release line. Every operator who deploys Wakeplane must understand what this means:
 
 - If `WAKEPLANE_AUTH_TOKEN` is unset, any process that can reach the HTTP port can read all schedules, list all runs, create schedules, trigger runs, delete schedules, access all run receipts, and use the operator console.
 - If `WAKEPLANE_AUTH_TOKEN` is set, `/v1/...` routes require `Authorization: Bearer <token>`.
+- Health, readiness, and static console assets remain unauthenticated. Console data and actions, MCP requests, event delivery, and remote-job reconciliation use the protected `/v1/...` boundary.
 - There are no sessions, users, roles, or per-schedule permissions.
 - HTTP request audit logging is enabled by default and can be disabled with `WAKEPLANE_REQUEST_AUDIT=false`.
 
@@ -66,15 +69,19 @@ Do not open a public GitHub issue for security vulnerabilities.
 
 Wakeplane's runtime dependencies:
 
-| Dependency                  | Purpose                                           |
-| --------------------------- | ------------------------------------------------- |
-| `github.com/robfig/cron/v3` | Cron expression parsing and next-fire calculation |
-| `modernc.org/sqlite`        | Pure-Go SQLite driver (no CGo)                    |
-| `github.com/oklog/ulid/v2`  | ULID generation for IDs                           |
-| `github.com/spf13/cobra`    | CLI framework                                     |
-| `golang.org/x/sync`         | `errgroup` for goroutine coordination             |
+| Dependency                               | Purpose                                                       |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| `github.com/robfig/cron/v3`              | Cron expression parsing and next-fire calculation             |
+| `modernc.org/sqlite`                     | Pure-Go SQLite driver (no CGo)                                |
+| `github.com/jackc/pgx/v5`                | Postgres database driver                                      |
+| `github.com/modelcontextprotocol/go-sdk` | MCP client/server protocol and transport                      |
+| `github.com/oklog/ulid/v2`               | ULID generation for IDs                                       |
+| `github.com/spf13/cobra`                 | CLI framework                                                 |
+| `golang.org/x/sync`                      | `errgroup` for goroutine coordination                         |
+| `golang.org/x/sys`                       | Platform system calls, including example-runner state locking |
+| `gopkg.in/yaml.v3`                       | Typed schedule manifest decoding                              |
 
-Dependency versions are pinned in `go.sum`. Verify with `go mod verify` before deploying in sensitive environments.
+Direct dependency versions are declared in `go.mod`; `go.sum` records dependency integrity hashes. The MCP SDK and its transitive dependencies do not add an OAuth authorization server to Wakeplane. Verify downloaded modules with `go mod verify` before deploying in sensitive environments.
 
 ## Summary
 
@@ -87,4 +94,4 @@ Dependency versions are pinned in `go.sum`. Verify with `go mod verify` before d
 | Multi-tenancy              | No - not implemented                         |
 | Trusted-network deployment | Yes - supported and required                 |
 | Reverse proxy pattern      | Yes - recommended                            |
-| Go module integrity        | Yes - `go.sum` pinned                        |
+| Go module integrity        | Versions in `go.mod`; hashes in `go.sum`     |

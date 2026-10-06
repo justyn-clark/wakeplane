@@ -3,7 +3,7 @@
 
 This page is generated from the real Cobra command tree in `internal/cli/root.go`.
 
-> **Status:** current public operator surface for Wakeplane `0.3.0-beta.1`. If a command is not listed here, it is not shipped.
+> **Source version:** operator surface for Wakeplane `0.3.0-beta.1`. Use a matching source build or published release. See [Install](install.md) for public binary availability. The command tree below is generated from this source version.
 
 ## Root Command
 

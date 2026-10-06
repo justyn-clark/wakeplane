@@ -2,13 +2,15 @@
 
 Operational reference for running Wakeplane in production or staging environments.
 
+This runbook covers the `v0.3.0-beta.1` source line. Check [Install](install.md) for binary availability; older published binaries do not provide all of these controls.
+
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md) before deploying.
 
 ## Startup
 
 ```bash
 WAKEPLANE_DB_PATH=/var/lib/wakeplane/data.db \
-WAKEPLANE_HTTP_ADDR=:8080 \
+WAKEPLANE_HTTP_ADDR=127.0.0.1:8080 \
 WAKEPLANE_WORKER_ID=wrk_prod_01 \
 wakeplane serve
 ```
@@ -20,7 +22,7 @@ curl http://localhost:8080/healthz   # {"ok":true}
 curl http://localhost:8080/readyz    # {"ok":true,"storage":"ok"}
 ```
 
-If readiness fails (`"storage":"error"`), check SQLite file permissions and disk space.
+If readiness fails (`"storage":"error"`), check SQLite file permissions and disk space, or the configured Postgres URL, credentials, network access, and database availability.
 
 ## Health endpoints
 
@@ -86,7 +88,9 @@ Scrape `GET /v1/metrics` (Prometheus text format).
 
 **Recovery:** Automatic on next startup. The dispatcher detects expired leases and marks running runs as `failed`, then retries or dead-letters per schedule policy.
 
-**Action:** No manual intervention needed. Monitor `claimed_but_expired_total`.
+For tracked HTTP jobs, recovery instead resumes observation of the persisted remote job or submission intent. Its original target and deadline remain in force.
+
+**Action:** Monitor `claimed_but_expired_total` and the run's receipts. If local tracking has ended but remote completion is unknown, use `POST /v1/runs/{id}/reconcile` to observe status. This does not resubmit work; a runner without a known identity or lookup capability requires runner-side investigation.
 
 ---
 
@@ -191,7 +195,7 @@ wakeplane schedule import --file schedules.json
 wakeplane status
 ```
 
-This bridge moves schedule definitions only. Use database-native backup/restore when you need run history, receipts, request audit logs, leases, or dead letters.
+This bridge moves schedule definitions only and creates new schedule IDs. Use database-native backup/restore when you need run history, receipts, request audit logs, leases, dead letters, external-job checkpoints, or event replay protection.
 
 ## Environment reference
 
@@ -221,6 +225,8 @@ Wakeplane records request audit rows for `/v1/...` routes when `WAKEPLANE_REQUES
 Wakeplane bounds receipt body storage with `WAKEPLANE_RECEIPT_MAX_BYTES`. Oversized receipt bodies are truncated before storage and marked with a truncation note.
 
 Set `WAKEPLANE_RUN_RETENTION_DAYS` to prune terminal runs older than the configured number of days. Pruning deletes terminal run rows and cascades to attached receipts and dead letters. Active, pending, claimed, running, and retry-queued runs are not pruned.
+
+Unresolved remote-job attempts remain inspectable for recovery even when locally terminal. Confirmed terminal checkpoints are compacted after all their attempts are pruned. Event deduplication records survive run pruning and remain until schedule deletion. Audit rows have no automatic pruning policy. Account for those records separately when sizing storage; see [Automation](automation.md).
 
 ## Production Drills
 

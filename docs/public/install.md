@@ -2,9 +2,11 @@
 
 Use one of these supported install paths for Wakeplane. The canonical repository is [github.com/justyn-clark/wakeplane](https://github.com/justyn-clark/wakeplane).
 
-> **Operator warning:** installability does not change the security model. Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
+> **Operator warning:** the published `v0.2.0-beta.1` has no built-in authentication. Bearer authentication is available in the `v0.3.0-beta.1` source line, with no RBAC or multi-tenancy. For either version, bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
-The commands below pin the last published release, `v0.2.0-beta.1`. The new automation capabilities are in the `v0.3.0-beta.1` source line; build that source until a matching release is published.
+The release-download and `go install` commands below pin the last published release, `v0.2.0-beta.1`. Built-in bearer authentication, Postgres, the console, and the new automation capabilities are in the `v0.3.0-beta.1` source line; use the source-build option until a matching release is published. Verify the resulting version before following the current API and operator guides.
+
+Other later source capabilities include request audit, configurable receipt limits, terminal-run retention, the `status` command, and schedule update/export/import commands. These are absent from the legacy published binaries. Environment settings for those controls do not add them to an older binary.
 
 ## Option 1: GitHub Releases
 
@@ -62,7 +64,7 @@ go build ./cmd/wakeplaned
 ```bash
 ./wakeplane version
 WAKEPLANE_DB_PATH=./wakeplane.db \
-WAKEPLANE_HTTP_ADDR=:8080 \
+WAKEPLANE_HTTP_ADDR=127.0.0.1:8080 \
 WAKEPLANE_WORKER_ID=wrk_local \
 ./wakeplane serve
 ```

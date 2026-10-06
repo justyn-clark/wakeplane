@@ -2,7 +2,7 @@
 
 Wakeplane is a scheduling control plane, not a thin cron wrapper. Understanding its model makes the API, policies, and durability guarantees predictable.
 
-This page describes the `v0.3.0-beta.1` source line. See [Install](install.md) for published-binary availability and legacy limitations.
+This page describes the published `v0.3.0-beta.1` beta. See [Install](install.md) for downloads and legacy limitations.
 
 ## The problem
 

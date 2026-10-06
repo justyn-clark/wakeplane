@@ -2,7 +2,7 @@
 
 Operational reference for running Wakeplane in production or staging environments.
 
-This runbook covers the `v0.3.0-beta.1` source line. Check [Install](install.md) for binary availability; older published binaries do not provide all of these controls.
+This runbook covers the published `v0.3.0-beta.1` beta. Check [Install](install.md) before upgrading; older binaries do not provide all of these controls.
 
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md) before deploying.
 

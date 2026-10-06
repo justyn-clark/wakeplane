@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -15,6 +16,8 @@ import (
 
 	"github.com/justyn-clark/wakeplane/internal/app"
 	"github.com/justyn-clark/wakeplane/internal/domain"
+	wakeplaneMCP "github.com/justyn-clark/wakeplane/internal/mcp"
+	"github.com/justyn-clark/wakeplane/internal/templates"
 )
 
 //go:embed console/*
@@ -22,6 +25,55 @@ var consoleFS embed.FS
 
 func NewMux(service *app.Service) http.Handler {
 	mux := http.NewServeMux()
+	mcpHandler := wakeplaneMCP.NewHandler(service, service.Version())
+	mux.HandleFunc("POST /v1/mcp", mcpHandler.ServeHTTP)
+	mux.HandleFunc("GET /v1/mcp", mcpHandler.ServeHTTP)
+	mux.HandleFunc("DELETE /v1/mcp", mcpHandler.ServeHTTP)
+	mux.HandleFunc("GET /v1/templates", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]any{"items": templates.List()})
+	})
+	mux.HandleFunc("POST /v1/runs/{id}/reconcile", func(w http.ResponseWriter, r *http.Request) {
+		run, err := service.ReconcileExternalJob(r.Context(), r.PathValue("id"))
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, run)
+	})
+	mux.HandleFunc("POST /v1/schedules/preview", func(w http.ResponseWriter, r *http.Request) {
+		var req domain.CreateScheduleRequest
+		if err := decodeBoundedJSON(w, r, &req); err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		runs, errs, err := service.PreviewSchedule(r.Context(), req)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if len(errs) > 0 {
+			writeAPIError(w, domain.NewValidationError(errs))
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"next_runs": runs})
+	})
+	mux.HandleFunc("POST /v1/schedules/{id}/events", func(w http.ResponseWriter, r *http.Request) {
+		var event domain.TriggerEvent
+		if err := decodeBoundedJSON(w, r, &event); err != nil {
+			writeError(w, domain.NewBadRequestError(err.Error()))
+			return
+		}
+		run, created, err := service.TriggerEvent(r.Context(), r.PathValue("id"), event)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		status := http.StatusOK
+		if created {
+			status = http.StatusCreated
+		}
+		writeJSON(w, status, map[string]any{"run": run, "created": created})
+	})
 
 	consoleAssets, err := fs.Sub(consoleFS, "console")
 	if err != nil {
@@ -246,6 +298,21 @@ func NewMux(service *app.Service) http.Handler {
 	})
 
 	return controlPlaneMiddleware(service, mux)
+}
+
+func decodeBoundedJSON(w http.ResponseWriter, r *http.Request, out any) error {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	dec := json.NewDecoder(r.Body)
+	dec.UseNumber()
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(out); err != nil {
+		return err
+	}
+	var extra any
+	if err := dec.Decode(&extra); err != io.EOF {
+		return fmt.Errorf("request must contain exactly one JSON object")
+	}
+	return nil
 }
 
 type statusRecorder struct {

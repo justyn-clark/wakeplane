@@ -36,6 +36,18 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install formatting tools
+        run: pnpm install --frozen-lockfile
+      - name: Lint, format, and console tests
+        run: pnpm run check
+      - name: Vet Go code
+        run: go vet ./...
+
       - name: Verify formatting
         run: |
           if [ -n "$(gofmt -l .)" ]; then
@@ -48,7 +60,7 @@ jobs:
         run: go run ./tools/docsgen --check
 
       - name: Run tests
-        run: go test ./... -count=1 -timeout 120s
+        run: go test -race ./... -count=1 -timeout 120s
 
       - name: Run Postgres integration tests
         env:
@@ -64,10 +76,14 @@ jobs:
           tar -C dist/smoke -xzf "dist/releases/wakeplane_${GITHUB_REF_NAME#v}_linux_amd64.tar.gz"
           ./dist/smoke/wakeplane version
           ./dist/smoke/wakeplaned version
+          test "$(./dist/smoke/wakeplane version)" = "${GITHUB_REF_NAME#v}"
+          test "$(./dist/smoke/wakeplaned version)" = "${GITHUB_REF_NAME#v}"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: docs/public/releases/${{ github.ref_name }}.md
           files: |
             dist/releases/*.tar.gz
             dist/releases/checksums.txt

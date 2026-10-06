@@ -70,6 +70,8 @@ func resetPostgresCLITestDB(t *testing.T, databaseURL string) {
 	}
 	defer db.Close()
 	for _, table := range []string{
+		"trigger_events",
+		"external_jobs",
 		"request_audit_logs",
 		"execution_receipts",
 		"dead_letters",

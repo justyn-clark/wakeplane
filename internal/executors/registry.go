@@ -22,12 +22,18 @@ type Result struct {
 	ErrorText      string
 	Receipts       []Receipt
 	Cancelled      bool
+	// Deferred releases local work during shutdown without declaring the remote
+	// job cancelled. The persisted occurrence resumes after the next claim.
+	Deferred bool
+	// TerminalFailure prevents resubmitting an already failed remote job.
+	TerminalFailure bool
 }
 
 type ExecuteRequest struct {
-	Schedule domain.Schedule
-	Run      domain.Run
-	Timeout  int
+	Schedule   domain.Schedule
+	Run        domain.Run
+	Timeout    int
+	Checkpoint func(context.Context, domain.ExternalJob) error
 }
 
 type Executor interface {

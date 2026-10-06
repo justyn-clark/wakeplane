@@ -33,6 +33,9 @@ dist/
 /wakeplaned
 /embedded
 artifacts/
+/output/playwright/
+/.playwright-cli/
+examples/automation-runner/state/
 wakeplane.dev.db*
 
 # Editor/IDE

@@ -77,6 +77,65 @@ type TargetSpec struct {
 	Args       []string          `json:"args,omitempty" yaml:"args,omitempty"`
 	WorkflowID string            `json:"workflow_id,omitempty" yaml:"workflow_id,omitempty"`
 	Input      map[string]any    `json:"input,omitempty" yaml:"input,omitempty"`
+	HTTPJob    *HTTPJobSpec      `json:"http_job,omitempty" yaml:"http_job,omitempty"`
+}
+
+// HTTPJobSpec selects the durable asynchronous runner contract for an HTTP target.
+// The runner must deduplicate submissions by the Idempotency-Key header.
+type HTTPJobSpec struct {
+	PollIntervalSeconds int    `json:"poll_interval_seconds,omitempty" yaml:"poll_interval_seconds,omitempty"`
+	LookupURL           string `json:"lookup_url,omitempty" yaml:"lookup_url,omitempty"`
+}
+
+type ExternalJobStatus string
+
+const (
+	ExternalJobSubmitting ExternalJobStatus = "submitting"
+	ExternalJobQueued     ExternalJobStatus = "queued"
+	ExternalJobRunning    ExternalJobStatus = "running"
+	ExternalJobSucceeded  ExternalJobStatus = "succeeded"
+	ExternalJobFailed     ExternalJobStatus = "failed"
+	ExternalJobCancelled  ExternalJobStatus = "cancelled"
+)
+
+type JobProgress struct {
+	Percent *float64 `json:"percent,omitempty"`
+	Message string   `json:"message,omitempty"`
+}
+
+type JobArtifact struct {
+	Name        string `json:"name"`
+	URL         string `json:"url"`
+	ContentType string `json:"content_type,omitempty"`
+}
+
+// ExternalJob is shared by all attempts for one occurrence. RequestTarget is an
+// immutable execution snapshot, deliberately excluded from the public run API.
+type ExternalJob struct {
+	JobID         string            `json:"job_id,omitempty"`
+	StatusURL     string            `json:"status_url,omitempty"`
+	Status        ExternalJobStatus `json:"status"`
+	Progress      *JobProgress      `json:"progress,omitempty"`
+	Result        json.RawMessage   `json:"result,omitempty"`
+	Artifacts     []JobArtifact     `json:"artifacts,omitempty"`
+	Error         string            `json:"error,omitempty"`
+	SubmittedAt   time.Time         `json:"submitted_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	DeadlineAt    time.Time         `json:"deadline_at"`
+	Compacted     bool              `json:"compacted,omitempty"`
+	CanReconcile  bool              `json:"can_reconcile"`
+	RequestTarget TargetSpec        `json:"-"`
+}
+
+func (j ExternalJob) Terminal() bool {
+	return j.Status == ExternalJobSucceeded || j.Status == ExternalJobFailed || j.Status == ExternalJobCancelled
+}
+
+func (j ExternalJob) ReconciliationAvailable() bool {
+	if j.Compacted || j.Terminal() {
+		return false
+	}
+	return (j.JobID != "" && j.StatusURL != "") || (j.Status == ExternalJobSubmitting && j.RequestTarget.HTTPJob != nil && j.RequestTarget.HTTPJob.LookupURL != "")
 }
 
 type Policy struct {
@@ -121,27 +180,30 @@ type Receipt struct {
 }
 
 type Run struct {
-	ID                string          `json:"id"`
-	ScheduleID        string          `json:"schedule_id"`
-	OccurrenceKey     string          `json:"occurrence_key"`
-	NominalTime       time.Time       `json:"nominal_time"`
-	DueTime           time.Time       `json:"due_time"`
-	Status            RunStatus       `json:"status"`
-	Attempt           int             `json:"attempt"`
-	ClaimedByWorkerID *string         `json:"claimed_by_worker_id,omitempty"`
-	ClaimExpiresAt    *time.Time      `json:"claim_expires_at,omitempty"`
-	StartedAt         *time.Time      `json:"started_at,omitempty"`
-	FinishedAt        *time.Time      `json:"finished_at,omitempty"`
-	HTTPStatusCode    *int            `json:"http_status_code,omitempty"`
-	ExitCode          *int            `json:"exit_code,omitempty"`
-	ResultJSON        json.RawMessage `json:"result_json,omitempty"`
-	ErrorText         *string         `json:"error_text,omitempty"`
-	RetryAvailableAt  *time.Time      `json:"retry_available_at,omitempty"`
-	CreatedAt         time.Time       `json:"created_at"`
-	UpdatedAt         time.Time       `json:"updated_at"`
-	Receipts          []Receipt       `json:"receipts,omitempty"`
-	Attempts          []RunSummary    `json:"attempts,omitempty"`
-	DeadLetter        *DeadLetter     `json:"dead_letter,omitempty"`
+	ID                  string          `json:"id"`
+	ScheduleID          string          `json:"schedule_id"`
+	OccurrenceKey       string          `json:"occurrence_key"`
+	NominalTime         time.Time       `json:"nominal_time"`
+	DueTime             time.Time       `json:"due_time"`
+	Status              RunStatus       `json:"status"`
+	Attempt             int             `json:"attempt"`
+	ClaimedByWorkerID   *string         `json:"claimed_by_worker_id,omitempty"`
+	ClaimExpiresAt      *time.Time      `json:"claim_expires_at,omitempty"`
+	StartedAt           *time.Time      `json:"started_at,omitempty"`
+	FinishedAt          *time.Time      `json:"finished_at,omitempty"`
+	HTTPStatusCode      *int            `json:"http_status_code,omitempty"`
+	ExitCode            *int            `json:"exit_code,omitempty"`
+	ResultJSON          json.RawMessage `json:"result_json,omitempty"`
+	ErrorText           *string         `json:"error_text,omitempty"`
+	RetryAvailableAt    *time.Time      `json:"retry_available_at,omitempty"`
+	CreatedAt           time.Time       `json:"created_at"`
+	UpdatedAt           time.Time       `json:"updated_at"`
+	Receipts            []Receipt       `json:"receipts,omitempty"`
+	Attempts            []RunSummary    `json:"attempts,omitempty"`
+	DeadLetter          *DeadLetter     `json:"dead_letter,omitempty"`
+	ExternalJob         *ExternalJob    `json:"external_job,omitempty"`
+	Event               *TriggerEvent   `json:"event,omitempty"`
+	ExecutionLeaseToken string          `json:"-"`
 }
 
 type DeadLetter struct {

@@ -3,6 +3,7 @@ package planner
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/justyn-clark/wakeplane/internal/domain"
@@ -11,10 +12,11 @@ import (
 )
 
 type Planner struct {
-	store    *store.Store
-	logger   *slog.Logger
-	now      func() time.Time
-	lastTick time.Time
+	store      *store.Store
+	logger     *slog.Logger
+	now        func() time.Time
+	lastTickMu sync.RWMutex
+	lastTick   time.Time
 }
 
 func New(st *store.Store, logger *slog.Logger) *Planner {
@@ -28,12 +30,16 @@ func New(st *store.Store, logger *slog.Logger) *Planner {
 }
 
 func (p *Planner) LastTick() time.Time {
+	p.lastTickMu.RLock()
+	defer p.lastTickMu.RUnlock()
 	return p.lastTick
 }
 
 func (p *Planner) Tick(ctx context.Context) error {
 	now := p.now()
+	p.lastTickMu.Lock()
 	p.lastTick = now
+	p.lastTickMu.Unlock()
 	schedules, err := p.store.ListAllSchedules(ctx)
 	if err != nil {
 		return err

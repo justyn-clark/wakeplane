@@ -2,7 +2,7 @@
 
 Wakeplane serves a compact single-operator console from the daemon at `/console/`.
 
-The console is an inspection and recovery surface, not a full visual schedule builder. YAML, API, and CLI remain the primary creation and editing paths for now.
+The console supports guided schedule creation and editing alongside inspection and recovery. Start with a recipe, choose an explicit timezone and target, preview the next occurrences, then save. New drafts start paused unless you explicitly enable them. YAML, API, and CLI remain available.
 
 ## What it shows
 
@@ -20,9 +20,13 @@ The console supports the same safe schedule actions as the API:
 - pause
 - resume
 - trigger now with a reason
+- create or edit a schedule with validated timing, target, policy, and retry settings
+- preview up to five next-run times without storing or executing the draft
 - copy schedule or run IDs
 
 It does not bypass policy enforcement, durable run recording, target typing, auth, or request audit logging.
+
+Tracked HTTP jobs show the runner's durable identity, progress, result, and artifact links. An accepted remote job remains unfinished until the runner reports a terminal status. Timeout stops local tracking; it does not promise remote cancellation. See [Automation](automation.md) and [Recipes](recipes.md).
 
 ## Auth boundary
 

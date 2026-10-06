@@ -2,7 +2,6 @@ package timecalc
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/justyn-clark/wakeplane/internal/domain"
@@ -23,27 +22,48 @@ func NextAfter(schedule domain.Schedule, after time.Time) (*time.Time, error) {
 			return nil, err
 		}
 		base := after.In(loc)
+		if schedule.StartAt != nil && schedule.StartAt.After(after) {
+			base = schedule.StartAt.Add(-time.Nanosecond).In(loc)
+		}
 		next := spec.Next(base)
+		if next.IsZero() {
+			return nil, nil
+		}
 		nextUTC := next.UTC()
 		if schedule.EndAt != nil && nextUTC.After(schedule.EndAt.UTC()) {
 			return nil, nil
 		}
 		return &nextUTC, nil
 	case domain.ScheduleKindInterval:
+		if schedule.Schedule.EverySeconds <= 0 || int64(schedule.Schedule.EverySeconds) > int64((1<<63-1)/int64(time.Second)) {
+			return nil, fmt.Errorf("interval must have a positive supported duration")
+		}
 		anchor := schedule.CreatedAt.UTC()
 		if schedule.Schedule.AnchorAt != nil {
 			anchor = schedule.Schedule.AnchorAt.UTC()
 		} else if schedule.StartAt != nil {
 			anchor = schedule.StartAt.UTC()
 		}
-		if after.UTC().Before(anchor) {
+		base := after.UTC()
+		if schedule.StartAt != nil && schedule.StartAt.After(after) {
+			base = schedule.StartAt.Add(-time.Nanosecond).UTC()
+		}
+		if base.Before(anchor) {
 			next := anchor
 			return bound(schedule, next)
 		}
-		interval := time.Duration(schedule.Schedule.EverySeconds) * time.Second
-		elapsed := after.UTC().Sub(anchor)
-		steps := int(math.Floor(float64(elapsed)/float64(interval))) + 1
-		next := anchor.Add(time.Duration(steps) * interval)
+		// Use exact seconds plus the anchor's nanoseconds. Duration subtraction
+		// saturates for distant anchors, and float division rounds near slots.
+		intervalSeconds := int64(schedule.Schedule.EverySeconds)
+		elapsedSeconds := base.Unix() - anchor.Unix()
+		if base.Nanosecond() < anchor.Nanosecond() {
+			elapsedSeconds--
+		}
+		steps := elapsedSeconds/intervalSeconds + 1
+		next := time.Unix(anchor.Unix()+steps*intervalSeconds, int64(anchor.Nanosecond())).UTC()
+		if next.Year() > 9999 {
+			return nil, nil // RFC3339 JSON timestamps cannot represent later slots.
+		}
 		return bound(schedule, next)
 	case domain.ScheduleKindOnce:
 		if schedule.Schedule.At == nil {
@@ -62,7 +82,7 @@ func NextAfter(schedule domain.Schedule, after time.Time) (*time.Time, error) {
 func bound(schedule domain.Schedule, next time.Time) (*time.Time, error) {
 	next = next.UTC()
 	if schedule.StartAt != nil && next.Before(schedule.StartAt.UTC()) {
-		return &[]time.Time{schedule.StartAt.UTC()}[0], nil
+		return nil, nil
 	}
 	if schedule.EndAt != nil && next.After(schedule.EndAt.UTC()) {
 		return nil, nil

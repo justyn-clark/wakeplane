@@ -22,9 +22,14 @@ type Dispatcher struct {
 	leaseTTL  time.Duration
 	now       func() time.Time
 	activeMu  sync.Mutex
-	active    map[string]context.CancelFunc
+	active    map[string]activeExecution
 	activeWG  sync.WaitGroup
 	lastError error
+}
+
+type activeExecution struct {
+	token  string
+	cancel context.CancelFunc
 }
 
 func New(st *store.Store, registry *executors.Registry, logger *slog.Logger, workerID string, leaseTTL time.Duration) *Dispatcher {
@@ -37,7 +42,7 @@ func New(st *store.Store, registry *executors.Registry, logger *slog.Logger, wor
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
-		active: map[string]context.CancelFunc{},
+		active: map[string]activeExecution{},
 	}
 }
 
@@ -70,11 +75,12 @@ func (d *Dispatcher) Tick(ctx context.Context) error {
 		if !claimable {
 			continue
 		}
-		claimed, err := d.store.ClaimRun(ctx, schedule, run.ID, d.workerID, now, d.leaseTTL)
+		claimed, token, err := d.store.ClaimRunWithToken(ctx, schedule, run.ID, d.workerID, now, d.leaseTTL)
 		if err != nil || !claimed {
 			continue
 		}
 		run.ClaimedByWorkerID = &d.workerID
+		run.ExecutionLeaseToken = token
 		expires := now.Add(d.leaseTTL)
 		run.ClaimExpiresAt = &expires
 		d.activeWG.Add(1)
@@ -99,6 +105,16 @@ func (d *Dispatcher) recoverExpiredLeases(ctx context.Context, now time.Time) er
 			}
 		case domain.RunRunning:
 			d.cancelRun(item.Run.ID)
+			job, err := d.store.GetExternalJob(ctx, item.Run.OccurrenceKey)
+			if err != nil {
+				return err
+			}
+			if job != nil || item.Schedule.Target.HTTPJob != nil {
+				if err := d.store.RequeueExternalRun(ctx, item.Run.ID, "", "", now, true); err != nil && err != store.ErrLeaseLost {
+					return err
+				}
+				continue
+			}
 			result := executors.Result{
 				ErrorText: "worker lease expired during execution",
 			}
@@ -116,7 +132,7 @@ func (d *Dispatcher) recoverExpiredLeases(ctx context.Context, now time.Time) er
 }
 
 func (d *Dispatcher) prepareScheduleForClaim(ctx context.Context, schedule domain.Schedule, run domain.Run) (bool, error) {
-	activeCount, err := d.store.ActiveRunCount(ctx, schedule.ID)
+	activeCount, err := d.store.ActiveOtherOccurrenceCount(ctx, schedule.ID, run.OccurrenceKey)
 	if err != nil {
 		return false, err
 	}
@@ -137,6 +153,15 @@ func (d *Dispatcher) prepareScheduleForClaim(ctx context.Context, schedule domai
 	case domain.OverlapQueueLatest:
 		return false, d.enforceQueuePolicy(ctx, schedule)
 	case domain.OverlapReplace:
+		remoteCount, err := d.store.UnresolvedExternalJobCount(ctx, schedule.ID)
+		if err != nil {
+			return false, err
+		}
+		if remoteCount > 0 {
+			// A live schedule edit cannot turn remote work into cancellable local
+			// work. Keep tracking it until the runner confirms completion.
+			return false, d.enforceQueuePolicy(ctx, schedule)
+		}
 		activeRuns, err := d.store.ListActiveRuns(ctx, schedule.ID)
 		if err != nil {
 			return false, err
@@ -155,6 +180,19 @@ func (d *Dispatcher) enforceQueuePolicy(ctx context.Context, schedule domain.Sch
 	if err != nil {
 		return err
 	}
+	// Queue coalescing only skips work that has not been submitted. A pending
+	// tracker may already represent active remote work after a restart/retry.
+	unsubmitted := make([]domain.Run, 0, len(pending))
+	for _, run := range pending {
+		job, err := d.store.GetExternalJob(ctx, run.OccurrenceKey)
+		if err != nil {
+			return err
+		}
+		if job == nil {
+			unsubmitted = append(unsubmitted, run)
+		}
+	}
+	pending = unsubmitted
 	if len(pending) <= 1 {
 		return nil
 	}
@@ -181,14 +219,45 @@ func (d *Dispatcher) enforceQueuePolicy(ctx context.Context, schedule domain.Sch
 
 func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, run domain.Run) {
 	startedAt := d.now()
-	if err := d.store.MarkRunRunning(ctx, run.ID, startedAt); err != nil {
+	var err error
+	run.ExternalJob, err = d.store.GetExternalJob(ctx, run.OccurrenceKey)
+	if err != nil {
+		d.logger.Error("load external job", "run_id", run.ID, "error", err)
+		return
+	}
+	run.Event, err = d.store.GetRunEvent(ctx, run.OccurrenceKey)
+	if err != nil {
+		d.logger.Error("load trigger event", "run_id", run.ID, "error", err)
+		return
+	}
+	external := run.ExternalJob != nil || schedule.Target.HTTPJob != nil
+	if external && run.ExecutionLeaseToken == "" {
+		run.ExecutionLeaseToken, err = d.store.ExecutionLeaseToken(ctx, run.ID, d.workerID)
+	}
+	if err == nil && run.ExecutionLeaseToken != "" {
+		err = d.store.MarkRunRunningWithLease(ctx, run.ID, d.workerID, run.ExecutionLeaseToken, startedAt)
+	} else if err == nil {
+		err = d.store.MarkRunRunning(ctx, run.ID, startedAt)
+	}
+	if err != nil {
 		d.logger.Error("mark run running", "run_id", run.ID, "error", err)
 		return
 	}
-	execCtx, cancel := context.WithTimeout(ctx, time.Duration(schedule.Policy.TimeoutSeconds)*time.Second)
-	d.registerCancel(run.ID, cancel)
+	if run.StartedAt == nil {
+		run.StartedAt = &startedAt
+	}
+	deadline := startedAt.Add(time.Duration(schedule.Policy.TimeoutSeconds) * time.Second)
+	if external {
+		deadline = run.StartedAt.Add(time.Duration(schedule.Policy.TimeoutSeconds) * time.Second)
+		if run.ExternalJob != nil {
+			deadline = run.ExternalJob.DeadlineAt
+		}
+	}
+	execCtx, cancel := context.WithDeadline(ctx, deadline)
+	activeToken := domain.NewID("execution")
+	d.registerCancel(run.ID, activeToken, cancel)
 	defer func() {
-		d.unregisterCancel(run.ID)
+		d.unregisterCancel(run.ID, activeToken)
 		cancel()
 	}()
 
@@ -204,14 +273,24 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 			case <-execDone:
 				return nil
 			case <-ticker.C:
-				if err := d.store.RenewLease(context.Background(), run.ID, d.workerID, d.now(), d.leaseTTL); err != nil {
+				var err error
+				if run.ExecutionLeaseToken != "" {
+					err = d.store.RenewLeaseWithToken(context.Background(), run.ID, d.workerID, run.ExecutionLeaseToken, d.now(), d.leaseTTL)
+				} else {
+					err = d.store.RenewLease(context.Background(), run.ID, d.workerID, d.now(), d.leaseTTL)
+				}
+				if err != nil {
 					return err
 				}
 			}
 		}
 	})
 
-	executor, ok := d.registry.Get(schedule.Target.Kind)
+	kind := schedule.Target.Kind
+	if run.ExternalJob != nil {
+		kind = domain.TargetKindHTTP
+	}
+	executor, ok := d.registry.Get(kind)
 	if !ok {
 		d.completeFailure(context.Background(), schedule, run, fmt.Errorf("executor %q not registered", schedule.Target.Kind), true)
 		return
@@ -220,12 +299,27 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 	var result executors.Result
 	group.Go(func() error {
 		defer close(execDone)
-		result = executor.Execute(execCtx, executors.ExecuteRequest{Schedule: schedule, Run: run, Timeout: schedule.Policy.TimeoutSeconds})
+		result = executor.Execute(heartbeatCtx, executors.ExecuteRequest{
+			Schedule: schedule, Run: run, Timeout: schedule.Policy.TimeoutSeconds,
+			Checkpoint: func(checkpointCtx context.Context, job domain.ExternalJob) error {
+				return d.store.SaveExternalJob(checkpointCtx, run, d.workerID, run.ExecutionLeaseToken, job, d.now())
+			},
+		})
 		return nil
 	})
 
 	if err := group.Wait(); err != nil {
+		if external {
+			d.logger.Error("external job execution lease lost; resume after expiry", "run_id", run.ID, "error", err)
+			return
+		}
 		d.completeFailure(context.Background(), schedule, run, err, false)
+		return
+	}
+	if result.Deferred && external {
+		if err := d.store.RequeueExternalRun(context.Background(), run.ID, d.workerID, run.ExecutionLeaseToken, d.now(), false); err != nil {
+			d.logger.Error("release external job tracking", "run_id", run.ID, "error", err)
+		}
 		return
 	}
 
@@ -236,14 +330,14 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 	finishedAt := d.now()
 	run.Status = domain.RunSucceeded
 	run.ClaimExpiresAt = nil
-	run.StartedAt = &startedAt
 	run.FinishedAt = &finishedAt
 	run.HTTPStatusCode = result.HTTPStatusCode
 	run.ExitCode = result.ExitCode
 	run.ResultJSON = result.ResultJSON
 	run.UpdatedAt = finishedAt
-	if err := d.store.FinishRun(context.Background(), run); err != nil {
+	if err := d.finishRun(context.Background(), run); err != nil {
 		d.logger.Error("finish succeeded run", "run_id", run.ID, "error", err)
+		return
 	}
 	for _, receipt := range result.Receipts {
 		_ = d.store.InsertReceipt(context.Background(), domain.Receipt{
@@ -255,9 +349,7 @@ func (d *Dispatcher) executeRun(ctx context.Context, schedule domain.Schedule, r
 			CreatedAt:   finishedAt,
 		})
 	}
-	schedule.LastRunAt = &finishedAt
-	schedule.UpdatedAt = finishedAt
-	_ = d.store.UpdateSchedule(context.Background(), schedule)
+	_ = d.store.RecordScheduleCompletion(context.Background(), schedule.ID, finishedAt)
 }
 
 func (d *Dispatcher) completeFailure(ctx context.Context, schedule domain.Schedule, run domain.Run, err error, fatal bool) {
@@ -279,7 +371,7 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 	run.UpdatedAt = finishedAt
 	if result.Cancelled {
 		run.Status = domain.RunCancelled
-	} else if shouldRetry(schedule, run.Attempt) {
+	} else if shouldRetry(schedule, run.Attempt) && !result.TerminalFailure {
 		run.Status = domain.RunFailed
 	} else {
 		run.Status = domain.RunDeadLettered
@@ -287,8 +379,23 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 	if result.ErrorText != "" {
 		run.ErrorText = &result.ErrorText
 	}
-	if err := d.store.FinishRun(ctx, run); err != nil {
-		d.logger.Error("finish failed run", "run_id", run.ID, "error", err)
+	var finishErr error
+	if run.ExecutionLeaseToken != "" {
+		var retry *domain.Run
+		var dead *domain.DeadLetter
+		if run.Status == domain.RunFailed {
+			retryAt := backoffFor(schedule.Retry, run.Attempt, finishedAt)
+			retry = &domain.Run{ID: domain.NewID("run"), ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, NominalTime: run.NominalTime, DueTime: retryAt, Status: domain.RunRetryScheduled, Attempt: run.Attempt + 1, RetryAvailableAt: &retryAt, CreatedAt: finishedAt, UpdatedAt: finishedAt}
+		}
+		if run.Status == domain.RunDeadLettered {
+			dead = &domain.DeadLetter{ID: domain.NewID("dlq"), RunID: run.ID, ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, Reason: result.ErrorText, PayloadJSON: run.ResultJSON, CreatedAt: finishedAt}
+		}
+		finishErr = d.store.FinishExternalFailure(ctx, run, d.workerID, run.ExecutionLeaseToken, retry, dead, finishedAt)
+	} else {
+		finishErr = d.finishRun(ctx, run)
+	}
+	if finishErr != nil {
+		d.logger.Error("finish failed run", "run_id", run.ID, "error", finishErr)
 		return
 	}
 	for _, receipt := range result.Receipts {
@@ -301,7 +408,10 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 			CreatedAt:   finishedAt,
 		})
 	}
-	if shouldRetry(schedule, run.Attempt) && !result.Cancelled {
+	if run.ExecutionLeaseToken != "" {
+		return
+	}
+	if shouldRetry(schedule, run.Attempt) && !result.Cancelled && !result.TerminalFailure {
 		retryAt := backoffFor(schedule.Retry, run.Attempt, finishedAt)
 		nextRun := domain.Run{
 			ID:               domain.NewID("run"),
@@ -333,6 +443,13 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 	}
 }
 
+func (d *Dispatcher) finishRun(ctx context.Context, run domain.Run) error {
+	if run.ExecutionLeaseToken != "" {
+		return d.store.FinishRunWithLease(ctx, run, d.workerID, run.ExecutionLeaseToken, d.now())
+	}
+	return d.store.FinishRun(ctx, run)
+}
+
 func shouldRetry(schedule domain.Schedule, attempt int) bool {
 	if schedule.Retry.Strategy == domain.RetryNone {
 		return false
@@ -343,6 +460,10 @@ func shouldRetry(schedule domain.Schedule, attempt int) bool {
 func backoffFor(retry domain.RetryPolicy, attempt int, now time.Time) time.Time {
 	delay := retry.InitialDelaySeconds
 	for i := 1; i < attempt; i++ {
+		if delay > retry.MaxDelaySeconds/2 {
+			delay = retry.MaxDelaySeconds
+			break
+		}
 		delay *= 2
 		if delay >= retry.MaxDelaySeconds {
 			delay = retry.MaxDelaySeconds
@@ -352,24 +473,26 @@ func backoffFor(retry domain.RetryPolicy, attempt int, now time.Time) time.Time 
 	return now.Add(time.Duration(delay) * time.Second).UTC()
 }
 
-func (d *Dispatcher) registerCancel(runID string, cancel context.CancelFunc) {
+func (d *Dispatcher) registerCancel(runID, token string, cancel context.CancelFunc) {
 	d.activeMu.Lock()
 	defer d.activeMu.Unlock()
-	d.active[runID] = cancel
+	d.active[runID] = activeExecution{token: token, cancel: cancel}
 }
 
-func (d *Dispatcher) unregisterCancel(runID string) {
+func (d *Dispatcher) unregisterCancel(runID, token string) {
 	d.activeMu.Lock()
 	defer d.activeMu.Unlock()
-	delete(d.active, runID)
+	if current, ok := d.active[runID]; ok && current.token == token {
+		delete(d.active, runID)
+	}
 }
 
 func (d *Dispatcher) cancelRun(runID string) {
 	d.activeMu.Lock()
-	cancel, ok := d.active[runID]
+	active, ok := d.active[runID]
 	d.activeMu.Unlock()
 	if ok {
-		cancel()
+		active.cancel()
 	}
 }
 
@@ -377,8 +500,8 @@ func (d *Dispatcher) Shutdown(ctx context.Context) error {
 	d.activeMu.Lock()
 	active := len(d.active)
 	cancels := make([]context.CancelFunc, 0, active)
-	for _, cancel := range d.active {
-		cancels = append(cancels, cancel)
+	for _, active := range d.active {
+		cancels = append(cancels, active.cancel)
 	}
 	d.activeMu.Unlock()
 	d.logger.Info("dispatcher shutdown: cancelling active executions", "count", active)

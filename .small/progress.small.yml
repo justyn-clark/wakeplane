@@ -1535,3 +1535,126 @@ entries:
     status: completed
     task_id: task-48
     timestamp: "2026-05-28T17:45:48.943884000Z"
+  - evidence: Added task task-49 via small plan --add
+    notes: Refresh beta release coherence and record automation acceptance criteria
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-49
+    timestamp: "2026-10-05T19:26:40.337614000Z"
+  - evidence: Added task task-50 via small plan --add
+    notes: Add MCP assistant control surface with durable policy-backed tools
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-50
+    timestamp: "2026-10-05T19:26:40.358086000Z"
+  - evidence: Added task task-51 via small plan --add
+    notes: Track external jobs from durable acceptance through completion
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-51
+    timestamp: "2026-10-05T19:26:40.376932000Z"
+  - evidence: Added task task-52 via small plan --add
+    notes: Add guided automation creation and verified next-run previews
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-52
+    timestamp: "2026-10-05T19:26:40.397051000Z"
+  - evidence: Added task task-53 via small plan --add
+    notes: Deliver developer and personal automation recipes with events and notifications
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-53
+    timestamp: "2026-10-05T19:26:40.416667000Z"
+  - evidence: Added task task-54 via small plan --add
+    notes: Run full lint test race Postgres browser and release validation
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: pending
+    task_id: task-54
+    timestamp: "2026-10-05T19:26:40.436230000Z"
+  - command: go test ./... -count=1 -timeout 120s
+    command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20261005T192714.668879000Z.txt
+    command_sha256: c67d6c78c7328bb00fba09a42475464cf9bffc335bbc8c5cf565f878b694dc7c
+    command_summary: go test ./... -count=1 -timeout 120s
+    evidence: Command completed successfully
+    notes: 'apply: exit code 0'
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-54
+    timestamp: "2026-10-05T19:27:14.668879000Z"
+  - evidence: Clean main fast-forwarded from 04c7fe4 to e82d7b8; codex/automation-product-layer created. Baseline go test ./... -count=1 -timeout 120s passed. Authorized sequence implemented by MCP, external job and console agents plus parent API/recipes/release integration.
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: in_progress
+    task_id: meta/automation-sequence
+    timestamp: "2026-10-05T19:28:26.055764000Z"
+  - command: GOCACHE=/private/tmp/wakeplane-go-cache go test ./internal/api ./internal/mcp ./internal/timecalc -count=1 -timeout 120s
+    command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20261005T194114.079206000Z.txt
+    command_sha256: 2df1e106520447285217d1856cd86d707a6986bb532c8a13d773ca33b214791f
+    command_summary: GOCACHE=/private/tmp/wakeplane-go-cache go test ./internal/api ./internal/mcp ./internal/timecalc -count=1 -timeout 120s
+    evidence: Command completed successfully
+    notes: 'apply: exit code 0'
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-54
+    timestamp: "2026-10-05T19:41:14.079206000Z"
+  - command: WAKEPLANE_POSTGRES_TEST_URL= PATH=/opt/homebrew/opt/postgresql@18/bin:$PATH GOCACHE=/private/tmp/wakeplane-go-cache scripts/test-postgres-store.sh
+    command_ref: .small-cache/logs/c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182/commands/20261005T194119.027665000Z.txt
+    command_sha256: d9be03bc2fa4c491fce962c2ac02ee38b49094513a5e61c5a4b0c0a5bc3ca726
+    command_summary: WAKEPLANE_POSTGRES_TEST_URL= PATH=/opt/homebrew/opt/postgresql@18/bin:$PATH GOCACHE=/private/tmp/wakeplane-go-cache scripts/test-postgres-store.sh
+    evidence: Command completed successfully
+    notes: 'apply: exit code 0'
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-54
+    timestamp: "2026-10-05T19:41:19.027665000Z"
+  - task_id: task-49
+    status: completed
+    timestamp: "2026-10-05T20:08:32.460691Z"
+    evidence: "Source constants and generated docs align at 0.3.0-beta.1. CI/release gates strengthened; all three release archives built with checksum verification. Builder rejects mismatched versions before writing outputs. Public availability is documented separately from source capabilities."
+  - task_id: task-50
+    status: completed
+    timestamp: "2026-10-05T20:08:32.460692Z"
+    evidence: "Official MCP SDK stateless transport, 12 typed tools, shared REST auth/audit/policy; protocol negotiation, origins, bounded requests, real SDK integration and race tests pass."
+  - task_id: task-51
+    status: completed
+    timestamp: "2026-10-05T20:08:32.460693Z"
+    evidence: "Durable tracked HTTP jobs, frozen targets/deadlines, occurrence idempotency, exact ownership fencing, retry/restart recovery, remote overlap accounting, reconciliation/lookup, retention compaction; SQLite race and real Postgres parity tests pass."
+  - task_id: task-52
+    status: completed
+    timestamp: "2026-10-05T20:08:32.460694Z"
+    evidence: "Guided paused drafts and edits, timezone previews, friendly repository/feed/notification fields, typed targets and preservation, readable outcomes and recovery; 11 console tests/lint pass; real browser verified weekday preview and paused creation."
+  - task_id: task-53
+    status: completed
+    timestamp: "2026-10-05T20:08:32.460695Z"
+    evidence: "Deduplicated REST/MCP events preserve numeric precision and history tombstones; separate durable repository/reading-list runner with bounded read-only sources and notification retries. Both full fixture pipelines pass through actual Wakeplane dispatcher, runner, notification and artifact routes."
+  - task_id: task-54
+    status: in_progress
+    timestamp: "2026-10-05T20:08:32.460696Z"
+    evidence: "Final full go test -race -p 1 ./... and go vet pass; real Postgres rerun pass; lint/format and 11 console tests pass; cross-platform archives/checksums pass. A disk-space failure during concurrent builds was resolved by removing only task-owned disposable agent caches, then rerunning sequentially. Final packaged-browser/mobile/keyboard demonstration in progress. Logs retained under artifacts/validation-2026-10-05."
+  - task_id: task-54
+    status: completed
+    timestamp: "2026-10-05T20:22:37.891846Z"
+    evidence: "All local gates pass: full Go race suite and vet, real disposable Postgres parity, 13 console tests/lint/format, generated docs/snippets/schema/tidy, three platform archives/checksums, native macOS archive version smoke, and final packaged-browser workflow. Browser confirmed paused creation/edit/timezone preview, actual terminal job/report + one fixture notification, synchronized ledger, native summary Tab access, mobile Escape returning visible run card, width390 without overflow, zero console errors. Receipt/logs artifacts/validation-2026-10-05; real34second demo output/playwright/wakeplane-demo.mp4. No public release/deployment or absolute correctness guarantee claimed."
+  - task_id: meta/github-push-verification
+    status: completed
+    timestamp: "2026-10-05T20:47:12.000000Z"
+    evidence: "User authorized GitHub push. Refreshed origin; base e82d7b8 matches origin/main with no divergence and no existing remote feature branch. Final read-only boundary review found no blocker. Repeated lint/format, all 13 console tests, SMALL strict and git diff --check pass; full race/vet/Postgres/archive/browser evidence remains in the validation receipt. Commit and push codex/automation-product-layer, then use a pull request for hosted CI; no beta tag or deployment authorized."
+  - task_id: meta/github-push
+    status: completed
+    timestamp: "2026-10-05T20:49:01.000000Z"
+    evidence: "Committed implementation as fb742fe652c6e6d17ffb0435c317b6caa7b73627 and pushed codex/automation-product-layer with upstream tracking. git ls-remote confirmed the exact same SHA; worktree clean. No main merge, tag, release or deployment performed."
+  - task_id: meta/hosted-ci
+    status: blocked
+    timestamp: "2026-10-05T20:49:01.000001Z"
+    evidence: "GitHub connector rejected draft pull request creation with 403 Resource not accessible by integration. Repository CI triggers only main pushes or pull requests, so this branch push has not started hosted CI. Branch publication is complete; stop PR creation attempts until permissions or a user-created PR unblock it."
+  - task_id: meta/github-pull-request
+    status: completed
+    timestamp: "2026-10-05T21:56:43.000000Z"
+    evidence: "User directed retry via GitHub abilities and local git/gh. Network-enabled gh auth status verified justyn-clark with repo/workflow permissions; no existing branch PR. Created draft PR https://github.com/justyn-clark/wakeplane/pull/1 via gh --body-file, attached it to this chat, and verified head 176fe22f9aea5c1b42f4e05208c162062bd82d88. Hosted CI run 37379187185 and GitGuardian checks started; prior connector permission blocker resolved through the authorized CLI."
+  - task_id: meta/hosted-ci
+    status: in_progress
+    timestamp: "2026-10-05T21:56:43.000001Z"
+    evidence: "PR now triggers the repository CI on Ubuntu and Postgres 16. Monitor the latest pushed tip until all checks complete; fix concrete failures within the authorized implementation scope."
+  - task_id: meta/hosted-ci
+    status: completed
+    timestamp: "2026-10-05T22:00:12.000000Z"
+    evidence: "All GitHub checks passed on fd15588d44d22ffb752a2b2e34d0b8b4f0dfb503: lint/format/13 console tests, Go vet, generated docs, full Go race suite, real Postgres 16 integration and Linux binary builds. CI run 37379305435 concluded success; GitGuardian passed. Exact run/job/PR metadata and full CI logs saved under artifacts/validation-2026-10-05. This follow-up changes only handoff/progress records; verify automated checks on its final pushed tip before marking PR ready."

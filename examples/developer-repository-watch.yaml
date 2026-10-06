@@ -1,0 +1,26 @@
+name: weekday-repository-watch
+enabled: false
+timezone: America/Los_Angeles
+schedule:
+  kind: cron
+  expr: "0 9 * * 1-5"
+target:
+  kind: http
+  method: POST
+  url: http://127.0.0.1:8091/jobs
+  http_job:
+    poll_interval_seconds: 2
+    lookup_url: http://127.0.0.1:8091/jobs/lookup
+  body:
+    task: repository-watch
+    repository: justyn-clark/wakeplane
+policy:
+  overlap: forbid
+  misfire: skip
+  timeout_seconds: 120
+  max_concurrency: 1
+retry:
+  max_attempts: 3
+  strategy: exponential
+  initial_delay_seconds: 2
+  max_delay_seconds: 10

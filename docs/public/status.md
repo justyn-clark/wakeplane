@@ -4,7 +4,7 @@ This page defines what Wakeplane means by alpha, beta, and 1.0. It is intentiona
 
 ## Current public state
 
-Wakeplane is publicly labeled beta as of `v0.2.0-beta.1`.
+The published beta is `v0.2.0-beta.1`. This documentation describes the `v0.3.0-beta.1` source line. New capabilities require that source build or a matching published tag; preparing release artifacts does not publish them.
 
 The beta gate is now satisfied:
 
@@ -31,7 +31,7 @@ Beta does **not** mean:
 - stable semver guarantees
 - RBAC or multi-user auth
 - distributed coordination
-- visual schedule creation/editing
+- OAuth account onboarding or provider spending enforcement
 
 ## Beta gate
 
@@ -61,7 +61,7 @@ Wakeplane should not be labeled stable until all of these are true:
 
 The most practical path beyond beta is:
 
-1. Keep improving the operator console until failed-run diagnosis and schedule posture are fully inspectable without falling back to CLI/API calls.
+1. Validate complete operator workloads through guided creation, tracked external completion, and notification delivery; publish matching binaries and documentation.
 2. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0.
 3. Decide whether the embedding surface becomes a stable public Go package or remains source-level for the current release line.
 

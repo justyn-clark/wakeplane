@@ -58,5 +58,5 @@ Non-cooperative executors (those that ignore `ctx.Done()`) are handled by the ti
 
 - Single-operator bearer auth is available for `/v1/...`; there is no RBAC or multi-tenant model.
 - No distributed worker coordination beyond SQLite-backed claims and leases.
-- No visual schedule builder, DAG orchestration, or calendar/business-rule engine.
+- Guided schedule forms are an operator surface; DAG orchestration and calendar/business-rule engines remain outside the core.
 - `replace` overlap is cooperative and best-effort; if a running executor cannot be interrupted, the practical result is queued-latest behavior until the active run exits.

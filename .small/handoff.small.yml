@@ -1,12 +1,13 @@
 small_version: "1.0.0"
 owner: agent
-summary: Wakeplane has completed the first local single-operator console phase on top of the production-track backend. The daemon now serves /console/ with a compact ledger-first operator UI for runs, schedules, receipts, failures, retries, dead letters, status, storage backend, auth posture, request audit posture, workers, due work, and retention. The API now exposes richer run summaries, target_kind filtering, run attempt history, receipts, and dead-letter details for the console without bypassing the existing scheduler/dispatcher/store boundaries.
+summary: Completed and validated the automation product layer on codex/automation-product-layer; source version 0.3.0-beta.1. Implementation commit fb742fe652c6e6d17ffb0435c317b6caa7b73627 pushed to origin. GitHub PR 1 created using authenticated gh after the connector's 403. All hosted checks passed for fd15588d44d22ffb752a2b2e34d0b8b4f0dfb503, including Ubuntu race tests, Postgres 16, builds and GitGuardian; successful CI run 37379305435. Validation and publication results are recorded in artifacts/validation-2026-10-05/receipt.json. No merge, beta tag or deployment performed.
 resume:
-  current_task_id: task-48
+  current_task_id: task-54
   next_steps:
-    - Commit the operator console work if the user asks.
-    - Sync updated source docs into wakeplane.dev before public deploy.
-    - Decide whether to expose a stable non-internal public Go embedding package or keep embedding source-level only in v0.2.x.
+    - Review https://github.com/justyn-clark/wakeplane/pull/1 and its checks on the current branch tip.
+    - Use network-enabled authenticated gh for GitHub writes; the connected app returns 403 for PR creation, while the local CLI has repository permissions.
+    - "Public promotion remains separate: matching beta tag/archive release and wakeplane.dev content/deploy synchronization when authorized."
+    - Production accounts, longer soak, OAuth/RBAC/budgets and remote cancellation require separately scoped work.
 links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

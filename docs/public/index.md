@@ -1,6 +1,6 @@
 # Wakeplane Docs
 
-Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the current public beta release line.
+Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the `v0.3.0-beta.1` source line. Check [Status](status.md) and the release tag for public availability.
 
 > **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
 
@@ -9,6 +9,8 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 - [Install](install.md) - release downloads, `go install`, source builds, checksum verification, and a smoke test
 - [Quickstart](quickstart.md) - start the daemon, create a schedule, inspect runs in under five minutes
 - [Operator Console](console.md) - inspect runs, schedules, receipts, failures, retries, and daemon posture
+- [Automation](automation.md) - assistant tools, tracked remote jobs, and deduplicated events
+- [Recipes](recipes.md) - runnable repository-watch and weekly reading-list examples
 - [GitHub](https://github.com/justyn-clark/wakeplane) - canonical public repository
 
 ## Use cases
@@ -55,7 +57,8 @@ The current public beta line ships as:
 - SQLite-first storage with embedded migrations and a Postgres backend seam
 - HTTP, shell, and in-process workflow executors
 - HTTP JSON API and Cobra CLI
-- Embedded single-operator console
+- Guided single-operator console with draft previews
+- MCP assistant tools, deduplicated events, and tracked HTTP jobs
 - Planner and dispatcher loops with durable run ledger
 - Metrics, health, readiness, and status endpoints
 - Structured shutdown and drain logging

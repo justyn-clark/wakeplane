@@ -275,6 +275,7 @@ func (s *Service) ReplaceSchedule(ctx context.Context, id string, req domain.Upd
 	if errs := domain.ValidateCreateSchedule(req); len(errs) > 0 {
 		return domain.Schedule{}, errs, nil
 	}
+	wasEnabled := current.Enabled
 	current.Name = req.Name
 	current.Enabled = req.Enabled
 	current.Timezone = req.Timezone
@@ -286,11 +287,17 @@ func (s *Service) ReplaceSchedule(ctx context.Context, id string, req domain.Upd
 	current.EndAt = req.EndAt
 	current.UpdatedAt = time.Now().UTC()
 	if current.Enabled {
+		current.PausedAt = nil
 		next, err := timecalc.NextAfter(current, time.Now().UTC().Add(-time.Nanosecond))
 		if err != nil {
 			return domain.Schedule{}, nil, err
 		}
 		current.NextRunAt = next
+	} else {
+		current.NextRunAt = nil
+		if wasEnabled {
+			current.PausedAt = &current.UpdatedAt
+		}
 	}
 	if err := s.store.UpdateSchedule(ctx, current); err != nil {
 		return domain.Schedule{}, nil, err
@@ -312,11 +319,17 @@ func (s *Service) PatchSchedule(ctx context.Context, id string, patch domain.Pat
 	}
 	next.UpdatedAt = time.Now().UTC()
 	if next.Enabled {
+		next.PausedAt = nil
 		computed, err := timecalc.NextAfter(next, time.Now().UTC().Add(-time.Nanosecond))
 		if err != nil {
 			return domain.Schedule{}, nil, err
 		}
 		next.NextRunAt = computed
+	} else {
+		next.NextRunAt = nil
+		if current.Enabled {
+			next.PausedAt = &next.UpdatedAt
+		}
 	}
 	if err := s.store.UpdateSchedule(ctx, next); err != nil {
 		return domain.Schedule{}, nil, err

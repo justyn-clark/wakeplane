@@ -5,6 +5,12 @@ version="${1:?usage: scripts/build-release-artifacts.sh <version> [output_dir]}"
 out_dir="${2:-dist/releases}"
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+source_version="$(sed -n 's/^const version = "\([^"]*\)"$/\1/p' "$repo_root/cmd/wakeplane/main.go")"
+daemon_version="$(sed -n 's/^const version = "\([^"]*\)"$/\1/p' "$repo_root/cmd/wakeplaned/main.go")"
+if [[ -z "$source_version" || "${version#v}" != "$source_version" || "$daemon_version" != "$source_version" ]]; then
+  printf 'Release version %s must match both binary constants (%s, %s).\n' "$version" "$source_version" "$daemon_version" >&2
+  exit 1
+fi
 mkdir -p "$out_dir"
 rm -f "$out_dir"/checksums.txt
 

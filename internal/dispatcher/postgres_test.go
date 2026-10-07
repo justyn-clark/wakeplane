@@ -130,6 +130,10 @@ func TestPostgresFinalFailureDeadLettersAndRetainsReceipt(t *testing.T) {
 
 	d := New(st, executors.NewRegistry(), logging.New(), workerID, 30*time.Second)
 	d.now = func() time.Time { return now }
+	claimedRun.ExecutionLeaseToken, err = st.ExecutionLeaseToken(context.Background(), run.ID, workerID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	d.completeFailureWithResult(context.Background(), schedule, claimedRun, executors.Result{
 		ErrorText: "permanent failure",
 		Receipts: []executors.Receipt{{

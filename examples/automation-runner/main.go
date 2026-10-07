@@ -18,13 +18,19 @@ func main() {
 	defer stop()
 	address := envOr("AUTOMATION_RUNNER_ADDR", "127.0.0.1:8091")
 	runner, err := newRunner(ctx, runnerConfig{
-		StateDir:     envOr("AUTOMATION_RUNNER_STATE_DIR", "examples/automation-runner/state"),
-		PublicURL:    envOr("AUTOMATION_RUNNER_PUBLIC_URL", "http://"+address),
-		Token:        os.Getenv("AUTOMATION_RUNNER_TOKEN"),
-		GitHubURL:    envOr("AUTOMATION_RUNNER_GITHUB_URL", "https://api.github.com"),
-		GitHubToken:  os.Getenv("AUTOMATION_RUNNER_GITHUB_TOKEN"),
-		NotifyToken:  os.Getenv("AUTOMATION_RUNNER_NOTIFY_TOKEN"),
-		NotifyOrigin: os.Getenv("AUTOMATION_RUNNER_NOTIFY_ORIGIN"),
+		StateDir:          envOr("AUTOMATION_RUNNER_STATE_DIR", "examples/automation-runner/state"),
+		PublicURL:         envOr("AUTOMATION_RUNNER_PUBLIC_URL", "http://"+address),
+		Token:             os.Getenv("AUTOMATION_RUNNER_TOKEN"),
+		GitHubURL:         envOr("AUTOMATION_RUNNER_GITHUB_URL", "https://api.github.com"),
+		GitHubToken:       os.Getenv("AUTOMATION_RUNNER_GITHUB_TOKEN"),
+		NotifyToken:       os.Getenv("AUTOMATION_RUNNER_NOTIFY_TOKEN"),
+		NotifyOrigin:      os.Getenv("AUTOMATION_RUNNER_NOTIFY_ORIGIN"),
+		DiscordWebhookURL: os.Getenv("AUTOMATION_RUNNER_DISCORD_WEBHOOK_URL"),
+		GmailFrom:         os.Getenv("AUTOMATION_RUNNER_GMAIL_FROM"),
+		GmailTo:           os.Getenv("AUTOMATION_RUNNER_GMAIL_TO"),
+		GmailClientID:     os.Getenv("AUTOMATION_RUNNER_GMAIL_CLIENT_ID"),
+		GmailClientSecret: os.Getenv("AUTOMATION_RUNNER_GMAIL_CLIENT_SECRET"),
+		GmailRefreshToken: os.Getenv("AUTOMATION_RUNNER_GMAIL_REFRESH_TOKEN"),
 	})
 	if err != nil {
 		log.Fatal(err)

@@ -153,16 +153,49 @@ func (s *Store) MarkRunRunningWithLease(ctx context.Context, runID, workerID, to
 }
 
 func (s *Store) FinishRunWithLease(ctx context.Context, run domain.Run, workerID, token string, now time.Time) error {
-	return s.finishExternalRun(ctx, run, workerID, token, nil, nil, now)
+	return s.finishExternalRun(ctx, run, workerID, token, nil, nil, now, false)
 }
 
 // FinishExternalFailure commits the failed attempt and its follow-up together.
 // A crash cannot strand accepted remote work between failure and retry insertion.
 func (s *Store) FinishExternalFailure(ctx context.Context, run domain.Run, workerID, token string, retry *domain.Run, dead *domain.DeadLetter, now time.Time) error {
-	return s.finishExternalRun(ctx, run, workerID, token, retry, dead, now)
+	return s.finishExternalRun(ctx, run, workerID, token, retry, dead, now, false)
 }
 
-func (s *Store) finishExternalRun(ctx context.Context, run domain.Run, workerID, token string, retry *domain.Run, dead *domain.DeadLetter, now time.Time) error {
+// FinishExpiredRunFailure recovers an ordinary running attempt atomically with
+// its retry/dead letter and lease removal. Recheck expiry under the run lock so
+// a heartbeat after the caller's discovery snapshot fences stale recovery.
+func (s *Store) FinishExpiredRunFailure(ctx context.Context, run domain.Run, retry *domain.Run, dead *domain.DeadLetter, now time.Time) error {
+	return s.finishExternalRun(ctx, run, "", "", retry, dead, now, true)
+}
+
+func (s *Store) lockExpiredRunningRun(ctx context.Context, tx *sql.Tx, runID string, now time.Time) (string, string, error) {
+	query := `SELECT status, claimed_by_worker_id FROM schedule_runs WHERE id = ?`
+	if s.dialect == "postgres" {
+		query += ` FOR UPDATE`
+	}
+	var status domain.RunStatus
+	var owner sql.NullString
+	if err := s.txQueryRow(ctx, tx, query, runID).Scan(&status, &owner); err != nil {
+		return "", "", err
+	}
+	if status != domain.RunRunning || !owner.Valid {
+		return "", "", ErrLeaseLost
+	}
+	var token, workerID, expires string
+	if err := s.txQueryRow(ctx, tx, `SELECT id, worker_id, expires_at FROM worker_leases WHERE run_id = ?`, runID).Scan(&token, &workerID, &expires); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", "", ErrLeaseLost
+		}
+		return "", "", err
+	}
+	if workerID != owner.String || mustParseTime(expires).After(now) {
+		return "", "", ErrLeaseLost
+	}
+	return workerID, token, nil
+}
+
+func (s *Store) finishExternalRun(ctx context.Context, run domain.Run, workerID, token string, retry *domain.Run, dead *domain.DeadLetter, now time.Time, expired bool) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -171,7 +204,12 @@ func (s *Store) finishExternalRun(ctx context.Context, run domain.Run, workerID,
 	// A cancelled executor may finish after its lease expires during shutdown.
 	// It may record that outcome only while the exact claim is still current;
 	// recovery or a newer claim changes/removes the token and fences this write.
-	if err := s.lockRunLease(ctx, tx, run.ID, workerID, token, now, false); err != nil {
+	if expired {
+		workerID, token, err = s.lockExpiredRunningRun(ctx, tx, run.ID, now)
+		if err != nil {
+			return err
+		}
+	} else if err := s.lockRunLease(ctx, tx, run.ID, workerID, token, now, false); err != nil {
 		return err
 	}
 	_, err = s.txExec(ctx, tx, `UPDATE schedule_runs SET status = ?, claimed_by_worker_id = ?, claim_expires_at = NULL, started_at = ?, finished_at = ?, http_status_code = ?, exit_code = ?, result_json = ?, error_text = ?, retry_available_at = ?, updated_at = ? WHERE id = ?`, run.Status, workerID, timePtrString(run.StartedAt), timePtrString(run.FinishedAt), intPtr(run.HTTPStatusCode), intPtr(run.ExitCode), rawJSON(run.ResultJSON), stringPtr(run.ErrorText), timePtrString(run.RetryAvailableAt), timeString(now), run.ID)

@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -104,23 +105,29 @@ func (d *Dispatcher) recoverExpiredLeases(ctx context.Context, now time.Time) er
 				return err
 			}
 		case domain.RunRunning:
-			d.cancelRun(item.Run.ID)
 			job, err := d.store.GetExternalJob(ctx, item.Run.OccurrenceKey)
 			if err != nil {
 				return err
 			}
 			if job != nil || item.Schedule.Target.HTTPJob != nil {
-				if err := d.store.RequeueExternalRun(ctx, item.Run.ID, "", "", now, true); err != nil && err != store.ErrLeaseLost {
+				err := d.store.RequeueExternalRun(ctx, item.Run.ID, "", "", now, true)
+				if err != nil && !errors.Is(err, store.ErrLeaseLost) {
 					return err
+				}
+				if err == nil {
+					d.cancelRun(item.Run.ID)
 				}
 				continue
 			}
 			result := executors.Result{
 				ErrorText: "worker lease expired during execution",
 			}
-			d.completeFailureWithResult(ctx, item.Schedule, item.Run, result)
-			if err := d.store.ClearLease(ctx, item.Run.ID); err != nil {
+			err = d.completeFailureWithResult(ctx, item.Schedule, item.Run, result)
+			if err != nil && !errors.Is(err, store.ErrLeaseLost) {
 				return err
+			}
+			if err == nil {
+				d.cancelRun(item.Run.ID)
 			}
 		default:
 			if err := d.store.ClearLease(ctx, item.Run.ID); err != nil {
@@ -360,7 +367,7 @@ func (d *Dispatcher) completeFailure(ctx context.Context, schedule domain.Schedu
 	d.completeFailureWithResult(ctx, schedule, run, result)
 }
 
-func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule domain.Schedule, run domain.Run, result executors.Result) {
+func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule domain.Schedule, run domain.Run, result executors.Result) error {
 	finishedAt := d.now()
 	run.StartedAt = timePtrOr(run.StartedAt, finishedAt)
 	run.FinishedAt = &finishedAt
@@ -379,24 +386,24 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 	if result.ErrorText != "" {
 		run.ErrorText = &result.ErrorText
 	}
+	var retry *domain.Run
+	var dead *domain.DeadLetter
+	if run.Status == domain.RunFailed {
+		retryAt := backoffFor(schedule.Retry, run.Attempt, finishedAt)
+		retry = &domain.Run{ID: domain.NewID("run"), ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, NominalTime: run.NominalTime, DueTime: retryAt, Status: domain.RunRetryScheduled, Attempt: run.Attempt + 1, RetryAvailableAt: &retryAt, CreatedAt: finishedAt, UpdatedAt: finishedAt}
+	}
+	if run.Status == domain.RunDeadLettered {
+		dead = &domain.DeadLetter{ID: domain.NewID("dlq"), RunID: run.ID, ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, Reason: result.ErrorText, PayloadJSON: run.ResultJSON, CreatedAt: finishedAt}
+	}
 	var finishErr error
 	if run.ExecutionLeaseToken != "" {
-		var retry *domain.Run
-		var dead *domain.DeadLetter
-		if run.Status == domain.RunFailed {
-			retryAt := backoffFor(schedule.Retry, run.Attempt, finishedAt)
-			retry = &domain.Run{ID: domain.NewID("run"), ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, NominalTime: run.NominalTime, DueTime: retryAt, Status: domain.RunRetryScheduled, Attempt: run.Attempt + 1, RetryAvailableAt: &retryAt, CreatedAt: finishedAt, UpdatedAt: finishedAt}
-		}
-		if run.Status == domain.RunDeadLettered {
-			dead = &domain.DeadLetter{ID: domain.NewID("dlq"), RunID: run.ID, ScheduleID: run.ScheduleID, OccurrenceKey: run.OccurrenceKey, Reason: result.ErrorText, PayloadJSON: run.ResultJSON, CreatedAt: finishedAt}
-		}
 		finishErr = d.store.FinishExternalFailure(ctx, run, d.workerID, run.ExecutionLeaseToken, retry, dead, finishedAt)
 	} else {
-		finishErr = d.finishRun(ctx, run)
+		finishErr = d.store.FinishExpiredRunFailure(ctx, run, retry, dead, finishedAt)
 	}
 	if finishErr != nil {
 		d.logger.Error("finish failed run", "run_id", run.ID, "error", finishErr)
-		return
+		return finishErr
 	}
 	for _, receipt := range result.Receipts {
 		_ = d.store.InsertReceipt(context.Background(), domain.Receipt{
@@ -408,39 +415,7 @@ func (d *Dispatcher) completeFailureWithResult(ctx context.Context, schedule dom
 			CreatedAt:   finishedAt,
 		})
 	}
-	if run.ExecutionLeaseToken != "" {
-		return
-	}
-	if shouldRetry(schedule, run.Attempt) && !result.Cancelled && !result.TerminalFailure {
-		retryAt := backoffFor(schedule.Retry, run.Attempt, finishedAt)
-		nextRun := domain.Run{
-			ID:               domain.NewID("run"),
-			ScheduleID:       run.ScheduleID,
-			OccurrenceKey:    run.OccurrenceKey,
-			NominalTime:      run.NominalTime,
-			DueTime:          retryAt,
-			Status:           domain.RunRetryScheduled,
-			Attempt:          run.Attempt + 1,
-			RetryAvailableAt: &retryAt,
-			CreatedAt:        finishedAt,
-			UpdatedAt:        finishedAt,
-		}
-		if err := d.store.InsertRun(context.Background(), nextRun); err != nil && err != store.ErrAlreadyExists {
-			d.logger.Error("insert retry attempt", "run_id", run.ID, "error", err)
-		}
-		return
-	}
-	if run.Status == domain.RunDeadLettered {
-		_ = d.store.InsertDeadLetter(context.Background(), domain.DeadLetter{
-			ID:            domain.NewID("dlq"),
-			RunID:         run.ID,
-			ScheduleID:    run.ScheduleID,
-			OccurrenceKey: run.OccurrenceKey,
-			Reason:        result.ErrorText,
-			PayloadJSON:   run.ResultJSON,
-			CreatedAt:     finishedAt,
-		})
-	}
+	return nil
 }
 
 func (d *Dispatcher) finishRun(ctx context.Context, run domain.Run) error {

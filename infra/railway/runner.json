@@ -5,7 +5,7 @@
 		"dockerfilePath": "Dockerfile"
 	},
 	"deploy": {
-		"startCommand": "/usr/local/bin/automation-runner",
+		"startCommand": "/usr/local/bin/wakeplane-entrypoint /usr/local/bin/automation-runner",
 		"numReplicas": 1,
 		"healthcheckPath": "/healthz",
 		"healthcheckTimeout": 60,

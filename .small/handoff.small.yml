@@ -1,13 +1,15 @@
 small_version: "1.0.0"
 owner: agent
-summary: "PR4 merged at948166f; release and documentation synchronization in progress."
+summary: "Railway selected and private infrastructure provisioned; multi-cloud adapter validation underway. Notification workloads stay paused pending native grants."
 resume:
-  current_task_id: task-61
+  current_task_id: task-65
   next_steps:
-    - Validate release preparation and publish v0.3.0-beta.2 from the exact green source head. Verify all public archives checksums and runner packaging before advancing the installer.
-    - Synchronize the paired documentation site from merged application main and verify the live banner install guidance and canonical pages.
-    - Runtime delivery requires separately provisioned Gmail offline authorization and a Discord webhook; user does not know existing vault records. Do not borrow connector credentials or claim hosted provider proof.
-    - Private Railway trial needs explicit deployment configuration and authorization before resources are created. Begin workload observation only after runtime delivery is verified.
+    - Validate adapters and exact-head CI including Docker root-mounted volume bootstrap and Cloudflare dry-run before attaching the Railway application source.
+    - Railway project0b0a06b8-61af-4e06-bbed-34dec6f6b0de environmentc364e6a0-ff9f-4e7f-a042-308404f7cce1 is authorized and provisioned. Postgres is live; daemon and runner are configured without attached sources. Initial candidate limits are0.25CPU/0.25GB per app and0.25CPU/0.5GB Postgres, requiring measurement.
+    - Local Railway CLI is logged out; user was asked to log in for private SSH runtime checks. Connector deployment access works. Do not expose private services or harvest tokens to bypass this boundary.
+    - Keep single-process ownership. Zero overlap time does not prevent deployment startup overlap; pin source and use explicit stop drain start for upgrades. Notifications remain paused until native Gmail OAuth grant and Discord webhook provisioning.
+    - AWS/GCP Kubernetes overlays and Cloudflare API-only supervisor are configuration adapters with explicit unverified live-runtime boundaries. No non-Railway cloud resources authorized or provisioned.
+    - Reviewable application PR precedes documentation promotion. Synchronize site after verified source merge. Published binary release remainsv0.3.0-beta.2; adapter source changes are not included in its archives.
 links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

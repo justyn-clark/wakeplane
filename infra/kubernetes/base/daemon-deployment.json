@@ -1,0 +1,140 @@
+{
+	"apiVersion": "apps/v1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "daemon"
+	},
+	"spec": {
+		"replicas": 1,
+		"strategy": {
+			"type": "Recreate"
+		},
+		"selector": {
+			"matchLabels": {
+				"app": "daemon"
+			}
+		},
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "daemon"
+				}
+			},
+			"spec": {
+				"automountServiceAccountToken": false,
+				"terminationGracePeriodSeconds": 40,
+				"securityContext": {
+					"runAsUser": 10001,
+					"runAsGroup": 10001,
+					"runAsNonRoot": true,
+					"fsGroup": 10001,
+					"fsGroupChangePolicy": "OnRootMismatch",
+					"seccompProfile": {
+						"type": "RuntimeDefault"
+					}
+				},
+				"containers": [
+					{
+						"name": "daemon",
+						"image": "wakeplane:local",
+						"imagePullPolicy": "IfNotPresent",
+						"command": ["/usr/local/bin/wakeplane", "serve"],
+						"env": [
+							{
+								"name": "WAKEPLANE_STORE",
+								"value": "sqlite"
+							},
+							{
+								"name": "WAKEPLANE_DB_PATH",
+								"value": "/data/wakeplane.db"
+							},
+							{
+								"name": "WAKEPLANE_HTTP_ADDR",
+								"value": ":8080"
+							},
+							{
+								"name": "WAKEPLANE_WORKER_ID",
+								"value": "wakeplane-singleton"
+							}
+						],
+						"envFrom": [
+							{
+								"secretRef": {
+									"name": "daemon-secrets"
+								}
+							}
+						],
+						"ports": [
+							{
+								"name": "http",
+								"containerPort": 8080
+							}
+						],
+						"securityContext": {
+							"allowPrivilegeEscalation": false,
+							"readOnlyRootFilesystem": true,
+							"capabilities": {
+								"drop": ["ALL"]
+							}
+						},
+						"resources": {
+							"requests": {
+								"cpu": "100m",
+								"memory": "64Mi"
+							},
+							"limits": {
+								"cpu": "500m",
+								"memory": "256Mi"
+							}
+						},
+						"readinessProbe": {
+							"httpGet": {
+								"path": "/readyz",
+								"port": "http"
+							},
+							"periodSeconds": 5
+						},
+						"livenessProbe": {
+							"httpGet": {
+								"path": "/healthz",
+								"port": "http"
+							},
+							"periodSeconds": 15,
+							"failureThreshold": 3
+						},
+						"startupProbe": {
+							"httpGet": {
+								"path": "/readyz",
+								"port": "http"
+							},
+							"periodSeconds": 2,
+							"failureThreshold": 60
+						},
+						"volumeMounts": [
+							{
+								"name": "state",
+								"mountPath": "/data"
+							},
+							{
+								"name": "tmp",
+								"mountPath": "/tmp"
+							}
+						]
+					}
+				],
+				"volumes": [
+					{
+						"name": "state",
+						"persistentVolumeClaim": {
+							"claimName": "daemon-state"
+						}
+					},
+					{
+						"name": "tmp",
+						"emptyDir": {}
+					}
+				]
+			}
+		}
+	}
+}

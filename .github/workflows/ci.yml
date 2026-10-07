@@ -43,6 +43,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint, format, and console tests
         run: pnpm run check
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.36.1"
+      - name: Validate rendered deployment safety and Kubernetes schemas
+        run: |
+          go run ./tools/deploycheck
+          for provider in aws google-cloud; do
+            kubectl kustomize "infra/kubernetes/$provider" | go run github.com/yannh/kubeconform/cmd/kubeconform@v0.8.0 -strict -summary -kubernetes-version 1.36.0
+          done
       - name: Vet Go code
         run: go vet ./...
 
@@ -72,3 +81,6 @@ jobs:
 
       - name: Verify container packaging and persistent restart
         run: bash scripts/container-smoke.sh
+
+      - name: Validate Cloudflare Worker and container configuration without deployment
+        run: pnpm run check:cloudflare

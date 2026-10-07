@@ -1,0 +1,36 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "wakeplane-daemon",
+	"main": "index.js",
+	"compatibility_date": "2026-10-07",
+	"workers_dev": false,
+	"containers": [
+		{
+			"class_name": "WakeplaneDaemon",
+			"scheduling_policy": "durable_object",
+			"images": {
+				"daemon": {
+					"dockerfile": "../../Dockerfile",
+					"build_context": "../.."
+				}
+			}
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "DAEMON",
+				"class_name": "WakeplaneDaemon"
+			}
+		]
+	},
+	"exports": {
+		"WakeplaneDaemon": {
+			"type": "durable-object",
+			"storage": "sqlite"
+		}
+	},
+	"observability": {
+		"enabled": true
+	}
+}

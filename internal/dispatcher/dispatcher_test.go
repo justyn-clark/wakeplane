@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -482,3 +483,60 @@ func TestFailedRunWithoutRetryIsStableAfterReopen(t *testing.T) {
 }
 
 func ptrTime(v time.Time) *time.Time { return &v }
+
+// Discovery and policy checks can take longer than the lease TTL under load.
+// A newly claimed run must get its full lease from claim time, not tick start.
+func TestTickClaimsWithFreshTimeAfterCandidateDiscovery(t *testing.T) {
+	st := newDispatcherStore(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	now := time.Now().UTC()
+	claimedAt := now.Add(2 * time.Minute)
+	ttl := time.Minute
+	schedule := dispatcherSchedule(now)
+	schedule.Target = domain.TargetSpec{Kind: domain.TargetKindHTTP, Method: "POST", URL: "https://runner.test/jobs"}
+	if err := st.CreateSchedule(ctx, schedule); err != nil {
+		t.Fatal(err)
+	}
+	run := domain.Run{ID: domain.NewID("run"), ScheduleID: schedule.ID, OccurrenceKey: domain.OccurrenceKey(schedule.ID, now), NominalTime: now, DueTime: now, Status: domain.RunPending, Attempt: 1, CreatedAt: now, UpdatedAt: now}
+	if err := st.InsertRun(ctx, run); err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan struct{})
+	executor := jobExecutorFunc(func(ctx context.Context, req executors.ExecuteRequest) executors.Result {
+		close(started)
+		<-ctx.Done()
+		return executors.Result{Cancelled: true, ErrorText: ctx.Err().Error()}
+	})
+	d := New(st, executors.NewRegistry(executor), logging.New(), "fresh-clock-worker", ttl)
+	defer func() {
+		cancel()
+		shutdownCtx, stop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stop()
+		if err := d.Shutdown(shutdownCtx); err != nil {
+			t.Error(err)
+		}
+	}()
+	var calls atomic.Int32
+	d.now = func() time.Time {
+		if calls.Add(1) == 1 {
+			return now
+		}
+		return claimedAt
+	}
+	if err := d.Tick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	got, err := st.GetRun(context.Background(), run.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ClaimExpiresAt == nil || !got.ClaimExpiresAt.Equal(claimedAt.Add(ttl)) {
+		t.Fatalf("new claim inherited discovery time: expires=%v want=%v", got.ClaimExpiresAt, claimedAt.Add(ttl))
+	}
+	select {
+	case <-started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("freshly claimed execution did not start")
+	}
+}

@@ -76,13 +76,16 @@ func (d *Dispatcher) Tick(ctx context.Context) error {
 		if !claimable {
 			continue
 		}
-		claimed, token, err := d.store.ClaimRunWithToken(ctx, schedule, run.ID, d.workerID, now, d.leaseTTL)
+		// Recovery and candidate policy checks may outlive a short lease TTL.
+		// Start this lease from the claim, not from the discovery snapshot.
+		claimedAt := d.now()
+		claimed, token, err := d.store.ClaimRunWithToken(ctx, schedule, run.ID, d.workerID, claimedAt, d.leaseTTL)
 		if err != nil || !claimed {
 			continue
 		}
 		run.ClaimedByWorkerID = &d.workerID
 		run.ExecutionLeaseToken = token
-		expires := now.Add(d.leaseTTL)
+		expires := claimedAt.Add(d.leaseTTL)
 		run.ClaimExpiresAt = &expires
 		d.activeWG.Add(1)
 		go func(schedule domain.Schedule, run domain.Run) {

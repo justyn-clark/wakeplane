@@ -1,6 +1,6 @@
 # Deployment Notes - wakeplane.dev
 
-This doc covers the deployment topology for the Wakeplane public site (`wakeplane.dev`).
+This doc covers the deployment topology for the Wakeplane public site (`wakeplane.dev`). For the scheduling daemon, see [Daemon Hosting](hosting.md) and [Production Acceptance](production-acceptance.md).
 
 ## Deployment pattern
 

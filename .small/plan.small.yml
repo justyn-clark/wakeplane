@@ -86,7 +86,7 @@ tasks:
     title: Fix planner test flake in TestPlannerMisfirePolicies/run_once_if_late
     status: completed
   - id: task-29
-    title: "Build public docs: quickstart, concepts, schedules, policies, executors, api, run-states, embedding, storage, runbook, releasing, security"
+    title: 'Build public docs: quickstart, concepts, schedules, policies, executors, api, run-states, embedding, storage, runbook, releasing, security'
     status: completed
   - id: task-30
     title: Repo hardening and deployment pattern alignment for public alpha launch
@@ -165,4 +165,19 @@ tasks:
     status: completed
   - id: task-55
     title: Correct source documentation and synchronize verified live site content
-    status: blocked
+    status: completed
+  - id: task-56
+    title: Publish v0.3.0-beta.1 and verify public archives installer and live documentation
+    status: completed
+  - id: task-57
+    title: Make ordinary expired running lease recovery atomic and refresh internal status
+    status: completed
+  - id: task-58
+    title: Add configured Discord and Gmail delivery adapters with invariant tests
+    status: completed
+  - id: task-59
+    title: Prepare Railway deployment and production observation acceptance criteria
+    status: completed
+  - id: task-60
+    title: Validate recovery delivery packaging and docs and prepare reviewable pull request
+    status: pending

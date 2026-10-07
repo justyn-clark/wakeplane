@@ -1674,3 +1674,58 @@ entries:
     status: blocked
     timestamp: "2026-10-06T18:57:18.000000Z"
     evidence: "User reports PR1 merged; GitHub confirms merge4b409f7f84bdea9995474e16ef4c7ff8ae9df0ea at2026-10-06T18:52:39Z. Fetched main and verified4628e66 ancestor; PR2 diff against main contains only22 documentation/generator/execution-record files. Retargeted canonical docs PR2 from old feature branch to main and verified it remains OPEN. Site draft PR1 remains pending paired source-doc promotion and resync. Confirmed site build is astro build over committed MDX; sync reads application docs/public separately, and site CI compares against application main without updating pages. No automatic site deployment follows an application-only merge. Preserve production and installer until canonical corrections and site CI pass."
+  - evidence: User merged PR2; GitHub confirms3fb4abcacb514f6029bb966cd3ab06ac41baddd9 at2026-10-06T19:05:50Z and main application CI37516378451 SUCCESS. Fetched actual application and site main; site main remains0aa9b9c with no concurrent changes. Created clean canonical checkout with full object history at /private/tmp/wakeplane-docs-canonical-main-20261006 detached at3fb4abc. Resume site sync, local/hosted validation and authorized production promotion; existing local site checkout remains untouched.
+    status: in_progress
+    task_id: task-55
+    timestamp: "2026-10-06T19:15:21.000000Z"
+  - evidence: 'Site PR1 merged at4148174260f00f5c9a2fd0b4e65889b0c2ed16bf on2026-10-06T19:19:31Z after hosted CI37512218633 attempt2 SUCCESS against canonical app main3fb4abc. Main site CI37518111720 SUCCESS, production Vercel dpl_GC2q2pNr6pxA8dBaEC3pj2Cwq3wC READY with wakeplane.dev aliases; public homepage/new search/nav/mobile verified. Full comparison found guide text identical, with only2 historical footer date differences caused by shallow local site Git history (May30 boundary vs actual May27 copy dates). Corrected date provenance to explicit canonical per-document source Git timestamps so build histories agree. New branch codex/docs-source-dates: 13 invariant tests, all22 parsed YAML dates vs Git, parity, lint/format, Astro build and1520 renderedlinks/assets PASS. Generated dates are source-document dates, not site publication dates. Final followup publication and full live body comparison pending.'
+    status: in_progress
+    task_id: task-55
+    timestamp: "2026-10-06T19:32:10.000000Z"
+  - evidence: Published docs update complete. Site PR2 merged33de27b391b5cbf35ec22b3d0d8da8d13c1c65d3; main CI37520677357 SUCCESS and both Vercel deployment statuses SUCCESS. Production wakeplane-web dpl_6RAraMDqGFzefHtwthdJhjvXX96B Ready on wakeplane.dev and www. All22 live canonical page bodies exactly match validated build, including canonical per-document dates; installer/favicon bytes match, old ledger redirect verified. Search Pagefind1.4 platform-generated bootstrap has all35 statements AST-equivalent and remaining module byte-identical; real public search navigates tracked remote jobs correctly. Final browser console0 errors0 warnings; width390 has no overflow. 13 sync invariant tests, parity, lint/format, production build,1520 links/assets and application main Go/console/Postgres CI pass. Real42second MP4 demo output/playwright/wakeplane-docs-final-demo.mp4. Final receipt and all logs under artifacts/docs-site-sync-2026-10-06. Published binary remains v0.2.0-beta.1; no new tag/release; GA and binary release work separately scoped.
+    status: completed
+    task_id: task-55
+    timestamp: "2026-10-06T19:46:01.822877+00:00"
+  - evidence: User explicitly authorized publishing v0.3.0-beta.1 and verifying downloadable archives/checksums plus the live documentation banner. GitHub confirms main3fb4abc CI37516378451 SUCCESS; only existing public tag/release v0.2.0-beta.1. Preserve dirty agent execution records in original checkout; use isolated full-history release checkout, publish tested main tag through gated release workflow, verify public assets, then update canonical docs and paired site installer/banner with CI and live verification. No stable1.0 claim or production data migration.
+    status: in_progress
+    task_id: task-56
+    timestamp: "2026-10-06T21:04:13.523998+00:00"
+  - evidence: Annotated tagv0.3.0-beta.1 object4b06878fa8e1f1c63cd57af4f694ae131917ea53 pushed; GitHub peeled commit3fb4abc matches green main CI. Clean tagged checkout passed SMALL strict and generated-doc verification. Release workflow37531310506 running full gates and3-platform packaging. Prepared11 source-doc changes on isolated branch codex/published-v0.3.0-beta.1; no source/site published-state change before assets verified. Local Docker daemon unavailable; nativeDarwin and hostedLinux smoke plus architecture/build metadata will cover public archives without starting unrelated services.
+    status: in_progress
+    task_id: task-56
+    timestamp: "2026-10-06T21:06:33.805168+00:00"
+  - evidence: Release workflow37531310506 SUCCESS; v0.3.0-beta.1 is publicly published with3 archives and checksums. Both publicLinux archive checksums pass; actual public go install commands forCLI/daemon pass versions and module metadata. PublicDarwin transfer still progressing, separatecurl diagnostic timeout recorded without affecting required original download. Source-doc PR3 created/attached at08f2f17; hostedCI37532011427 SUCCESS. Paired sitecommit7faf9d3 has13 invariant tests, exact parity, format/lint, production build and1522 rendered links/assets PASS; no production installer/site promotion before native downloaded archive verification. Evidence under artifacts/release-v0.3.0-beta.1-2026-10-06.
+    status: in_progress
+    task_id: task-56
+    timestamp: "2026-10-06T21:16:19.205381+00:00"
+  - evidence: Publication is live and verified. Source PR3 merged93cafaddddc109bdd4f6233ff16dc6bebc5a966e; mainCI37532928456 SUCCESS. Site PR3 mergeda144a6a0209bd81902fdb89f97421e51e5c00f5c; mainCI37533349370 SUCCESS and production dpl_A37sM7XCX6j5tT5xfCcxuGR7hgf9 Ready on wakeplane.dev/www. All22 canonical live page bodies match tested build; installer/favicon byte parity and audited generated search library plus legacy redirect PASS. Native publicDarwin versions/daemon/auth/health/console/shutdown PASS, all3 checksums and6 build identities PASS, both public go install commands PASS. Original workspace fast-forwarded safely with only existing agent records dirty. Real public default installer tempdir run still transferring; final browser demo/mobile/receipt and SMALL completion remain.
+    status: in_progress
+    task_id: task-56
+    timestamp: "2026-10-06T21:26:59.560881+00:00"
+  - evidence: Completed authorized publication of v0.3.0-beta.1 at tagged source3fb4abc (annotatedtag4b06878). ReleaseCI37531310506 SUCCESS with Go vet/race, realPostgres16, lint/format/13 console tests,3 platform archives and nativeLinuxAMD64 archive smoke. All3 unauthenticated public archive downloads match published checksums and GitHub asset digests; safe2-file contents and6 binary architecture/source identities verified. NativeDarwin CLI/daemon versions, auth401/authorizedstatus, health/ready/console and clean shutdown PASS. Both actual public go install commands PASS. Source PR3 merged93cafad and site PR3 mergeda144a6a; theirPR/mainCI allSUCCESS. Production dpl_A37sM7XCX6j5tT5xfCcxuGR7hgf9 Ready; all22 live canonical pages match testedbuild,1-version banner and defaultinstaller nowv3;13 sync tests/lint/build/1522 links PASS. Real public hosted installer independently downloaded and checksum-verified Darwin archive into own tmpdir; both installed binaries report0.3.0-beta.1 and byte hashes match verified public archive. Docs browser desktop/mobile390 nooverflow,0errors0warnings; real32second MP4 demo output/playwright/wakeplane-v0.3-published-demo.mp4. Receipt/logs artifacts/release-v0.3.0-beta.1-2026-10-06. Original workspace safely fast-forwarded with unrelatedwork preserved. LinuxARM64 archive/checksum/architecture/revision verified; native execution unavailable locally. Remains publicbeta; noGA claim.
+    status: completed
+    task_id: task-56
+    timestamp: "2026-10-06T21:34:58.683583+00:00"
+  - evidence: User authorized next round, internal status cleanup, Discord/email delivery using JCN Agent Ops Gmail, and Railway/Cloudflare feasibility assessment. Branch codex/reliability-delivery-hosting starts at published-source docs main93cafad; only prior agent records dirty. Confirmed ordinary recovery separate failure/retry writes; connected Gmail profile jcn.agent.ops@gmail.com. Build reviewable recovery/delivery/deployment changes; no platform deployment requested. Live delivery awaits recipient and vault record names; never store secrets in artifacts.
+    status: in_progress
+    task_id: task-57
+    timestamp: "2026-10-07T16:54:28.316529+00:00"
+  - evidence: Atomic ordinary expiry recovery implemented. SQLite and real disposable Postgres18 tests prove follow-up rollback, renewed/completed lease fencing, successful retry/dead-letter commit and duplicate recovery rejection. Full Go race/vet/docsgen/module checks PASS. Internal status records published v0.3.0-beta.1 and unreleased branch work accurately.
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-57
+    timestamp: "2026-10-07T17:11:04.101204000Z"
+  - evidence: 'Configured Discord and Gmail adapters implemented outside core. Fixture tests and full race suite PASS: OAuth/MIME, provider confirmation, payload limits, mentions disabled, credential destinations, ambiguous send and durable restart, rate-limit retries. Gmail connector self-test1a11756d0c73750a confirmed SENT and INBOX via readback; unattended runner delivery awaits vault credentials.'
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-58
+    timestamp: "2026-10-07T17:11:04.132796000Z"
+  - evidence: Prepared non-root container, Railway daemon/runner configs, platform PORT support, hosting assessment and 30-day production acceptance plan. Config fields verified against public Railway schema. CI image/auth/persistence check added; local Docker unavailable. No production service created.
+    replayId: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+    status: completed
+    task_id: task-59
+    timestamp: "2026-10-07T17:11:04.163800000Z"
+  - task_id: task-60
+    status: in_progress
+    timestamp: "2026-10-07T17:25:31.987446+00:00"
+    evidence: "Draft PR4 at b888979; hosted CI37658175423 passed lint/vet/race/Postgres16/docs/build, Docker image built5cf4311 and daemon auth/persistent restart passed, but runner smoke exited because wildcard bind address produced an invalid default public URL. Corrected smoke environment to explicit loopback public origin and added early exit/logging for stopped containers. No application runtime workaround or production change. Rerun hosted CI before readiness."

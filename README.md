@@ -286,6 +286,8 @@ This bridge moves schedule definitions. Run history, receipts, audit logs, lease
 - [Replace Semantics](docs/replace-semantics.md)
 - [SQLite Audit](docs/sqlite-audit.md)
 - [Release Discipline](docs/release.md)
+- [Daemon Hosting: Railway and Cloudflare](docs/hosting.md)
+- [Production Acceptance](docs/production-acceptance.md)
 - [Deployment Notes](docs/deployment.md)
 
 For the current coherence audit, hardening gaps, and scale path, see [Current Status](docs/current-status.md).

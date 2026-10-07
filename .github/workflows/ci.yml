@@ -69,3 +69,6 @@ jobs:
         run: |
           go build -o /dev/null ./cmd/wakeplane
           go build -o /dev/null ./cmd/wakeplaned
+
+      - name: Verify container packaging and persistent restart
+        run: bash scripts/container-smoke.sh

@@ -48,7 +48,20 @@ Set `body.notify_url` to a trusted receiver to send the report after collection.
 
 The completed result records `delivery.status` and attempt count. A collected report can succeed while its notification is visibly failed; check that field rather than treating collection success as proof of delivery. Delivery attempts and pending delivery survive runner restart.
 
-This generic JSON payload is suitable for an adapter in n8n, Make, Zapier, or your own service. Slack, Discord, email, and other providers need an adapter that maps it to their API format and owns account credentials; their native webhook formats are not automatically compatible.
+This generic JSON payload is suitable for an adapter in n8n, Make, Zapier, or your own service. The published `v0.3.0-beta.1` requires an adapter for Discord and email. The current development branch adds the native delivery options below; install a subsequent release or build that source before using them. Other providers still need an adapter.
+
+## Discord and email delivery on the development branch
+
+Set `body.notify_channel` to `discord` or `email`, and omit `notify_url`. The destination and provider credentials are configured on the runner, never in schedule payloads. Each job selects one delivery channel; create separate schedules when both are needed.
+
+- `examples/developer-repository-watch-discord.yaml`: paused weekday repository watch delivered to a configured Discord channel.
+- `examples/personal-weekly-summary-email.yaml`: paused weekly digest delivered to a configured email recipient.
+
+For Discord, configure `AUTOMATION_RUNNER_DISCORD_WEBHOOK_URL` from your secret store. The runner accepts only an HTTPS `discord.com` API webhook URL, requests server confirmation with `wait=true`, suppresses mentions, and bounds message length. Full reports remain available as runner artifacts.
+
+For Gmail, configure `AUTOMATION_RUNNER_GMAIL_FROM`, `AUTOMATION_RUNNER_GMAIL_TO`, `AUTOMATION_RUNNER_GMAIL_CLIENT_ID`, `AUTOMATION_RUNNER_GMAIL_CLIENT_SECRET`, and `AUTOMATION_RUNNER_GMAIL_REFRESH_TOKEN`. FROM and TO each accept one plain email address. Authorize the Gmail account using a server-side OAuth flow with offline access and the `https://www.googleapis.com/auth/gmail.send` scope. Refresh credentials are sent only to Google's token endpoint; email requests go only to the Gmail API. Keep the refresh token and client secret in your shared vault or hosting secret variables. Connected Gmail access in an assistant does not provision credentials for this process. See [Google's authorization guide](https://developers.google.com/workspace/gmail/api/auth/web-server).
+
+Confirmed native sends persist a `delivery.provider_message_id`. Discord and Gmail do not promise deduplication for these requests. A transport error, server error, missing confirmation, or restart during a send produces `delivery.status = "unknown"` and is not automatically resent. Investigate the provider before arranging a new delivery. Explicit rate-limit rejections can retry within the existing three-attempt limit. The collected report can still succeed while delivery is `failed` or `unknown`; collection success does not prove receipt or inbox placement. Generic webhook receivers retain the original idempotency-key contract.
 
 ## Configuration and limits
 

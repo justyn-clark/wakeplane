@@ -26,3 +26,15 @@ func TestWithDefaultsKeepsSQLiteAsDefaultStore(t *testing.T) {
 		t.Fatalf("expected default sqlite database path, got %q", cfg.DatabasePath)
 	}
 }
+
+func TestPlatformPortAndExplicitListenAddress(t *testing.T) {
+	t.Setenv("PORT", "9123")
+	t.Setenv("WAKEPLANE_HTTP_ADDR", "")
+	if got := FromEnv("test").HTTPAddress; got != ":9123" {
+		t.Fatalf("platform listen address=%q", got)
+	}
+	t.Setenv("WAKEPLANE_HTTP_ADDR", "127.0.0.1:8123")
+	if got := FromEnv("test").HTTPAddress; got != "127.0.0.1:8123" {
+		t.Fatalf("explicit listen address=%q", got)
+	}
+}

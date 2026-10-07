@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -36,6 +35,7 @@ type taskRequest struct {
 	Repository     string          `json:"repository,omitempty"`
 	Feeds          []string        `json:"feeds,omitempty"`
 	NotifyURL      string          `json:"notify_url,omitempty"`
+	NotifyChannel  string          `json:"notify_channel,omitempty"`
 	WakeplaneEvent json.RawMessage `json:"_wakeplane_event,omitempty"`
 }
 
@@ -48,10 +48,11 @@ type reportItem struct {
 }
 
 type deliveryState struct {
-	Status      string     `json:"status"`
-	Attempts    int        `json:"attempts"`
-	LastError   string     `json:"last_error,omitempty"`
-	DeliveredAt *time.Time `json:"delivered_at,omitempty"`
+	Status            string     `json:"status"`
+	Attempts          int        `json:"attempts"`
+	LastError         string     `json:"last_error,omitempty"`
+	DeliveredAt       *time.Time `json:"delivered_at,omitempty"`
+	ProviderMessageID string     `json:"provider_message_id,omitempty"`
 }
 
 type report struct {
@@ -101,20 +102,27 @@ type diskState struct {
 }
 
 type runnerConfig struct {
-	StateDir     string
-	PublicURL    string
-	Token        string
-	GitHubURL    string
-	GitHubToken  string
-	NotifyToken  string
-	NotifyOrigin string
-	Client       *http.Client
-	RetryDelay   time.Duration
+	StateDir          string
+	PublicURL         string
+	Token             string
+	GitHubURL         string
+	GitHubToken       string
+	NotifyToken       string
+	NotifyOrigin      string
+	Client            *http.Client
+	RetryDelay        time.Duration
+	DiscordWebhookURL string
+	GmailFrom         string
+	GmailTo           string
+	GmailClientID     string
+	GmailClientSecret string
+	GmailRefreshToken string
 }
 
 type runner struct {
 	config      runnerConfig
 	client      *http.Client
+	gmailClient *http.Client
 	ctx         context.Context
 	cancel      context.CancelFunc
 	mu          sync.Mutex
@@ -146,6 +154,9 @@ func newRunner(ctx context.Context, config runnerConfig) (*runner, error) {
 			return nil, errors.New("a notification token requires AUTOMATION_RUNNER_NOTIFY_ORIGIN")
 		}
 	}
+	if err := validateDeliveryConfig(config); err != nil {
+		return nil, err
+	}
 	if config.RetryDelay == 0 {
 		config.RetryDelay = time.Second
 	}
@@ -162,6 +173,7 @@ func newRunner(ctx context.Context, config runnerConfig) (*runner, error) {
 		config: config, client: &client, ctx: workerCtx, cancel: cancel,
 		jobs: make(map[string]job), queue: make(chan string, maxJobs),
 	}
+	r.gmailClient = gmailHTTPClient(workerCtx, config, &client)
 	if err := os.MkdirAll(config.StateDir, 0700); err != nil {
 		cancel()
 		return nil, fmt.Errorf("create state directory: %w", err)
@@ -476,6 +488,9 @@ func (r *runner) validateTask(task taskRequest) error {
 	default:
 		return errors.New("task must be repository-watch or weekly-summary")
 	}
+	if err := r.validateDelivery(task); err != nil {
+		return err
+	}
 	if task.NotifyURL != "" {
 		notifyURL, err := validHTTPURL(task.NotifyURL)
 		if err != nil {
@@ -560,7 +575,7 @@ func (r *runner) execute(id string) {
 			r.finishFailed(id, err)
 			return
 		}
-		if entry.Request.NotifyURL != "" {
+		if entry.Request.NotifyURL != "" || entry.Request.NotifyChannel != "" {
 			result.Delivery = &deliveryState{Status: "pending"}
 		}
 		if err := r.update(id, func(current *job) {
@@ -573,7 +588,7 @@ func (r *runner) execute(id string) {
 		}
 	}
 	entry, _ = r.get(id)
-	if entry.Result.Delivery != nil && entry.Result.Delivery.Status != "sent" && entry.Result.Delivery.Status != "failed" {
+	if entry.Result.Delivery != nil && entry.Result.Delivery.Status != "sent" && entry.Result.Delivery.Status != "failed" && entry.Result.Delivery.Status != "unknown" {
 		if err := r.deliver(id); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("runner job %s: notification persistence: %v", id, err)
@@ -590,6 +605,8 @@ func (r *runner) execute(id string) {
 		if current.Result.Delivery != nil {
 			if current.Result.Delivery.Status == "sent" {
 				message += "; notification sent"
+			} else if current.Result.Delivery.Status == "unknown" {
+				message += "; notification unconfirmed (investigate before resending)"
 			} else {
 				message += "; notification failed (inspect delivery result)"
 			}
@@ -614,6 +631,12 @@ func (r *runner) deliver(id string) error {
 	for {
 		entry, _ := r.get(id)
 		delivery := entry.Result.Delivery
+		if nativeDelivery(entry.Request) && delivery.Status == "sending" {
+			return r.update(id, func(current *job) {
+				current.Result.Delivery.Status = "unknown"
+				current.Result.Delivery.LastError = "runner restarted during send; investigate provider before resending"
+			})
+		}
 		if delivery.Attempts >= maxDeliveries {
 			return r.update(id, func(current *job) {
 				current.Result.Delivery.Status = "failed"
@@ -624,35 +647,15 @@ func (r *runner) deliver(id string) error {
 		}
 		if err := r.update(id, func(current *job) {
 			current.Result.Delivery.Status = "pending"
+			if nativeDelivery(entry.Request) {
+				current.Result.Delivery.Status = "sending"
+			}
 			current.Result.Delivery.Attempts++
 			current.Progress = jobProgress{Percent: 90, Message: "Report ready; delivering notification"}
 		}); err != nil {
 			return err
 		}
-		payloadReport := *entry.Result
-		payloadReport.Delivery = nil // Every retry has the exact same payload.
-		payload, _ := json.Marshal(struct {
-			JobID  string `json:"job_id"`
-			Task   string `json:"task"`
-			Report report `json:"report"`
-		}{entry.ID, entry.Request.Task, payloadReport})
-		req, err := http.NewRequestWithContext(r.ctx, http.MethodPost, entry.Request.NotifyURL, bytes.NewReader(payload))
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Idempotency-Key", "wakeplane-notify:"+id)
-		if r.config.NotifyToken != "" {
-			req.Header.Set("Authorization", "Bearer "+r.config.NotifyToken)
-		}
-		response, sendErr := r.client.Do(req)
-		if response != nil {
-			_, _ = io.Copy(io.Discard, io.LimitReader(response.Body, 4096))
-			_ = response.Body.Close()
-			if sendErr == nil && (response.StatusCode < 200 || response.StatusCode >= 300) {
-				sendErr = fmt.Errorf("notification endpoint returned HTTP %d", response.StatusCode)
-			}
-		}
+		messageID, sendErr := r.sendNotification(entry)
 		if r.ctx.Err() != nil {
 			return r.ctx.Err()
 		}
@@ -662,10 +665,22 @@ func (r *runner) deliver(id string) error {
 				current.Result.Delivery.Status = "sent"
 				current.Result.Delivery.DeliveredAt = &now
 				current.Result.Delivery.LastError = ""
+				current.Result.Delivery.ProviderMessageID = messageID
+			})
+		}
+		var deliveryErr *notificationError
+		if errors.As(sendErr, &deliveryErr) && (deliveryErr.unconfirmed || !deliveryErr.retryable) {
+			return r.update(id, func(current *job) {
+				current.Result.Delivery.Status = "failed"
+				if deliveryErr.unconfirmed {
+					current.Result.Delivery.Status = "unknown"
+				}
+				current.Result.Delivery.LastError = deliveryErr.Error()
 			})
 		}
 		if err := r.update(id, func(current *job) {
 			current.Result.Delivery.LastError = truncate(sendErr.Error(), 1000)
+			current.Result.Delivery.Status = "pending"
 		}); err != nil {
 			return err
 		}

@@ -25,7 +25,7 @@ type Config struct {
 
 func FromEnv(version string) Config {
 	cfg := Config{
-		HTTPAddress:        envOrDefault("WAKEPLANE_HTTP_ADDR", ":8080"),
+		HTTPAddress:        envOrDefault("WAKEPLANE_HTTP_ADDR", ":"+envOrDefault("PORT", "8080")),
 		StoreDialect:       envOrDefault("WAKEPLANE_STORE", "sqlite"),
 		DatabasePath:       envOrDefault("WAKEPLANE_DB_PATH", "./wakeplane.db"),
 		DatabaseURL:        os.Getenv("WAKEPLANE_DATABASE_URL"),

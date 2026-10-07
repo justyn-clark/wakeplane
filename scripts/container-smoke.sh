@@ -22,8 +22,15 @@ docker run -d --name "$daemon" -p 127.0.0.1::8080 \
 
 wait_ready() {
   local name="$1" path="$2" port
-  port="$(docker port "$name" 8080/tcp | awk -F: '{print $NF}')"
+  port="$(docker port "$name" 8080/tcp | awk -F: '{print $NF}')" || {
+    docker logs "$name" >&2
+    return 1
+  }
   for _ in $(seq 1 60); do
+    if [[ "$(docker inspect -f '{{.State.Running}}' "$name")" != true ]]; then
+      docker logs "$name" >&2
+      return 1
+    fi
     if curl -fsS "http://127.0.0.1:${port}${path}" >/dev/null 2>&1; then
       printf '%s' "$port"
       return
@@ -47,6 +54,7 @@ curl -fsS -H "Authorization: Bearer $token" "http://127.0.0.1:${daemon_port}/v1/
 docker run -d --name "$runner" -p 127.0.0.1::8080 \
   -v "${runner_volume}:/data" -e PORT=8080 -e CONTAINER_HEALTH_PATH=/healthz \
   -e AUTOMATION_RUNNER_ADDR=:8080 -e AUTOMATION_RUNNER_STATE_DIR=/data/runner \
+  -e AUTOMATION_RUNNER_PUBLIC_URL=http://127.0.0.1:8080 \
   -e AUTOMATION_RUNNER_TOKEN="$token" "$image" /usr/local/bin/automation-runner >/dev/null
 runner_port="$(wait_ready "$runner" /healthz)"
 test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${runner_port}/jobs/lookup")" = 401

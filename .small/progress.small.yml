@@ -1725,3 +1725,7 @@ entries:
     status: completed
     task_id: task-59
     timestamp: "2026-10-07T17:11:04.163800000Z"
+  - task_id: task-60
+    status: in_progress
+    timestamp: "2026-10-07T17:25:31.987446+00:00"
+    evidence: "Draft PR4 at b888979; hosted CI37658175423 passed lint/vet/race/Postgres16/docs/build, Docker image built5cf4311 and daemon auth/persistent restart passed, but runner smoke exited because wildcard bind address produced an invalid default public URL. Corrected smoke environment to explicit loopback public origin and added early exit/logging for stopped containers. No application runtime workaround or production change. Rerun hosted CI before readiness."

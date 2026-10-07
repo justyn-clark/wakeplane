@@ -1,14 +1,14 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Recovery, Discord/Gmail runner adapters and Railway deployment preparation are implemented. Final container CI and reviewable PR remain."
+summary: "PR4 merged at948166f; release and documentation synchronization in progress."
 resume:
-  current_task_id: task-60
+  current_task_id: task-61
   next_steps:
-    - Complete final validation and open a reviewable PR without merging or publishing another release.
-    - Full Go race/vet, lint/format/13 console tests, docsgen, real Postgres18 integration, restart, SQLite restore and Postgres restore passed; container runtime test needs hosted Docker CI.
-    - Gmail connector self-test reached jcn.agent.ops@gmail.com; runtime Gmail OAuth grant and Discord webhook vault locations are still needed for live unattended delivery. No secrets in records.
-    - No Railway/Cloudflare deployment requested or created; production observation and later cancellation/approval controls remain separate milestones.
+    - Validate release preparation and publish v0.3.0-beta.2 from the exact green source head. Verify all public archives checksums and runner packaging before advancing the installer.
+    - Synchronize the paired documentation site from merged application main and verify the live banner install guidance and canonical pages.
+    - Runtime delivery requires separately provisioned Gmail offline authorization and a Discord webhook; user does not know existing vault records. Do not borrow connector credentials or claim hosted provider proof.
+    - Private Railway trial needs explicit deployment configuration and authorization before resources are created. Begin workload observation only after runtime delivery is verified.
 links: []
 replayId:
-    value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
-    source: auto
+  value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
+  source: auto

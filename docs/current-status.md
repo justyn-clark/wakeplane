@@ -1,6 +1,6 @@
 # Wakeplane Current Status
 
-As of 2026-10-07, the published release is `v0.3.0-beta.1`, with matching archives, checksums, hosted installer, and public documentation. Subsequent development on a branch is not part of that published release until a new tag and archives are published.
+As of 2026-10-07, the release line is `v0.3.0-beta.2`. Publication requires matching tagged archives and checksums; the hosted installer and public documentation are promoted through the paired site update. Subsequent development on a branch is not part of that published release until a new tag and archives are published.
 
 ## Implemented product surface
 
@@ -17,9 +17,9 @@ The source adds:
 
 The May backend improvements are included: optional single-operator bearer authentication, request audit, bounded receipts, terminal run retention, export/import, and an embedded console.
 
-## Current development work (not yet published)
+## Reliability, delivery, and hosting
 
-The reliability/delivery branch closes the ordinary running-lease recovery transaction gap and adds configured Discord and Gmail adapters in the separate example runner. It also adds container packaging and Railway deployment configuration. The published beta does not contain these changes. Provider fixture tests do not establish live delivery; a hosted deployment and longer workload observation remain separate acceptance steps.
+Release `v0.3.0-beta.2` closes the ordinary running-lease recovery transaction gap and adds configured Discord and Gmail adapters in the separate example runner. It also adds container packaging and Railway deployment configuration. Provider fixture tests do not establish live delivery; a hosted deployment and longer workload observation remain separate acceptance steps.
 
 ## Operational boundaries
 
@@ -33,4 +33,4 @@ The product remains beta. It has no RBAC, multi-tenancy, OAuth account onboardin
 
 CI and the release workflow require formatting/lint, console tests, Go vet, race tests, Postgres integration, generated documentation, and version-matched archive smoke checks. Local evidence is recorded in `.small/progress.small.yml`; historical deployment receipts are not evidence of the new features being deployed.
 
-See [Automation](public/automation.md), [Recipes](public/recipes.md), [Console](public/console.md), and the [release notes](public/releases/v0.3.0-beta.1.md). Longer operator soak and production recovery evidence remain promotion steps; beta is not a 1.0 guarantee. Keep future source changes, tagged binaries, and hosted documentation synchronized.
+See [Automation](public/automation.md), [Recipes](public/recipes.md), [Console](public/console.md), and the [release notes](public/releases/v0.3.0-beta.2.md). Longer operator soak and production recovery evidence remain promotion steps; beta is not a 1.0 guarantee. Keep future source changes, tagged binaries, and hosted documentation synchronized.

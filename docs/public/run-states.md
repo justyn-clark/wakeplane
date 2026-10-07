@@ -111,4 +111,4 @@ Tracked remote jobs use `running` -> `pending` recovery so the next owner can re
 
 Normal leased-worker failure records the outcome and its retry or dead letter in one transaction, fenced by the exact lease token. Tracked-job lease recovery requeues the existing tracker.
 
-On the current development branch, ordinary running-lease recovery atomically commits the outcome, retry or dead letter, and lease removal on both storage backends. Recovery rechecks the current lease expiry under the run lock, so a renewed lease fences stale recovery. The published `v0.3.0-beta.1` still has the separate-write recovery window; this fix requires a subsequent release. Atomic ledger updates do not guarantee exactly-once external side effects.
+In `v0.3.0-beta.2`, ordinary running-lease recovery atomically commits the outcome, retry or dead letter, and lease removal on both storage backends. Recovery rechecks the current lease expiry under the run lock, so a renewed lease fences stale recovery. The older `v0.3.0-beta.1` has the separate-write recovery window; upgrade for this fix. Atomic ledger updates do not guarantee exactly-once external side effects.

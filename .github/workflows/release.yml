@@ -78,6 +78,27 @@ jobs:
           ./dist/smoke/wakeplaned version
           test "$(./dist/smoke/wakeplane version)" = "${GITHUB_REF_NAME#v}"
           test "$(./dist/smoke/wakeplaned version)" = "${GITHUB_REF_NAME#v}"
+          test -x ./dist/smoke/automation-runner
+          AUTOMATION_RUNNER_ADDR=127.0.0.1:18091 \
+          AUTOMATION_RUNNER_STATE_DIR="$RUNNER_TEMP/archive-runner" \
+            ./dist/smoke/automation-runner >dist/smoke/runner.log 2>&1 &
+          runner_pid=$!
+          trap 'kill "$runner_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:18091/healthz; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "$runner_pid" 2>/dev/null; then
+              cat dist/smoke/runner.log
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          kill "$runner_pid"
+          wait "$runner_pid"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2

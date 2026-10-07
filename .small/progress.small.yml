@@ -1729,3 +1729,15 @@ entries:
     status: in_progress
     timestamp: "2026-10-07T17:25:31.987446+00:00"
     evidence: "Draft PR4 at b888979; hosted CI37658175423 passed lint/vet/race/Postgres16/docs/build, Docker image built5cf4311 and daemon auth/persistent restart passed, but runner smoke exited because wildcard bind address produced an invalid default public URL. Corrected smoke environment to explicit loopback public origin and added early exit/logging for stopped containers. No application runtime workaround or production change. Rerun hosted CI before readiness."
+  - task_id: task-60
+    status: completed
+    timestamp: "2026-10-07T20:09:18.000000Z"
+    evidence: "User reviewed and authorized PR4 merge. Exact reviewed head6183008 had CI37658976374 and GitGuardian SUCCESS; merged as948166f618344b634a6c7bf5b838555db97d5070. Local prior validation receipt retained in original checkout; no runtime deployment or provider provisioning performed."
+  - task_id: task-61
+    status: in_progress
+    timestamp: "2026-10-07T20:12:00.000000Z"
+    evidence: "User authorized continuing the next phase after PR4 merge. Isolated release worktree preserves original execution records. Prepare v0.3.0-beta.2 with separately packaged automation runner, archive smoke, and matching source documentation. Publish after green exact-head CI; synchronize site only after public archive checksums pass. Runtime grant and Discord webhook are not yet provisioned; no existing vault record assumed."
+  - task_id: task-61
+    status: in_progress
+    timestamp: "2026-10-07T20:23:00.000000Z"
+    evidence: "Release candidate local Go vet/full race/docsgen/module/build checks PASS, disposable Postgres18 PASS, JavaScript lint/Markdown formatting and13 console tests PASS. Three-platform packaging now includes the separate runner and hosted Linux archive readiness smoke. Moved hosting and acceptance content to canonical public pages with internal pointers to avoid duplicated guides. Initial SMALL metadata omissions corrected; strict and diff checks PASS. Site installer remains beta1 until release assets verified."

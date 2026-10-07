@@ -1,12 +1,14 @@
 # Runnable automation recipes
 
-These examples require `v0.3.0-beta.1` or its matching source build. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
+These examples require `v0.3.0-beta.2` or its matching source build. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
 
 ## Start the separate runner
 
-From this repository:
+Each `v0.3.0-beta.2` archive includes `automation-runner` alongside the CLI and daemon. Run the extracted binary, or use a matching source checkout:
 
 ```bash
+./automation-runner
+# Or, from the repository:
 go run ./examples/automation-runner
 ```
 
@@ -48,9 +50,9 @@ Set `body.notify_url` to a trusted receiver to send the report after collection.
 
 The completed result records `delivery.status` and attempt count. A collected report can succeed while its notification is visibly failed; check that field rather than treating collection success as proof of delivery. Delivery attempts and pending delivery survive runner restart.
 
-This generic JSON payload is suitable for an adapter in n8n, Make, Zapier, or your own service. The published `v0.3.0-beta.1` requires an adapter for Discord and email. The current development branch adds the native delivery options below; install a subsequent release or build that source before using them. Other providers still need an adapter.
+This generic JSON payload is suitable for an adapter in n8n, Make, Zapier, or your own service. Native Discord and Gmail delivery is included in `v0.3.0-beta.2`; `v0.3.0-beta.1` requires an external adapter for those channels. Other providers still need an adapter.
 
-## Discord and email delivery on the development branch
+## Discord and email delivery
 
 Set `body.notify_channel` to `discord` or `email`, and omit `notify_url`. The destination and provider credentials are configured on the runner, never in schedule payloads. Each job selects one delivery channel; create separate schedules when both are needed.
 

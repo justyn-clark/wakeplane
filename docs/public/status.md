@@ -4,9 +4,9 @@ This page defines what Wakeplane means by alpha, beta, and 1.0. It is intentiona
 
 ## Current public state
 
-The published beta is `v0.3.0-beta.1`. These docs match the published release. Wakeplane remains pre-stable and intended for a single operator on trusted infrastructure.
+The published beta is `v0.3.0-beta.2`. These docs match the published release. Wakeplane remains pre-stable and intended for a single operator on trusted infrastructure.
 
-The legacy `v0.2.0-beta.1` has no built-in authentication, request audit, configurable receipt limits, retention, Postgres backend, operator console, status command, or schedule update/export/import commands. Those features and the new automation interfaces are available in `v0.3.0-beta.1`. Setting `WAKEPLANE_AUTH_TOKEN` does not protect an older binary that lacks authentication support.
+The legacy `v0.2.0-beta.1` has no built-in authentication, request audit, configurable receipt limits, retention, Postgres backend, operator console, status command, or schedule update/export/import commands. Those features and the new automation interfaces are available in `v0.3.0-beta.2`. Setting `WAKEPLANE_AUTH_TOKEN` does not protect an older binary that lacks authentication support.
 
 The beta gate is now satisfied:
 
@@ -64,7 +64,7 @@ Wakeplane should not be labeled stable until all of these are true:
 The most practical path beyond beta is:
 
 1. Validate complete operator workloads through guided creation, tracked external completion, and notification delivery; publish matching binaries and documentation.
-2. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0.
+2. Extend soak, restart-recovery, and backup/restore verification with longer windows and real operator workloads before claiming 1.0; follow [Production Acceptance](production-acceptance.md) and [Daemon Hosting](hosting.md).
 3. Decide whether the embedding surface becomes a stable public Go package or remains source-level for the current release line.
 
 ## Explicitly out of scope today

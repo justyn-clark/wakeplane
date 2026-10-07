@@ -3,7 +3,7 @@
 
 Wakeplane exposes a JSON HTTP API for schedule and run management. The route tables on this page are generated from `internal/api/http.go` so the published surface stays aligned with the server.
 
-> **Source version:** this reference describes Wakeplane `0.3.0-beta.1`. Use a matching source build or published release; see [Install](install.md) for public binary availability. Older releases do not provide every route or security control listed here.
+> **Source version:** this reference describes Wakeplane `0.3.0-beta.2`. Use a matching source build or published release; see [Install](install.md) for public binary availability. Older releases do not provide every route or security control listed here.
 
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 
@@ -104,7 +104,7 @@ Run list responses include operator-console fields: `schedule_name`, `target_kin
 ```json
 {
   "service": "wakeplane",
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "started_at": "2026-03-25T12:00:00Z",
   "database": {
     "driver": "sqlite",

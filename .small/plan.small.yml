@@ -181,3 +181,12 @@ tasks:
   - id: task-60
     title: Validate recovery delivery packaging and docs and prepare reviewable pull request
     status: pending
+  - id: task-61
+    title: Publish merged reliability and delivery changes as v0.3.0-beta.2 with verified archives
+    status: in_progress
+  - id: task-62
+    title: Synchronize released source documentation installer and production site
+    status: pending
+  - id: task-63
+    title: Provision private trial credentials and verify unattended provider delivery
+    status: pending

@@ -1,6 +1,6 @@
 # Wakeplane Docs
 
-Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the published `v0.3.0-beta.1` beta. See [Install](install.md) for downloads and [Status](status.md) for release expectations.
+Wakeplane is a durable scheduling control plane for long-running systems. These docs cover the published `v0.3.0-beta.2` beta. See [Install](install.md) for downloads and [Status](status.md) for release expectations.
 
 > **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
 
@@ -44,6 +44,8 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 - [API](api.md) - endpoint list, error envelope, pagination, filtering, content types
 - [Embedding](embedding.md) - using Wakeplane as a Go library in your application
 - [Storage](storage.md) - SQLite local mode, Postgres production mode, and migration bridge
+- [Daemon Hosting](hosting.md) - private Railway deployment and Cloudflare compatibility
+- [Production Acceptance](production-acceptance.md) - workload and operational evidence for promotion
 - [Runbook](runbook.md) - startup, health checks, shutdown, metrics, common failures
 - [Releasing](releasing.md) - versioning, release checklist, breaking change definition
 - [Security](security.md) - bearer-token auth, trusted-network requirements, planned work
@@ -51,7 +53,7 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 
 ## Current scope
 
-The published `v0.3.0-beta.1` includes the following capabilities. The legacy `v0.2.0-beta.1` binaries provide the older SQLite scheduler and basic CLI/API. They do not include the later authentication, request audit, receipt limits, retention, Postgres, console, status command, schedule update/export/import commands, MCP, event delivery, or tracked jobs. See [Install](install.md) for the available build paths; setting `WAKEPLANE_AUTH_TOKEN` cannot protect an older binary without authentication support.
+The published `v0.3.0-beta.2` includes the following capabilities. The legacy `v0.2.0-beta.1` binaries provide the older SQLite scheduler and basic CLI/API. They do not include the later authentication, request audit, receipt limits, retention, Postgres, console, status command, schedule update/export/import commands, MCP, event delivery, or tracked jobs. See [Install](install.md) for the available build paths; setting `WAKEPLANE_AUTH_TOKEN` cannot protect an older binary without authentication support.
 
 - Single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations and a verified Postgres backend

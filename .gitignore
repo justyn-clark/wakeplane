@@ -51,3 +51,8 @@ infra/terraform/*.tfstate
 infra/terraform/*.tfstate.backup
 infra/terraform/.terraform.lock.hcl
 infra/terraform/terraform.tfvars
+
+# Local cloud adapter state and credentials
+infra/cloudflare/.wrangler/
+.dev.vars
+.dev.vars.*

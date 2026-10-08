@@ -17,6 +17,8 @@ trap cleanup EXIT
 docker build -t "$image" .
 docker volume create "$daemon_volume" >/dev/null
 docker volume create "$runner_volume" >/dev/null
+# Simulate Railway's root-owned mount before invoking the bootstrap.
+docker run --rm --user 0 -v "${runner_volume}:/data" --entrypoint sh "$image" -c 'chown 0:0 /data; chmod 755 /data'
 docker run -d --name "$daemon" -p 127.0.0.1::8080 \
   -v "${daemon_volume}:/data" -e PORT=8080 -e WAKEPLANE_AUTH_TOKEN="$token" "$image" >/dev/null
 
@@ -51,7 +53,7 @@ daemon_port="$(wait_ready "$daemon" /readyz)"
 curl -fsS -H "Authorization: Bearer $token" "http://127.0.0.1:${daemon_port}/v1/schedules" | \
   python3 -c 'import json,sys; data=json.load(sys.stdin); assert "weekday-repository-watch-discord" in json.dumps(data), data'
 
-docker run -d --name "$runner" -p 127.0.0.1::8080 \
+docker run -d --user 0 --name "$runner" -p 127.0.0.1::8080 \
   -v "${runner_volume}:/data" -e PORT=8080 -e CONTAINER_HEALTH_PATH=/healthz \
   -e AUTOMATION_RUNNER_ADDR=:8080 -e AUTOMATION_RUNNER_STATE_DIR=/data/runner \
   -e AUTOMATION_RUNNER_PUBLIC_URL=http://127.0.0.1:8080 \
@@ -61,5 +63,5 @@ test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${runner_port}/
 docker restart --time 30 "$runner" >/dev/null
 wait_ready "$runner" /healthz >/dev/null
 test "$(docker exec "$daemon" id -u)" = 10001
-test "$(docker exec "$runner" id -u)" = 10001
+test "$(docker exec "$runner" cat /proc/1/status | awk '/^Uid:/{print $2}')" = 10001
 printf '%s\n' 'Container build, non-root execution, auth, SQLite persistence, and runner restart PASS.'

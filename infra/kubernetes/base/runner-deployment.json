@@ -1,0 +1,140 @@
+{
+	"apiVersion": "apps/v1",
+	"kind": "Deployment",
+	"metadata": {
+		"name": "runner"
+	},
+	"spec": {
+		"replicas": 1,
+		"strategy": {
+			"type": "Recreate"
+		},
+		"selector": {
+			"matchLabels": {
+				"app": "runner"
+			}
+		},
+		"template": {
+			"metadata": {
+				"labels": {
+					"app": "runner"
+				}
+			},
+			"spec": {
+				"automountServiceAccountToken": false,
+				"terminationGracePeriodSeconds": 40,
+				"securityContext": {
+					"runAsUser": 10001,
+					"runAsGroup": 10001,
+					"runAsNonRoot": true,
+					"fsGroup": 10001,
+					"fsGroupChangePolicy": "OnRootMismatch",
+					"seccompProfile": {
+						"type": "RuntimeDefault"
+					}
+				},
+				"containers": [
+					{
+						"name": "runner",
+						"image": "wakeplane:local",
+						"imagePullPolicy": "IfNotPresent",
+						"command": ["/usr/local/bin/automation-runner"],
+						"env": [
+							{
+								"name": "AUTOMATION_RUNNER_ADDR",
+								"value": ":8080"
+							},
+							{
+								"name": "AUTOMATION_RUNNER_STATE_DIR",
+								"value": "/data/runner"
+							},
+							{
+								"name": "AUTOMATION_RUNNER_PUBLIC_URL",
+								"value": "http://runner.wakeplane.svc.cluster.local:8080"
+							},
+							{
+								"name": "CONTAINER_HEALTH_PATH",
+								"value": "/healthz"
+							}
+						],
+						"envFrom": [
+							{
+								"secretRef": {
+									"name": "runner-secrets"
+								}
+							}
+						],
+						"ports": [
+							{
+								"name": "http",
+								"containerPort": 8080
+							}
+						],
+						"securityContext": {
+							"allowPrivilegeEscalation": false,
+							"readOnlyRootFilesystem": true,
+							"capabilities": {
+								"drop": ["ALL"]
+							}
+						},
+						"resources": {
+							"requests": {
+								"cpu": "100m",
+								"memory": "64Mi"
+							},
+							"limits": {
+								"cpu": "500m",
+								"memory": "256Mi"
+							}
+						},
+						"readinessProbe": {
+							"httpGet": {
+								"path": "/healthz",
+								"port": "http"
+							},
+							"periodSeconds": 5
+						},
+						"livenessProbe": {
+							"httpGet": {
+								"path": "/healthz",
+								"port": "http"
+							},
+							"periodSeconds": 15,
+							"failureThreshold": 3
+						},
+						"startupProbe": {
+							"httpGet": {
+								"path": "/healthz",
+								"port": "http"
+							},
+							"periodSeconds": 2,
+							"failureThreshold": 60
+						},
+						"volumeMounts": [
+							{
+								"name": "state",
+								"mountPath": "/data"
+							},
+							{
+								"name": "tmp",
+								"mountPath": "/tmp"
+							}
+						]
+					}
+				],
+				"volumes": [
+					{
+						"name": "state",
+						"persistentVolumeClaim": {
+							"claimName": "runner-state"
+						}
+					},
+					{
+						"name": "tmp",
+						"emptyDir": {}
+					}
+				]
+			}
+		}
+	}
+}

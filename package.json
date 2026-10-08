@@ -11,10 +11,13 @@
 		"format:code:check": "biome check .",
 		"format:docs": "prettier --write \"**/*.md\"",
 		"format:docs:check": "prettier --check \"**/*.md\"",
-		"check": "pnpm run format:code:check && pnpm run format:docs:check && pnpm run test:console"
+		"check": "pnpm run format:code:check && pnpm run format:docs:check && pnpm run test:console && pnpm run test:deployment",
+		"test:deployment": "node --test tools/deployment-test.mjs",
+		"check:cloudflare": "WRANGLER_SEND_METRICS=false WRANGLER_LOG_PATH=/tmp/wakeplane-wrangler.log wrangler deploy --dry-run --config infra/cloudflare/wrangler.json --outdir /tmp/wakeplane-cloudflare-dry-run"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.9",
-		"prettier": "^3.6.2"
+		"prettier": "^3.6.2",
+		"wrangler": "4.148.0"
 	}
 }

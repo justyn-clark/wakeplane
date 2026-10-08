@@ -311,3 +311,7 @@ Runtime and build execution state in this repo is tracked through `small`.
 - Use `small plan`, `small checkpoint`, `small handoff`, and `small check --strict` for agent-owned state.
 - Use `small draft` and `small accept` for human-owned `.small` artifacts.
 - Use `small apply --task ... --cmd ...` for build, test, and verification commands.
+
+## Deployment adapters
+
+Railway is the primary hosted target. [Deployment adapters](infra/README.md) include AWS EKS and Google GKE storage overlays, plus an experimental Cloudflare Containers daemon supervisor. All preserve separate execution adapters and durable state. Cloud-specific runtime acceptance remains distinct from configuration and CI checks.

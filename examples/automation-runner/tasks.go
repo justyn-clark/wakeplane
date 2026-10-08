@@ -50,7 +50,7 @@ func (r *runner) repositoryReport(ctx context.Context, repository string) (repor
 	}
 	result := report{
 		Title: "Repository watch: " + repository, GeneratedAt: time.Now().UTC(),
-		Summary: fmt.Sprintf("%s has %d stars and %d open issues including pull requests. Last push: %s. This is a source-backed activity report; no changes were made.", repository, metadata.Stars, metadata.OpenIssues, truncate(metadata.PushedAt, 80)),
+		Summary: fmt.Sprintf("%s. %s (including pull requests). Last push: %s.", countLabel(metadata.Stars, "star", "stars"), countLabel(metadata.OpenIssues, "open issue", "open issues"), reportDate(truncate(metadata.PushedAt, 80))),
 		Items: []reportItem{{
 			Title: "Repository overview", URL: outputURL(metadata.HTMLURL, base), Source: repository,
 			PublishedAt: truncate(metadata.PushedAt, 80), Excerpt: plainText(metadata.Description, 500),
@@ -71,7 +71,7 @@ func (r *runner) repositoryReport(ctx context.Context, repository string) (repor
 			Source: repository, PublishedAt: truncate(release.PublishedAt, 80),
 		})
 	} else {
-		result.Summary += " No published stable release was returned."
+		result.Summary += " No published stable release."
 	}
 	var pulls []githubPull
 	if _, err := r.fetchJSON(ctx, base+"/pulls?state=open&sort=updated&direction=desc&per_page=5", &pulls, false); err != nil {
@@ -86,7 +86,9 @@ func (r *runner) repositoryReport(ctx context.Context, repository string) (repor
 			URL:   outputURL(pull.HTMLURL, base), Source: repository, PublishedAt: truncate(pull.UpdatedAt, 80),
 		})
 	}
-	result.Summary += fmt.Sprintf(" Included %d recently updated open pull requests.", len(pulls))
+	if len(pulls) > 0 {
+		result.Summary += fmt.Sprintf(" Showing %s.", countLabel(len(pulls), "recent pull request", "recent pull requests"))
+	}
 	return result, nil
 }
 
@@ -195,8 +197,15 @@ func (r *runner) feedReport(ctx context.Context, addresses []string) (report, er
 	if len(result.Items) > maxArticles {
 		result.Items = result.Items[:maxArticles]
 	}
-	result.Summary = fmt.Sprintf("%d recent items from %d RSS or Atom feeds, with source excerpts and links. This reading list uses the feeds' published descriptions; it does not claim to summarize full articles or use an AI model.", len(result.Items), len(addresses))
+	result.Summary = fmt.Sprintf("%s from %s.", countLabel(len(result.Items), "recent entry", "recent entries"), countLabel(len(addresses), "feed", "feeds"))
 	return result, nil
+}
+
+func countLabel(count int, singular, plural string) string {
+	if count == 1 {
+		return fmt.Sprintf("%d %s", count, singular)
+	}
+	return fmt.Sprintf("%d %s", count, plural)
 }
 
 func parseFeed(data []byte, address string) ([]reportItem, error) {
@@ -310,27 +319,28 @@ func outputURL(value, base string) string {
 func renderReport(result report) string {
 	escape := strings.NewReplacer("\\", "\\\\", "[", "\\[", "]", "\\]", "*", "\\*", "#", "\\#", "<", "&lt;", ">", "&gt;")
 	var builder strings.Builder
-	fmt.Fprintf(&builder, "# %s\n\nGenerated: %s\n\n%s\n\n", escape.Replace(result.Title), result.GeneratedAt.Format(time.RFC3339), escape.Replace(result.Summary))
+	fmt.Fprintf(&builder, "# %s\n\n%s\n\n%s\n\n", escape.Replace(asciiText(result.Title)), reportDate(result.GeneratedAt.Format(time.RFC3339)), escape.Replace(asciiText(result.Summary)))
 	if result.Delivery != nil {
 		fmt.Fprintf(&builder, "Notification: %s (%d attempts)\n\n", result.Delivery.Status, result.Delivery.Attempts)
 	}
 	for _, item := range result.Items {
-		title := escape.Replace(item.Title)
-		if item.URL != "" {
+		title := escape.Replace(asciiText(item.Title))
+		if address := asciiURL(item.URL); address != "" {
 			// Angle-bracket destinations keep parentheses in a source URL from
 			// changing Markdown's link syntax. Brackets are percent-encoded.
-			link := strings.NewReplacer("<", "%3C", ">", "%3E").Replace(item.URL)
-			fmt.Fprintf(&builder, "- [%s](<%s>) — %s", title, link, escape.Replace(item.Source))
+			link := strings.NewReplacer("<", "%3C", ">", "%3E").Replace(address)
+			fmt.Fprintf(&builder, "- [%s](<%s>) - %s", title, link, escape.Replace(asciiText(item.Source)))
 		} else {
-			fmt.Fprintf(&builder, "- %s — %s", title, escape.Replace(item.Source))
+			fmt.Fprintf(&builder, "- %s - %s", title, escape.Replace(asciiText(item.Source)))
 		}
 		if item.PublishedAt != "" {
-			fmt.Fprintf(&builder, " (%s)", escape.Replace(item.PublishedAt))
+			fmt.Fprintf(&builder, " (%s)", escape.Replace(reportDate(item.PublishedAt)))
 		}
 		fmt.Fprintln(&builder)
 		if item.Excerpt != "" {
-			fmt.Fprintf(&builder, "  %s\n", escape.Replace(item.Excerpt))
+			fmt.Fprintf(&builder, "  %s\n", escape.Replace(asciiText(item.Excerpt)))
 		}
+		fmt.Fprintln(&builder)
 	}
 	return builder.String()
 }

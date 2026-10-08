@@ -8,10 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime"
+	"mime/multipart"
 	"mime/quotedprintable"
 	"net/http"
 	"net/mail"
+	"net/textproto"
 	"regexp"
 	"strings"
 
@@ -196,10 +197,19 @@ func discordContent(text string) string {
 
 func (r *runner) emailMessage(entry job, result report) []byte {
 	var message bytes.Buffer
-	subject := strings.NewReplacer("\r", " ", "\n", " ").Replace(result.Title)
-	fmt.Fprintf(&message, "From: %s\r\nTo: %s\r\nSubject: %s\r\nMessage-ID: <wakeplane-%s@wakeplane.invalid>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n", r.config.GmailFrom, r.config.GmailTo, mime.QEncoding.Encode("UTF-8", subject), entry.ID)
-	writer := quotedprintable.NewWriter(&message)
-	_, _ = io.WriteString(writer, renderReport(result))
-	_ = writer.Close()
+	parts := multipart.NewWriter(&message)
+	subject := strings.Join(strings.Fields(asciiText(result.Title)), " ")
+	fmt.Fprintf(&message, "From: %s\r\nTo: %s\r\nSubject: %s\r\nMessage-ID: <wakeplane-%s@wakeplane.invalid>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=%q\r\n\r\n", r.config.GmailFrom, r.config.GmailTo, subject, entry.ID, parts.Boundary())
+	for _, body := range []struct{ contentType, text string }{
+		{"text/plain", renderEmailText(result)},
+		{"text/html", renderEmailHTML(result)},
+	} {
+		header := textproto.MIMEHeader{"Content-Type": {body.contentType + "; charset=us-ascii"}, "Content-Transfer-Encoding": {"quoted-printable"}}
+		part, _ := parts.CreatePart(header) // bytes.Buffer cannot fail writes.
+		writer := quotedprintable.NewWriter(part)
+		_, _ = io.WriteString(writer, body.text)
+		_ = writer.Close()
+	}
+	_ = parts.Close()
 	return message.Bytes()
 }

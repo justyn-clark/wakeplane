@@ -67,6 +67,8 @@ Release `v0.3.0-beta.3` and matching source builds send Gmail reports as a respo
 
 Confirmed native sends persist a `delivery.provider_message_id`. Discord and Gmail do not promise deduplication for these requests. A transport error, server error, missing confirmation, or restart during a send produces `delivery.status = "unknown"` and is not automatically resent. Investigate the provider before arranging a new delivery. Explicit rate-limit rejections can retry within the existing three-attempt limit. The collected report can still succeed while delivery is `failed` or `unknown`; collection success does not prove receipt or inbox placement. Generic webhook receivers retain the original idempotency-key contract.
 
+The Discord and email schedule examples use `run_once_if_late` so a normal planner delay still runs the latest report. Older overdue reports are skipped. With `skip`, every occurrence already due when the planner checks is discarded, including a report picked up only one second late.
+
 ## Configuration and limits
 
 | Runner setting                    | Purpose                                                                             |

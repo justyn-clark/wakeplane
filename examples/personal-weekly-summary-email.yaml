@@ -18,7 +18,7 @@ target:
       - https://github.com/justyn-clark/wakeplane/releases.atom
 policy:
   overlap: forbid
-  misfire: skip
+  misfire: run_once_if_late
   timeout_seconds: 180
   max_concurrency: 1
 retry:

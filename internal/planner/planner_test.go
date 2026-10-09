@@ -2,6 +2,7 @@ package planner
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -10,7 +11,54 @@ import (
 	"github.com/justyn-clark/wakeplane/internal/domain"
 	"github.com/justyn-clark/wakeplane/internal/logging"
 	"github.com/justyn-clark/wakeplane/internal/store"
+	"gopkg.in/yaml.v3"
 )
+
+func TestNotificationExamplesRunAfterNormalPlannerDelay(t *testing.T) {
+	for _, name := range []string{"developer-repository-watch-discord.yaml", "personal-weekly-summary-email.yaml"} {
+		t.Run(name, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join("..", "..", "examples", name))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var request domain.CreateScheduleRequest
+			if err := yaml.Unmarshal(data, &request); err != nil {
+				t.Fatal(err)
+			}
+			if request.Enabled {
+				t.Fatal("notification examples must remain paused")
+			}
+			if request.Policy.Misfire != domain.MisfireRunOnceIfLate {
+				t.Fatal("reports must run the latest due occurrence")
+			}
+			st := newTestStore(t)
+			nominal := time.Date(2026, 10, 12, 16, 0, 0, 0, time.UTC)
+			schedule := testSchedule(nominal, request.Policy.Misfire)
+			schedule.Schedule = request.Schedule
+			schedule.Timezone = request.Timezone
+			schedule.Target = request.Target
+			schedule.Policy = request.Policy
+			schedule.NextRunAt = ptrTime(nominal)
+			if err := st.CreateSchedule(context.Background(), schedule); err != nil {
+				t.Fatal(err)
+			}
+			pl := New(st, logging.New())
+			for _, delay := range []time.Duration{time.Second, 5 * time.Second} {
+				pl.now = func() time.Time { return nominal.Add(delay) }
+				if err := pl.Tick(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+			}
+			items, _, err := st.ListRuns(context.Background(), &schedule.ID, nil, nil, 10, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(items) != 1 || items[0].Status != domain.RunPending || !items[0].NominalTime.Equal(nominal) {
+				t.Fatalf("expected exactly one pending nominal occurrence, got %+v", items)
+			}
+		})
+	}
+}
 
 func TestPlannerMisfirePolicies(t *testing.T) {
 	testCases := []struct {

@@ -2,7 +2,7 @@
 
 Wakeplane is a durable scheduling control plane. This guide gets you from nothing to a running daemon with a real schedule in under five minutes.
 
-This guide covers the published `v0.3.0-beta.1` beta, including the console, authentication, and Postgres options described here. See [Install](install.md) for downloads and checksum verification.
+This guide covers the published `v0.3.0-beta.3` beta, including the console, authentication, and Postgres options described here. See [Install](install.md) for downloads and checksum verification.
 
 > **Operator warning:** Wakeplane supports single-operator bearer auth for `/v1/...`, but it has no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Do not expose it directly to the public internet. See [Security](security.md).
 

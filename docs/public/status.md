@@ -4,9 +4,9 @@ This page defines what Wakeplane means by alpha, beta, and 1.0. It is intentiona
 
 ## Current public state
 
-The published beta is `v0.3.0-beta.2`. These docs follow current source and identify features newer than the published archives. Wakeplane remains pre-stable and intended for a single operator on trusted infrastructure.
+The published beta is `v0.3.0-beta.3`. Tagged archives and checksums include the notification formatting and deployment additions described here. Wakeplane remains pre-stable and intended for a single operator on trusted infrastructure.
 
-The legacy `v0.2.0-beta.1` has no built-in authentication, request audit, configurable receipt limits, retention, Postgres backend, operator console, status command, or schedule update/export/import commands. Those features and the new automation interfaces are available in `v0.3.0-beta.2`. Setting `WAKEPLANE_AUTH_TOKEN` does not protect an older binary that lacks authentication support.
+The legacy `v0.2.0-beta.1` has no built-in authentication, request audit, configurable receipt limits, retention, Postgres backend, operator console, status command, or schedule update/export/import commands. Those features and the new automation interfaces are available in `v0.3.0-beta.3`. Setting `WAKEPLANE_AUTH_TOKEN` does not protect an older binary that lacks authentication support.
 
 The beta gate is now satisfied:
 

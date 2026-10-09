@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public beta - `v0.3.0-beta.2`.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Download the published binaries from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases/tag/v0.3.0-beta.2). See [SECURITY.md](SECURITY.md).
+> **Public beta - `v0.3.0-beta.3`.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Download the published binaries from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases/tag/v0.3.0-beta.3). See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 

@@ -1,6 +1,6 @@
 # Assistant and external automation
 
-Wakeplane keeps scheduling, policy, durable occurrence identity, and operator history separate from the service that executes the work. These capabilities are available in the published `v0.3.0-beta.3` beta.
+Wakeplane keeps scheduling, policy, durable occurrence identity, and operator history separate from the service that executes the work. These capabilities are available in the stable `v1.0.0` release.
 
 ## Assistant access
 

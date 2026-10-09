@@ -3,7 +3,7 @@
 [![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Public beta - `v0.3.0-beta.3`.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Download the published binaries from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases/tag/v0.3.0-beta.3). See [SECURITY.md](SECURITY.md).
+> **Stable release - `v1.0.0`.** Single-operator bearer auth is available, but there is no RBAC or multi-tenancy. Bind to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network. Download the published binaries from [GitHub Releases](https://github.com/justyn-clark/wakeplane/releases/tag/v1.0.0). See [SECURITY.md](SECURITY.md).
 
 Wakeplane is a durable scheduling control plane for long-running systems.
 
@@ -27,7 +27,7 @@ Wakeplane is designed as a reusable primitive across JCN systems. Nothing here i
 
 Current shipped state:
 
-- pre-stable public beta release line
+- 1.0 compatibility scope: standalone single-operator daemon, REST API, CLI, and schedule manifests; see [Stable Contract](docs/public/stable-contract.md)
 - core boundary preserved across distinct planner, dispatcher, store, executor, API, and CLI packages
 - single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations and a Postgres production backend seam

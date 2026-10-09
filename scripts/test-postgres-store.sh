@@ -4,7 +4,7 @@ set -euo pipefail
 container_name="${WAKEPLANE_POSTGRES_TEST_CONTAINER:-wakeplane-postgres-test}"
 port="${WAKEPLANE_POSTGRES_TEST_PORT:-55432}"
 database_url="postgres://wakeplane:wakeplane@127.0.0.1:${port}/wakeplane?sslmode=disable"
-packages=(./internal/store ./internal/app ./internal/dispatcher ./internal/cli)
+packages=(./internal/store ./internal/app ./internal/dispatcher ./internal/cli ./internal/planner)
 local_pg_dir=""
 local_pg_bin=""
 
@@ -19,7 +19,7 @@ find_postgres_bin() {
     dirname "$(command -v initdb)"
     return
   fi
-  for dir in /opt/homebrew/opt/postgresql@17/bin /opt/homebrew/opt/postgresql@16/bin /opt/homebrew/opt/postgresql@15/bin /usr/local/opt/postgresql@17/bin /usr/local/opt/postgresql@16/bin /usr/local/opt/postgresql@15/bin; do
+  for dir in /opt/homebrew/opt/postgresql@18/bin /opt/homebrew/opt/postgresql@17/bin /opt/homebrew/opt/postgresql@16/bin /opt/homebrew/opt/postgresql@15/bin /usr/local/opt/postgresql@18/bin /usr/local/opt/postgresql@17/bin /usr/local/opt/postgresql@16/bin /usr/local/opt/postgresql@15/bin; do
     if [[ -x "${dir}/initdb" && -x "${dir}/pg_ctl" && -x "${dir}/createdb" ]]; then
       echo "${dir}"
       return

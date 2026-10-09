@@ -63,7 +63,7 @@ func NewWithOptions(ctx context.Context, cfg config.Config, opts ...Option) (*Se
 		shellExec.New(),
 		workflowExec.New(workflowRegistry),
 	)
-	pl := planner.New(st, logger)
+	pl := planner.New(st, logger, cfg.SchedulerInterval)
 	disp := dispatcher.New(st, registry, logger, cfg.WorkerID, cfg.LeaseTTL)
 	return &Service{
 		cfg:              cfg,
@@ -629,9 +629,6 @@ func (s *Service) Metrics(ctx context.Context) (string, error) {
 }
 
 func withDefaults(req domain.CreateScheduleRequest) domain.CreateScheduleRequest {
-	if req.Policy.TimeoutSeconds == 0 {
-		req.Policy = domain.DefaultPolicy()
-	}
 	if req.Policy.Overlap == "" {
 		req.Policy.Overlap = domain.DefaultPolicy().Overlap
 	}
@@ -645,7 +642,7 @@ func withDefaults(req domain.CreateScheduleRequest) domain.CreateScheduleRequest
 		req.Policy.MaxConcurrency = domain.DefaultPolicy().MaxConcurrency
 	}
 	if req.Retry.Strategy == "" {
-		req.Retry = domain.DefaultRetryPolicy()
+		req.Retry.Strategy = domain.DefaultRetryPolicy().Strategy
 	}
 	if req.Retry.InitialDelaySeconds == 0 {
 		req.Retry.InitialDelaySeconds = domain.DefaultRetryPolicy().InitialDelaySeconds

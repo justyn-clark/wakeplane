@@ -96,7 +96,12 @@ func NewMux(service *app.Service) http.Handler {
 		writeJSON(w, http.StatusOK, service.Health(r.Context()))
 	})
 	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, service.Ready(r.Context()))
+		ready := service.Ready(r.Context())
+		status := http.StatusOK
+		if ready["ok"] != true {
+			status = http.StatusServiceUnavailable
+		}
+		writeJSON(w, status, ready)
 	})
 	mux.HandleFunc("GET /v1/status", func(w http.ResponseWriter, r *http.Request) {
 		status, err := service.Status(r.Context())

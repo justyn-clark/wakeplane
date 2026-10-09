@@ -259,8 +259,9 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 		if err != nil {
 			return nil, nil, err
 		}
-		clauses = append(clauses, "(created_at < ? OR (created_at = ? AND id < ?))")
-		args = append(args, timeString(createdAt), timeString(createdAt), id)
+		created := timestampSQL("created_at")
+		clauses = append(clauses, "("+created+" < ? OR ("+created+" = ? AND id < ?))")
+		args = append(args, comparisonTimeString(createdAt), comparisonTimeString(createdAt), id)
 	}
 	query := `
 		SELECT id, name, enabled, schedule_spec_json, timezone, target_kind, paused_at, next_run_at, last_run_at, created_at, updated_at
@@ -269,7 +270,7 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 	if len(clauses) > 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
-	query += " ORDER BY created_at DESC, id DESC LIMIT ?"
+	query += " ORDER BY " + timestampSQL("created_at") + " DESC, id DESC LIMIT ?"
 	args = append(args, limit+1)
 	rows, err := s.query(ctx, query, args...)
 	if err != nil {
@@ -312,14 +313,14 @@ func (s *Store) ListSchedules(ctx context.Context, enabled *bool, limit int, cur
 }
 
 func (s *Store) ListAllSchedules(ctx context.Context) ([]domain.Schedule, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT id, name, enabled, schedule_kind, schedule_spec_json, timezone, target_kind, target_spec_json,
 		       overlap_policy, misfire_policy, timeout_seconds, max_concurrency, retry_max_attempts,
 		       retry_strategy, retry_initial_delay_seconds, retry_max_delay_seconds, start_at, end_at,
 		       paused_at, next_run_at, last_run_at, created_at, updated_at
 		FROM schedules
-		ORDER BY created_at ASC
-	`)
+		ORDER BY %s ASC
+	`, timestampSQL("created_at")))
 	if err != nil {
 		return nil, err
 	}
@@ -431,8 +432,9 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 		if err != nil {
 			return nil, nil, err
 		}
-		clauses = append(clauses, "(sr.created_at < ? OR (sr.created_at = ? AND sr.id < ?))")
-		args = append(args, timeString(createdAt), timeString(createdAt), id)
+		created := timestampSQL("sr.created_at")
+		clauses = append(clauses, "("+created+" < ? OR ("+created+" = ? AND sr.id < ?))")
+		args = append(args, comparisonTimeString(createdAt), comparisonTimeString(createdAt), id)
 	}
 	query := `
 		SELECT sr.id, sr.schedule_id, s.name, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt,
@@ -444,7 +446,7 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 	if len(clauses) > 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
-	query += " ORDER BY sr.created_at DESC, sr.id DESC LIMIT ?"
+	query += " ORDER BY " + timestampSQL("sr.created_at") + " DESC, sr.id DESC LIMIT ?"
 	args = append(args, limit+1)
 	rows, err := s.query(ctx, query, args...)
 	if err != nil {
@@ -469,15 +471,15 @@ func (s *Store) ListRuns(ctx context.Context, scheduleID *string, status *domain
 }
 
 func (s *Store) ListRunAttempts(ctx context.Context, occurrenceKey string) ([]domain.RunSummary, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT sr.id, sr.schedule_id, s.name, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt,
 		       s.target_kind, sr.claimed_by_worker_id, sr.started_at, sr.finished_at, sr.retry_available_at,
 		       sr.error_text, sr.created_at, sr.updated_at
 		FROM schedule_runs sr
 		JOIN schedules s ON s.id = sr.schedule_id
 		WHERE sr.occurrence_key = ?
-		ORDER BY sr.attempt ASC, sr.created_at ASC, sr.id ASC
-	`, occurrenceKey)
+		ORDER BY sr.attempt ASC, %s ASC, sr.id ASC
+	`, timestampSQL("sr.created_at")), occurrenceKey)
 	if err != nil {
 		return nil, err
 	}
@@ -513,12 +515,12 @@ func (s *Store) ListReceipts(ctx context.Context, runID string) ([]domain.Receip
 	if err := s.ensureRunExists(ctx, runID); err != nil {
 		return nil, err
 	}
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT id, receipt_kind, content_type, body, created_at
 		FROM execution_receipts
 		WHERE run_id = ?
-		ORDER BY created_at ASC, id ASC
-	`, runID)
+		ORDER BY %s ASC, id ASC
+	`, timestampSQL("created_at")), runID)
 	if err != nil {
 		return nil, err
 	}
@@ -554,16 +556,16 @@ func (s *Store) PruneTerminalRunsBefore(ctx context.Context, cutoff time.Time) (
 		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	result, err := s.txExec(ctx, tx, `
+	result, err := s.txExec(ctx, tx, fmt.Sprintf(`
 		DELETE FROM schedule_runs
 		WHERE finished_at IS NOT NULL
-		  AND finished_at < ?
+		  AND %s < ?
 		  AND status IN ('succeeded', 'failed', 'dead_lettered', 'cancelled', 'skipped')
 		  AND NOT EXISTS (
 		      SELECT 1 FROM external_jobs ej WHERE ej.occurrence_key = schedule_runs.occurrence_key
 		      AND ej.job_status IN ('submitting', 'queued', 'running')
 		  )
-	`, timeString(cutoff))
+	`, timestampSQL("finished_at")), comparisonTimeString(cutoff))
 	if err != nil {
 		return 0, err
 	}
@@ -617,16 +619,16 @@ func (s *Store) RequestAuditCount(ctx context.Context) (int, error) {
 }
 
 func (s *Store) ListCandidateRuns(ctx context.Context, now time.Time, limit int) ([]domain.Run, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
 		FROM schedule_runs
-		WHERE (status = 'pending' AND due_time <= ?)
-		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND retry_available_at <= ?)
-		ORDER BY due_time ASC, created_at ASC
+		WHERE (status = 'pending' AND %s <= ?)
+		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND %s <= ?)
+		ORDER BY %s ASC, %s ASC
 		LIMIT ?
-	`, timeString(now), timeString(now), limit)
+	`, timestampSQL("due_time"), timestampSQL("retry_available_at"), timestampSQL("due_time"), timestampSQL("created_at")), comparisonTimeString(now), comparisonTimeString(now), limit)
 	if err != nil {
 		return nil, err
 	}
@@ -769,7 +771,7 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
-	rows, err := s.txQuery(ctx, tx, `SELECT run_id FROM worker_leases WHERE expires_at <= ?`, timeString(now))
+	rows, err := s.txQuery(ctx, tx, fmt.Sprintf(`SELECT run_id FROM worker_leases WHERE %s <= ?`, timestampSQL("expires_at")), comparisonTimeString(now))
 	if err != nil {
 		return err
 	}
@@ -799,7 +801,7 @@ func (s *Store) RecoverExpiredClaims(ctx context.Context, now time.Time) error {
 }
 
 func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]ExpiredLease, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT sr.id, sr.schedule_id, sr.occurrence_key, sr.nominal_time, sr.due_time, sr.status, sr.attempt, sr.claimed_by_worker_id,
 		       sr.claim_expires_at, sr.started_at, sr.finished_at, sr.http_status_code, sr.exit_code, sr.result_json, sr.error_text,
 		       sr.retry_available_at, sr.created_at, sr.updated_at,
@@ -810,8 +812,8 @@ func (s *Store) ListExpiredLeases(ctx context.Context, now time.Time) ([]Expired
 		FROM worker_leases wl
 		JOIN schedule_runs sr ON sr.id = wl.run_id
 		JOIN schedules s ON s.id = sr.schedule_id
-		WHERE wl.expires_at <= ?
-	`, timeString(now))
+		WHERE %s <= ?
+	`, timestampSQL("wl.expires_at")), comparisonTimeString(now))
 	if err != nil {
 		return nil, err
 	}
@@ -999,14 +1001,14 @@ func (s *Store) ActiveRunCount(ctx context.Context, scheduleID string) (int, err
 }
 
 func (s *Store) ListActiveRuns(ctx context.Context, scheduleID string) ([]domain.Run, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
 		FROM schedule_runs
 		WHERE schedule_id = ? AND status IN ('claimed', 'running')
-		ORDER BY created_at ASC
-	`, scheduleID)
+		ORDER BY %s ASC
+	`, timestampSQL("created_at")), scheduleID)
 	if err != nil {
 		return nil, err
 	}
@@ -1023,14 +1025,14 @@ func (s *Store) ListActiveRuns(ctx context.Context, scheduleID string) ([]domain
 }
 
 func (s *Store) ListPendingRunsBySchedule(ctx context.Context, scheduleID string) ([]domain.Run, error) {
-	rows, err := s.query(ctx, `
+	rows, err := s.query(ctx, fmt.Sprintf(`
 		SELECT id, schedule_id, occurrence_key, nominal_time, due_time, status, attempt, claimed_by_worker_id,
 		       claim_expires_at, started_at, finished_at, http_status_code, exit_code, result_json, error_text,
 		       retry_available_at, created_at, updated_at
 		FROM schedule_runs
 		WHERE schedule_id = ? AND status IN ('pending', 'retry_scheduled')
-		ORDER BY due_time ASC, created_at ASC
-	`, scheduleID)
+		ORDER BY %s ASC, %s ASC
+	`, timestampSQL("due_time"), timestampSQL("created_at")), scheduleID)
 	if err != nil {
 		return nil, err
 	}
@@ -1086,11 +1088,11 @@ var ErrNotFound = errors.New("not found")
 var ErrConflict = errors.New("conflict")
 
 func (s *Store) DueRunCount(ctx context.Context, now time.Time) (int, error) {
-	row := s.queryRow(ctx, `
+	row := s.queryRow(ctx, fmt.Sprintf(`
 		SELECT COUNT(*) FROM schedule_runs
-		WHERE (status = 'pending' AND due_time <= ?)
-		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND retry_available_at <= ?)
-	`, timeString(now), timeString(now))
+		WHERE (status = 'pending' AND %s <= ?)
+		   OR (status = 'retry_scheduled' AND retry_available_at IS NOT NULL AND %s <= ?)
+	`, timestampSQL("due_time"), timestampSQL("retry_available_at")), comparisonTimeString(now), comparisonTimeString(now))
 	var n int
 	return n, row.Scan(&n)
 }
@@ -1100,24 +1102,24 @@ func (s *Store) RetryQueuedCount(ctx context.Context) (int, error) {
 }
 
 func (s *Store) ClaimedExpiredCount(ctx context.Context, now time.Time) (int, error) {
-	row := s.queryRow(ctx, `
+	row := s.queryRow(ctx, fmt.Sprintf(`
 		SELECT COUNT(*) FROM schedule_runs
-		WHERE status IN ('claimed', 'running') AND claim_expires_at IS NOT NULL AND claim_expires_at <= ?
-	`, timeString(now))
+		WHERE status IN ('claimed', 'running') AND claim_expires_at IS NOT NULL AND %s <= ?
+	`, timestampSQL("claim_expires_at")), comparisonTimeString(now))
 	var n int
 	return n, row.Scan(&n)
 }
 
 func (s *Store) NextDueSchedule(ctx context.Context, _ time.Time) (*NextDue, error) {
-	row := s.queryRow(ctx, `
+	row := s.queryRow(ctx, fmt.Sprintf(`
 		SELECT schedule_id,
-		       MIN(CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END)
+		       MIN(%[1]s)
 		FROM schedule_runs
 		WHERE status IN ('pending', 'retry_scheduled')
 		GROUP BY schedule_id
-		ORDER BY MIN(CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END) ASC
+		ORDER BY MIN(%[1]s) ASC
 		LIMIT 1
-	`)
+	`, timestampSQL("CASE WHEN status = 'retry_scheduled' AND retry_available_at IS NOT NULL THEN retry_available_at ELSE due_time END")))
 	var scheduleID, dueTimeRaw string
 	if err := row.Scan(&scheduleID, &dueTimeRaw); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

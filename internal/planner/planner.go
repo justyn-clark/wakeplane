@@ -12,17 +12,25 @@ import (
 )
 
 type Planner struct {
-	store      *store.Store
-	logger     *slog.Logger
-	now        func() time.Time
-	lastTickMu sync.RWMutex
-	lastTick   time.Time
+	store        *store.Store
+	logger       *slog.Logger
+	misfireGrace time.Duration
+	now          func() time.Time
+	lastTickMu   sync.RWMutex
+	lastTick     time.Time
 }
 
-func New(st *store.Store, logger *slog.Logger) *Planner {
+// New uses one scheduler polling interval as the grace for skip misfires.
+// Existing callers use the daemon's default five-second interval.
+func New(st *store.Store, logger *slog.Logger, pollingInterval ...time.Duration) *Planner {
+	grace := 5 * time.Second
+	if len(pollingInterval) > 0 && pollingInterval[0] > 0 {
+		grace = pollingInterval[0]
+	}
 	return &Planner{
-		store:  st,
-		logger: logger,
+		store:        st,
+		logger:       logger,
+		misfireGrace: grace,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},
@@ -82,7 +90,16 @@ func (p *Planner) materializeSchedule(ctx context.Context, schedule domain.Sched
 	switch schedule.Policy.Misfire {
 	case domain.MisfireSkip:
 		for _, nominal := range due {
-			if err := p.insertOccurrence(ctx, schedule, nominal, domain.RunSkipped, stringPtr("skipped due to misfire policy")); err != nil && err != store.ErrAlreadyExists {
+			// Polling normally discovers an occurrence just after its nominal
+			// time. Skip only work older than one polling interval, including
+			// after a restart; no in-memory tick history changes this decision.
+			status := domain.RunPending
+			var errText *string
+			if now.Sub(nominal) > p.misfireGrace {
+				status = domain.RunSkipped
+				errText = stringPtr("skipped due to misfire policy")
+			}
+			if err := p.insertOccurrence(ctx, schedule, nominal, status, errText); err != nil && err != store.ErrAlreadyExists {
 				return err
 			}
 		}

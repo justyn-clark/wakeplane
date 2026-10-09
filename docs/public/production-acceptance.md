@@ -1,6 +1,6 @@
 # Production acceptance
 
-This is an execution plan, not completed production evidence. Start the observation clock only after a protected hosted daemon, persistent runner storage, and real provider delivery have been verified. An initial 30-day observation period is proposed; duration alone does not establish readiness.
+This is an execution plan, not completed production evidence. Start the observation clock only after a protected hosted daemon, persistent runner storage, and real provider delivery have been verified. Use an acceptance window sized to the actual workload cadence, rather than a fixed number of days. Require automatic scheduled occurrences for both chosen delivery paths and complete the recovery, restore, and contract checks below. Duration alone does not establish readiness.
 
 ## Operator workloads
 
@@ -24,4 +24,4 @@ Keep drafts paused until provider configuration and the first manual run are rev
 
 Record daily scheduled versus observed occurrences, terminal states, missed/late runs and reasons, retry/dead-letter counts, unconfirmed deliveries, restart/outage events, and backup health. Check retention and the runner's 500-job capacity. Explain every discrepancy; resolve any unexplained duplicate submission, missing follow-up, lost ledger state, or secret exposure before promotion.
 
-Acceptance requires at least one sustained real workload, both chosen delivery paths demonstrated, recovery/restore evidence for the supported backends, and an explicit account of limitations. Short drill passes can support this record but cannot substitute for the real deployment period. Stable 1.0 additionally requires the contract decisions in [Status](status.md).
+Acceptance requires real automatic scheduled work, both chosen delivery paths demonstrated, recovery/restore evidence for the supported backends, and an explicit account of limitations. Repeated occurrences should establish that cadence, identities, and delivery behave as expected. Short drills establish specific fault behavior; they do not substitute for scheduled delivery evidence. There is no mandatory calendar waiting period once the required evidence is complete. Stable 1.0 additionally requires the contract decisions in [Status](status.md).

@@ -1,6 +1,6 @@
 # Wakeplane Current Status
 
-As of 2026-10-07, the release line is `v0.3.0-beta.2`. Publication requires matching tagged archives and checksums; the hosted installer and public documentation are promoted through the paired site update. Subsequent development on a branch is not part of that published release until a new tag and archives are published.
+As of 2026-10-08, this source prepares `v0.3.0-beta.3`; published archives remain `v0.3.0-beta.2` until the new tagged archives and checksums are available. Promote the hosted installer and public documentation only after verifying those downloads. This beta adds readable ASCII notifications and portable deployment adapters; it does not establish stable production acceptance.
 
 ## Implemented product surface
 
@@ -32,5 +32,7 @@ The product remains beta. It has no RBAC, multi-tenancy, OAuth account onboardin
 ## Validation and release discipline
 
 CI and the release workflow require formatting/lint, console tests, Go vet, race tests, Postgres integration, generated documentation, and version-matched archive smoke checks. Local evidence is recorded in `.small/progress.small.yml`; historical deployment receipts are not evidence of the new features being deployed.
+
+The protected Railway trial has demonstrated native Discord receipt and Gmail inbox placement, plus retained runner history across an upgrade. Recurring workload observation, fault recovery, and rollback acceptance remain separate gates.
 
 See [Automation](public/automation.md), [Recipes](public/recipes.md), [Console](public/console.md), and the [release notes](public/releases/v0.3.0-beta.2.md). Longer operator soak and production recovery evidence remain promotion steps; beta is not a 1.0 guarantee. Keep future source changes, tagged binaries, and hosted documentation synchronized.

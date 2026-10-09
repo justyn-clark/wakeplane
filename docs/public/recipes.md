@@ -36,7 +36,7 @@ An authenticated event adapter can trigger this same enabled schedule immediatel
 
 ## Personal: weekly reading list
 
-`examples/personal-weekly-summary.yaml` collects up to twenty recent entries from up to five RSS or Atom feeds each Monday. Replace the sample feed URLs with your chosen sources and choose your timezone.
+`examples/personal-weekly-summary.yaml` collects up to twenty recent entries from up to five RSS or Atom feeds each Monday. The current examples default to the Wakeplane release feed used in delivery verification. Replace it with your chosen sources and choose your timezone; each feed must fit the runner's 256 KiB response limit.
 
 ```bash
 wakeplane schedule create -f examples/personal-weekly-summary.yaml

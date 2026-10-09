@@ -14,7 +14,7 @@ target:
   body:
     task: weekly-summary
     feeds:
-      - https://github.blog/feed/
+      - https://github.com/justyn-clark/wakeplane/releases.atom
 policy:
   overlap: forbid
   misfire: skip

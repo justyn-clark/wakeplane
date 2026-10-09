@@ -1,10 +1,10 @@
 # Runnable automation recipes
 
-These examples require `v0.3.0-beta.2` or its matching source build. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
+These examples require `v0.3.0-beta.3` or its matching source build. Wakeplane owns cadence, policy, durable run history, and remote tracking. The example runner owns source access, report generation, and notification delivery.
 
 ## Start the separate runner
 
-Each `v0.3.0-beta.2` archive includes `automation-runner` alongside the CLI and daemon. Run the extracted binary, or use a matching source checkout:
+Each `v0.3.0-beta.3` archive includes `automation-runner` alongside the CLI and daemon. Run the extracted binary, or use a matching source checkout:
 
 ```bash
 ./automation-runner
@@ -63,7 +63,7 @@ For Discord, configure `AUTOMATION_RUNNER_DISCORD_WEBHOOK_URL` from your secret 
 
 For Gmail, configure `AUTOMATION_RUNNER_GMAIL_FROM`, `AUTOMATION_RUNNER_GMAIL_TO`, `AUTOMATION_RUNNER_GMAIL_CLIENT_ID`, `AUTOMATION_RUNNER_GMAIL_CLIENT_SECRET`, and `AUTOMATION_RUNNER_GMAIL_REFRESH_TOKEN`. FROM and TO each accept one plain email address. Authorize the Gmail account using a server-side OAuth flow with offline access and the `https://www.googleapis.com/auth/gmail.send` scope. Refresh credentials are sent only to Google's token endpoint; email requests go only to the Gmail API. Keep the refresh token and client secret in your shared vault or hosting secret variables. Connected Gmail access in an assistant does not provision credentials for this process. See [Google's authorization guide](https://developers.google.com/workspace/gmail/api/auth/web-server).
 
-Current source builds send Gmail reports as a responsive HTML digest with a separate plain-text alternative. Notification copy uses ASCII characters: punctuation is normalized, Latin accents are simplified, and unsupported characters are omitted. Source links retain their destinations through URL encoding; the original structured report remains available unchanged. Discord messages also use ASCII copy. These presentation changes are newer than the published `v0.3.0-beta.2` archives, which send plain-text email.
+Release `v0.3.0-beta.3` and matching source builds send Gmail reports as a responsive HTML digest with a separate plain-text alternative. Notification copy uses ASCII characters: punctuation is normalized, Latin accents are simplified, and unsupported characters are omitted. Source links retain their destinations through URL encoding; the original structured report remains available unchanged. Discord messages also use ASCII copy. The older `v0.3.0-beta.2` archives send plain-text email.
 
 Confirmed native sends persist a `delivery.provider_message_id`. Discord and Gmail do not promise deduplication for these requests. A transport error, server error, missing confirmation, or restart during a send produces `delivery.status = "unknown"` and is not automatically resent. Investigate the provider before arranging a new delivery. Explicit rate-limit rejections can retry within the existing three-attempt limit. The collected report can still succeed while delivery is `failed` or `unknown`; collection success does not prove receipt or inbox placement. Generic webhook receivers retain the original idempotency-key contract.
 

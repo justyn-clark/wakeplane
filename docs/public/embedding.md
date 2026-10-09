@@ -19,7 +19,7 @@ Use the standalone daemon when:
 
 ## Current boundary
 
-Wakeplane's embedding surface in the `v0.3.0-beta.1` source line uses `internal/...` packages from this repository. It remains an integration surface for this module or forks retaining Go's internal-package import boundary, not a stable public Go package API.
+Wakeplane's embedding surface in the `v0.3.0-beta.3` source line uses `internal/...` packages from this repository. It remains an integration surface for this module or forks retaining Go's internal-package import boundary, not a stable public Go package API.
 
 If you want a shareable, stable way to use Wakeplane today, prefer the standalone daemon and HTTP API.
 

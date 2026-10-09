@@ -66,7 +66,9 @@ Current release notes:
 
 - [v0.1.0](releases/v0.1.0.md)
 - [v0.2.0-beta.1 (previous public beta)](releases/v0.2.0-beta.1.md)
-- [v0.3.0-beta.1 (current public beta)](releases/v0.3.0-beta.1.md)
+- [v0.3.0-beta.1 (previous public beta)](releases/v0.3.0-beta.1.md)
+- [v0.3.0-beta.2 (previous public beta)](releases/v0.3.0-beta.2.md)
+- [v0.3.0-beta.3 (current public beta)](releases/v0.3.0-beta.3.md)
 
 ## What constitutes a breaking change
 
@@ -85,7 +87,7 @@ Adding new optional fields, new endpoints, new policy types, or new executor kin
 
 ## Two binaries: `wakeplane` and `wakeplaned`
 
-Both binaries share the same command surface and configuration in the `v0.3.0-beta.1` source line.
+Both binaries share the same command surface and configuration in the `v0.3.0-beta.3` source line.
 
 `wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking - they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
 

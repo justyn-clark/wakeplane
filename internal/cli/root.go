@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -240,7 +241,10 @@ func newScheduleCmd(baseURL *string) *cobra.Command {
 		return postJSON(*baseURL+"/v1/schedules/"+args[0]+"/resume", map[string]any{})
 	}}
 	del := &cobra.Command{Use: "delete <id>", Short: "Delete a schedule", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		req, _ := http.NewRequest(http.MethodDelete, *baseURL+"/v1/schedules/"+args[0], nil)
+		req, err := http.NewRequest(http.MethodDelete, *baseURL+"/v1/schedules/"+args[0], nil)
+		if err != nil {
+			return err
+		}
 		return do(req)
 	}}
 	trigger := &cobra.Command{Use: "trigger <id>", Short: "Trigger a schedule now", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
@@ -264,7 +268,10 @@ func newRunCmd(baseURL *string) *cobra.Command {
 }
 
 func getAndPrint(url string) error {
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
 	return do(req)
 }
 
@@ -294,29 +301,44 @@ type scheduleExportManifest struct {
 }
 
 func exportScheduleManifest(baseURL string) (scheduleExportManifest, error) {
-	var listed domain.ListResponse[domain.ScheduleSummary]
-	if err := getJSON(baseURL+"/v1/schedules?limit=1000", &listed); err != nil {
-		return scheduleExportManifest{}, err
-	}
-	manifest := scheduleExportManifest{Schedules: make([]domain.CreateScheduleRequest, 0, len(listed.Items))}
-	for _, item := range listed.Items {
-		var schedule domain.Schedule
-		if err := getJSON(baseURL+"/v1/schedules/"+item.ID, &schedule); err != nil {
+	manifest := scheduleExportManifest{Schedules: make([]domain.CreateScheduleRequest, 0)}
+	cursor := ""
+	seenCursors := map[string]bool{}
+	for {
+		requestURL := baseURL + "/v1/schedules?limit=1000"
+		if cursor != "" {
+			requestURL += "&cursor=" + url.QueryEscape(cursor)
+		}
+		var listed domain.ListResponse[domain.ScheduleSummary]
+		if err := getJSON(requestURL, &listed); err != nil {
 			return scheduleExportManifest{}, err
 		}
-		manifest.Schedules = append(manifest.Schedules, domain.CreateScheduleRequest{
-			Name:     schedule.Name,
-			Enabled:  schedule.Enabled,
-			Timezone: schedule.Timezone,
-			Schedule: schedule.Schedule,
-			Target:   schedule.Target,
-			Policy:   schedule.Policy,
-			Retry:    schedule.Retry,
-			StartAt:  schedule.StartAt,
-			EndAt:    schedule.EndAt,
-		})
+		for _, item := range listed.Items {
+			var schedule domain.Schedule
+			if err := getJSON(baseURL+"/v1/schedules/"+item.ID, &schedule); err != nil {
+				return scheduleExportManifest{}, err
+			}
+			manifest.Schedules = append(manifest.Schedules, domain.CreateScheduleRequest{
+				Name:     schedule.Name,
+				Enabled:  schedule.Enabled,
+				Timezone: schedule.Timezone,
+				Schedule: schedule.Schedule,
+				Target:   schedule.Target,
+				Policy:   schedule.Policy,
+				Retry:    schedule.Retry,
+				StartAt:  schedule.StartAt,
+				EndAt:    schedule.EndAt,
+			})
+		}
+		if listed.NextCursor == nil || *listed.NextCursor == "" {
+			return manifest, nil
+		}
+		cursor = *listed.NextCursor
+		if seenCursors[cursor] {
+			return scheduleExportManifest{}, fmt.Errorf("schedule pagination repeated cursor")
+		}
+		seenCursors[cursor] = true
 	}
-	return manifest, nil
 }
 
 func getJSON(url string, target any) error {

@@ -10,14 +10,14 @@ Wakeplane follows [Semantic Versioning](https://semver.org/):
 - **MINOR** - new features, new endpoints, new policy types, backwards-compatible schema migrations
 - **PATCH** - bug fixes, test improvements, documentation updates
 
-**Pre-stable notice:** The current version is `0.x.y`. During `0.x`, minor versions may include breaking changes without a MAJOR bump. The API and CLI surface are not yet guaranteed stable.
+The `1.x` release line follows the [Stable Contract](stable-contract.md). Historical `0.x` releases were pre-stable. Stable compatibility applies to documented interfaces and supported deployment boundaries.
 
 ## Version source
 
 Version is defined as a constant in both entry points:
 
-- `cmd/wakeplane/main.go` - `const version = "0.3.0-beta.1"`
-- `cmd/wakeplaned/main.go` - `const version = "0.3.0-beta.1"`
+- `cmd/wakeplane/main.go` - `const version = "1.0.0"`
+- `cmd/wakeplaned/main.go` - `const version = "1.0.0"`
 
 Both must be updated in lockstep before tagging. The version is surfaced in:
 
@@ -47,7 +47,7 @@ Tagged releases must publish:
 - `wakeplane_<version>_linux_arm64.tar.gz`
 - `checksums.txt`
 
-Each archive includes both `wakeplane` and `wakeplaned`.
+Each archive includes `wakeplane`, `wakeplaned`, and the separate `automation-runner`. The hosted installer installs the CLI and daemon.
 
 The release workflow builds artifacts with `scripts/build-release-artifacts.sh` and attaches them to the GitHub release for tagged versions.
 
@@ -68,7 +68,8 @@ Current release notes:
 - [v0.2.0-beta.1 (previous public beta)](releases/v0.2.0-beta.1.md)
 - [v0.3.0-beta.1 (previous public beta)](releases/v0.3.0-beta.1.md)
 - [v0.3.0-beta.2 (previous public beta)](releases/v0.3.0-beta.2.md)
-- [v0.3.0-beta.3 (current public beta)](releases/v0.3.0-beta.3.md)
+- [v0.3.0-beta.3 (previous public beta)](releases/v0.3.0-beta.3.md)
+- [v1.0.0](releases/v1.0.0.md)
 
 ## What constitutes a breaking change
 
@@ -87,7 +88,7 @@ Adding new optional fields, new endpoints, new policy types, or new executor kin
 
 ## Two binaries: `wakeplane` and `wakeplaned`
 
-Both binaries share the same command surface and configuration in the `v0.3.0-beta.3` source line.
+Both binaries share the same command surface and configuration in the `v1.0.0` source line.
 
 `wakeplaned` follows Unix daemon naming conventions (`sshd`, `httpd`) for process listing, packaging disambiguation, and future deployment tooling. The split into two entry points is intentional and forward-looking - they may diverge if the daemon gains additional OS-level integration (systemd notify, privilege dropping, PID file management).
 

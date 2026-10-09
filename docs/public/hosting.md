@@ -1,6 +1,6 @@
 # Hosting the Wakeplane daemon
 
-Wakeplane is deployable as a long-running Go process with durable storage and a protected operator endpoint. Release `v0.3.0-beta.3` includes `Dockerfile`, `railway.json`, platform `PORT` support, Discord/Gmail runner adapters, and the volume bootstrap and cloud deployment adapters described below. No hosted runtime is provisioned merely by adding these files. Cloud configuration files live in the tagged source checkout; binary archives contain the CLI, daemon, and runner.
+Wakeplane is deployable as a long-running Go process with durable storage and a protected operator endpoint. Release `v1.0.0` includes `Dockerfile`, `railway.json`, platform `PORT` support, Discord/Gmail runner adapters, and the volume bootstrap and cloud deployment adapters described below. No hosted runtime is provisioned merely by adding these files. Cloud configuration files live in the tagged source checkout; binary archives contain the CLI, daemon, and runner.
 
 ## Railway: recommended first deployment
 

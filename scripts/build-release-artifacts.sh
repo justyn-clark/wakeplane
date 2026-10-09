@@ -39,7 +39,7 @@ build_target() {
 
   GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 go build -trimpath -o "$stage/automation-runner" ./examples/automation-runner
 
-  tar -C "$stage" -czf "$out_dir/$archive" wakeplane wakeplaned automation-runner
+  COPYFILE_DISABLE=1 tar -C "$stage" -czf "$out_dir/$archive" wakeplane wakeplaned automation-runner
   checksum "$out_dir/$archive"
 }
 

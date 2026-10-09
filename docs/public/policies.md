@@ -74,7 +74,7 @@ Do not use `replace` when:
 
 ## Misfire policy
 
-The misfire policy controls what happens when the scheduler detects that one or more occurrences were missed (e.g., because the daemon was down, or the planner ticked late).
+The misfire policy controls what happens when the scheduler detects that one or more occurrences are due. A polling scheduler normally discovers a slot slightly after its nominal time; that delay alone must not discard every scheduled run.
 
 ### `run_once_if_late` (default)
 
@@ -84,9 +84,15 @@ Use when: missing a few runs is acceptable but you want at least one run after a
 
 ### `skip`
 
-Skip all overdue occurrences. The schedule resumes from the next future occurrence.
+Materialize a pending run for each due occurrence whose lateness is at most one scheduler polling interval. Record older occurrences as `skipped`, then advance to the next future slot. The default tolerance is five seconds, matching the default polling interval. `WAKEPLANE_SCHEDULER_INTERVAL_SECONDS` changes both the poll interval and this tolerance.
+
+The boundary is inclusive: with a five-second interval, a 09:00:00 slot detected at 09:00:05 runs; the same slot detected after 09:00:05 is skipped. The rule also applies to the first tick after a restart, to one-time schedules, and to interval and timezone-based cron schedules. If several short-cadence slots fall within the tolerance, each is materialized; overlap and concurrency policies still govern execution. Reduce the polling interval when a tighter stale-work cutoff is required.
+
+This is a planning freshness rule, not an execution deadline: an accepted run can wait for dispatcher capacity. Schedule start/end bounds limit nominal slots, not the time at which accepted work finishes. Existing run records are never rewritten when the planner sees an occurrence again.
 
 Use when: running stale work would be incorrect or wasteful. Health checks and time-sensitive reports are good examples.
+
+Before 1.0, `skip` incorrectly discarded every due occurrence, including a slot detected exactly on time. Upgrading fixes future planning; historical skipped runs remain unchanged and are not replayed.
 
 ### `catch_up`
 

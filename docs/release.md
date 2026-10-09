@@ -1,69 +1,60 @@
-# Release Discipline
+# Release discipline
 
-## Versioning
+## Versioning and public scope
 
-Wakeplane follows [Semantic Versioning](https://semver.org/):
+Wakeplane uses Semantic Versioning for the standalone daemon, documented REST API, CLI commands, and schedule manifests defined in [Stable contract](public/stable-contract.md).
 
-- **MAJOR**: Breaking changes to API contract, CLI interface, or storage schema.
-- **MINOR**: New features, new endpoints, new policy types, backwards-compatible schema migrations.
-- **PATCH**: Bug fixes, test improvements, documentation updates.
+- **MAJOR:** incompatible changes to the supported public contract, existing enum/default meanings, or storage upgrades that cannot preserve the documented data.
+- **MINOR:** additive features, endpoints, commands, opt-in policy types, and compatible migrations.
+- **PATCH:** fixes to the documented behavior, dependency fixes, and documentation corrections.
 
-The current version is `0.x.y`, indicating pre-stable. During `0.x`, minor versions may include breaking changes.
+The stable release line starts with `v1.0.0`. Pre-1.0 releases carry no 1.x compatibility promise. Internal Go packages, human-readable help/error/status wording, console layout, opaque IDs/cursors, and internal SQL layout are not public semver contracts.
 
-## Version Source
+## Version source
 
-Version is defined as a constant in both entry points:
+Update `const version` in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go` together. Keep generated API/CLI/config references, release notes, the installer default and documentation notification banner aligned with the release that is actually published. A candidate source version must not be presented as an available binary before publication.
 
-- `cmd/wakeplane/main.go` - `const version = "0.3.0-beta.3"`
-- `cmd/wakeplaned/main.go` - `const version = "0.3.0-beta.3"`
+Version is surfaced by `wakeplane version` and `GET /v1/status`. The embedded source example uses its own `embed-example` identifier and is outside the stable product API.
 
-Both must be updated in lockstep. The version is surfaced in:
+## Candidate verification
 
-- `GET /v1/status` -> `version` field
-- Embedded example passes `"embed-example"` as version
+Before tagging the exact final commit:
 
-## Release Checklist
+1. Run `go test -race ./... -count=1`, `go build ./...`, and `go vet ./...`.
+2. Run the real Postgres parity suite with `scripts/test-postgres-store.sh`; a suite that skips Postgres without a test URL is not parity evidence.
+3. Run `go run ./tools/docsgen --check`, the public example tests in `go test ./...`, `pnpm run check`, and `small check --strict`.
+4. Confirm release constants, notes, install instructions, public contract and intended current-status copy agree. Review intentional pre-1.0 policy corrections and upgrade limits.
+5. Confirm [Production acceptance](public/production-acceptance.md), native backup/restore and isolated rollback evidence exists for the supported topology. No arbitrary 30-day or weekly wait is required when the gates have passed.
+6. Verify the working tree contains only the reviewed release changes, and CI checks the exact candidate commit.
 
-Before tagging a release:
+Public documentation is synchronized from `docs/public`; generated references must be regenerated from the versioned code. Verify the actual live site after its deployment, including its banner and install/release links.
 
-1. **All tests pass**: `go test -race ./... -count=1`
-2. **Build succeeds**: `go build ./...`
-3. **SMALL strict check passes**: `small check --strict`
-4. **Version constants updated** in both `cmd/wakeplane/main.go` and `cmd/wakeplaned/main.go`
-5. **README "Current status" section** reflects any new capabilities
-6. **Hosted installer default version** is updated if a public install script points at the release
-7. **No uncommitted changes**: `git status` is clean
-8. **Documentation current**: docs/ files reflect actual behavior
+## Publish and verify
 
-## Tagging
+For the validated final source commit:
 
-```
-git tag -a v0.2.0 -m "v0.2.0: <summary>"
-git push origin v0.2.0
+```bash
+git tag -a v1.0.0 -m "v1.0.0: stable single-operator scheduling control plane"
+git push origin v1.0.0
 ```
 
-## Binary Artifacts
+The release workflow builds the supported archives and `checksums.txt`. Verify the workflow result, tag target and release metadata rather than inferring publication from a pushed tag.
 
-Build both binaries:
+Download every published archive and `checksums.txt` from the real GitHub release. Verify every SHA-256 entry, archive layout and expected binaries (`wakeplane`, `wakeplaned`, `automation-runner`). Smoke-test native-host CLI/daemon startup and installer against the public downloads. Cross-compiled archive inspection does not establish execution on an unavailable OS/architecture.
 
-```
-go build -o dist/wakeplane ./cmd/wakeplane
-go build -o dist/wakeplaned ./cmd/wakeplaned
-```
+Update publication status and matching documentation only after release availability is confirmed. Retain evidence of the exact source/tag, workflow, downloaded hashes and tested install path. A failed or partial publication is not a completed release.
 
-For cross-compilation:
+## Upgrade and rollback
 
-```
-GOOS=linux GOARCH=amd64 go build -o dist/wakeplane-linux-amd64 ./cmd/wakeplane
-GOOS=darwin GOARCH=arm64 go build -o dist/wakeplane-darwin-arm64 ./cmd/wakeplane
-```
+Startup applies the store's migrations; there is no automatic downgrade procedure. Stop/drain the old daemon and runner, take a database-native backup with paired runner state, restore/verify it in isolation, and follow the [Stable contract](public/stable-contract.md) before starting the new version. Rollback uses the pre-upgrade data and prior binaries, followed by provider reconciliation. Schedule export/import is a definitions bridge, not a history/checkpoint backup.
 
-## What Constitutes a Breaking Change
+## Breaking changes
 
-- Removing or renaming an API endpoint
-- Changing the error envelope shape
-- Changing run status values or transition semantics
-- Changing the schedule YAML manifest schema
-- Changing the storage schema in a non-migratable way
-- Changing CLI command names or required flags
-- Removing a policy type or changing its default behavior
+Examples requiring a new major version after 1.0:
+
+- Removing/renaming an existing REST endpoint, supported command, argument, flag, or manifest field.
+- Changing request/response field meaning, existing error codes, run statuses, policy behavior, or documented defaults.
+- Requiring previously optional definition fields without a separate versioned surface.
+- Losing retained schedule IDs, run evidence, remote checkpoints, or event replay protection during a supported upgrade.
+
+Adding an optional response field does not change the existing contract. Clients must ignore unknown response fields and treat IDs/cursors as opaque.

@@ -1,6 +1,6 @@
 # Embedding Contract
 
-Wakeplane is designed to be embedded as a library in Go applications. This document defines the lifecycle contract, registration expectations, and behavioral guarantees that embedding code must understand.
+Wakeplane can be integrated into Go applications through this repository's `internal/...` packages. This is a source-level integration for the module or compatible forks, not an importable public Go library API. It remains outside the 1.0 public semver contract; pin the exact source revision and test your integration when upgrading. The supported standalone boundary is defined in [Stable contract](public/stable-contract.md).
 
 ## Construction
 
@@ -13,7 +13,7 @@ service, err := app.NewWithOptions(ctx, cfg,
 )
 ```
 
-`NewWithOptions` opens the SQLite database, runs migrations, and wires the planner, dispatcher, and executor registry. It does not start any background loops.
+`NewWithOptions` opens the configured SQLite or Postgres backend, runs its migrations, and wires the planner, dispatcher, and executor registry. It does not start any background loops.
 
 **Options:**
 
@@ -53,7 +53,7 @@ err := service.CloseContext(ctx)
 1. Cancel the run context (scheduler and dispatcher ticker loops stop).
 2. Wait for the run loop goroutine to exit.
 3. Call `dispatcher.Shutdown` which cancels all active execution contexts and waits for in-flight work to drain.
-4. Close the SQLite store.
+4. Close the configured store.
 
 **Shutdown logging:** Each phase emits structured log lines (`shutdown requested`, `draining`, `run loop stopped`, `dispatcher shutdown`, `shutdown complete` or timeout warnings) so operators can trace exactly where shutdown stalled.
 
@@ -125,19 +125,20 @@ type WorkflowHandler func(ctx context.Context, input map[string]any) (map[string
 If a schedule targets `workflow_id: X` and no handler is registered for `X`:
 
 - The executor returns an error: `workflow "X" is not registered`.
-- The run is marked `failed`.
-- Retry policy applies (the run will be retried, and will fail again if the handler is still missing).
-- After `max_attempts` retries, the run is dead-lettered.
+- The run is `failed` with a new retry attempt when policy permits; otherwise it is `dead_lettered`.
+- `max_attempts` counts total attempts including the first. Values `0` and `1`, or strategy `none`, allow no retry.
+- Register the handler before retrying: the same missing registration fails again.
 
 ## Recovery guarantees
 
 On startup, the dispatcher recovers stale state from the previous process:
 
-| Crash point                       | DB state after crash             | Recovery action                                                    |
-| --------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| After claim, before mark-running  | Run is `claimed`, lease exists   | Lease expires -> run reset to `pending`                            |
-| After mark-running, before finish | Run is `running`, lease exists   | Lease expires -> run marked `failed`, retry scheduled              |
-| After finish, before retry insert | Run is `failed`, no retry exists | **No automatic recovery** - retry is lost                          |
-| Retry scheduled, before dispatch  | Run is `retry_scheduled`         | Picked up by next dispatcher tick when `retry_available_at` passes |
+| Crash point                       | DB state                                | Recovery action                                                              |
+| --------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
+| After claim, before mark-running  | `claimed`, expired lease                | Reset to `pending` after validating the expired claim                        |
+| During ordinary execution         | `running`, expired lease                | Atomically record failure plus policy retry/dead letter and remove the lease |
+| During tracked external work      | Unresolved remote checkpoint            | Resume lookup/polling of the same occurrence and remote identity             |
+| During failure transaction        | Uncommitted changes                     | Roll back; later recovery can retry the transition                           |
+| After failure transaction commits | Terminal attempt plus retry/dead letter | Follow-up is already durable                                                 |
 
-The "after finish, before retry insert" gap is a known limitation. `FinishRun` and retry `InsertRun` are not in a single transaction. In practice, the window is extremely small (two sequential SQLite writes), but embedding code should be aware that a process kill at exactly this moment can lose a retry attempt.
+Failure outcome, follow-up retry/dead letter, and lease removal share a transaction. Historical failed rows without retries are not automatically rewritten on startup. Successful outcome and diagnostic receipt inserts remain separate writes; a crash can leave fewer receipts after a successful outcome. Neither durable state nor recovery establishes exactly-once side effects at a remote provider. See [Automation](public/automation.md).

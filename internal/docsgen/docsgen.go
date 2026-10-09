@@ -33,7 +33,7 @@ var routeDescriptions = map[string]string{
 	"GET /v1/mcp":                     "Returns 405 Method Not Allowed in the configured stateless transport; standalone server push is unsupported.",
 	"DELETE /v1/mcp":                  "Returns 405 Method Not Allowed in the configured stateless transport; no persistent transport sessions are allocated.",
 	"GET /healthz":                    "Liveness probe. Returns `{\"ok\":true}`.",
-	"GET /readyz":                     "Readiness probe. Returns `{\"ok\":true,\"storage\":\"ok\"}` when the store is reachable.",
+	"GET /readyz":                     "Readiness probe. HTTP 200 with `{\"ok\":true,\"storage\":\"ok\"}` when the store is reachable; HTTP 503 with `ok:false` when unavailable.",
 	"GET /v1/status":                  "Operational status including active store dialect, scheduler timing, worker counts, run counts, retention, and security posture.",
 	"GET /v1/metrics":                 "Prometheus text metrics for schedules, runs, leases, and executor outcomes.",
 	"POST /v1/schedules":              "Create a schedule. Returns `201` with the full schedule.",

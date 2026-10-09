@@ -311,6 +311,15 @@ type ListResponse[T any] struct {
 	NextCursor *string `json:"next_cursor"`
 }
 
+// MarshalJSON keeps empty list responses iterable across REST and MCP clients.
+func (r ListResponse[T]) MarshalJSON() ([]byte, error) {
+	type response ListResponse[T]
+	if r.Items == nil {
+		r.Items = []T{}
+	}
+	return json.Marshal(response(r))
+}
+
 type ScheduleSummary struct {
 	ID         string       `json:"id"`
 	Name       string       `json:"name"`

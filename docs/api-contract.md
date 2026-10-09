@@ -1,120 +1,93 @@
 # API Contract
 
-This document defines the error envelope, pagination, and behavioral guarantees of the Wakeplane HTTP JSON API.
+This document defines the machine contract of the standalone Wakeplane HTTP API. The [generated API reference](public/api.md) lists every implemented route; the [stable contract](public/stable-contract.md) defines the compatibility boundary for 1.0.
 
-## Error Envelope
+## Authentication and transport
 
-All errors return a JSON body with this shape:
+When `WAKEPLANE_AUTH_TOKEN` is configured, all `/v1/...` requests require `Authorization: Bearer <token>`. Missing or invalid authorization returns `401 unauthorized`. Health/readiness probes and static console files are outside this auth boundary. Wakeplane requires trusted networking and operator-controlled TLS; a bearer token does not provide RBAC, users, or multi-tenancy.
 
-```json
-{
-  "code": "string",
-  "error": "human-readable message",
-  "details": []
-}
-```
+Send JSON request bodies with `Content-Type: application/json`. REST JSON responses use `application/json`; `/v1/metrics` uses `text/plain; version=0.0.4`. The server decodes JSON bodies; it does not uniformly reject a missing or different request content type. Clients must not rely on that permissiveness. Unknown fields may be rejected, particularly by the bounded preview and event decoders.
 
-**Fields:**
+MCP uses JSON-RPC and its own tool-result envelopes after the shared HTTP authentication boundary. It is not an alternative REST error envelope.
 
-- `code` - machine-readable error category (see table below).
-- `error` - human-readable description. Not guaranteed to be stable across versions.
-- `details` - array of `{"field": "...", "message": "..."}` objects. Present only for `validation_failed` responses. Empty or omitted otherwise.
+## Error envelope
 
-**Error codes and HTTP status mapping:**
-
-| HTTP Status | Code                | When                                                                 |
-| ----------- | ------------------- | -------------------------------------------------------------------- |
-| 400         | `bad_request`       | Malformed JSON, invalid query parameters, missing required fields    |
-| 400         | `validation_failed` | Schedule or patch fails domain validation. `details` array populated |
-| 404         | `not_found`         | Resource ID does not exist                                           |
-| 409         | `conflict`          | Unique constraint violation (e.g., duplicate schedule name)          |
-| 500         | `internal_error`    | Unexpected server error                                              |
-
-**Non-API errors:** If the server cannot parse the request at all (e.g., wrong content type, unsupported method), the Go standard library returns its own plain-text error. These do not follow the JSON envelope.
-
-## Pagination
-
-List endpoints (`GET /v1/schedules`, `GET /v1/runs`, `GET /v1/schedules/{id}/runs`) use cursor-based pagination.
-
-**Request parameters:**
-
-- `limit` - maximum items to return. Default `50`. Invalid or non-positive values fall back to `50`.
-- `cursor` - opaque cursor string from a previous response. Omit for the first page. Malformed cursor values return `400 bad_request`.
-
-**Response shape:**
+Application-level REST errors return:
 
 ```json
 {
-  "items": [...],
-  "next_cursor": "opaque_string_or_null"
+  "code": "validation_failed",
+  "error": "human-readable description",
+  "details": [
+    { "field": "timezone", "message": "must be a valid IANA timezone" }
+  ]
 }
 ```
 
-- `items` - array of results, ordered by `created_at DESC, id DESC`.
-- `next_cursor` - if non-null, pass as `cursor` to fetch the next page. When null, there are no more results.
+- `code` is the machine-readable error category.
+- `error` and validation-detail `message` text may change; do not parse their wording.
+- `details` identifies validation fields and is omitted or empty for other errors.
 
-**Cursor format:** The cursor is a base64url-encoded JSON object containing `created_at` and `id`. Clients must treat it as opaque. Cursors from one endpoint are not valid at another. Cursors do not expire but may become invalid if the underlying data is deleted.
+| HTTP status | Code                        | Meaning                                                                                            |
+| ----------- | --------------------------- | -------------------------------------------------------------------------------------------------- |
+| 400         | `bad_request`               | Malformed JSON, invalid filter/cursor, or invalid trigger/event request                            |
+| 400         | `validation_failed`         | Schedule definition or patch fails domain validation                                               |
+| 401         | `unauthorized`              | Missing or invalid configured bearer token                                                         |
+| 404         | `not_found`                 | Resource does not exist                                                                            |
+| 409         | `conflict`                  | Conflicting event replay, paused event target, or incompatible remote reconciliation state         |
+| 410         | `history_pruned`            | Event was already processed, but its original run has been pruned                                  |
+| 500         | `internal_error`            | Unexpected application or storage error                                                            |
+| 502         | `runner_observation_failed` | Remote status or lookup cannot be safely observed; checkpoint and overlap reservation are retained |
 
-**Ordering:** List results are ordered newest-first (`created_at DESC`). Ties are broken by `id DESC`. This order is stable and consistent across pages.
+Unmatched routes, unsupported methods, and HTTP transport failures can use Go's plain-text `404`/`405` or transport responses. Readiness failure uses a probe response, not this envelope. Handle non-JSON responses and non-2xx status codes before parsing application errors.
 
-## Filtering
+## Pagination and filtering
 
-**`GET /v1/schedules`:**
+Schedule and run list endpoints return:
 
-- `enabled=true|false` - filter by enabled state. The value is case-sensitive and strict: `true` filters enabled schedules, `false` filters disabled schedules, and any other value returns `400 bad_request`.
+```json
+{
+  "items": [],
+  "next_cursor": null
+}
+```
 
-**`GET /v1/runs` and `GET /v1/schedules/{id}/runs`:**
+- Empty `items` is an array (`[]`), never null.
+- `limit` defaults to `50`; invalid or non-positive values also fall back to `50`.
+- `cursor` is the opaque value from the preceding response. Malformed values return `400 bad_request`.
+- Results are ordered by `created_at DESC, id DESC`.
+- Continue until `next_cursor` is null. Do not interpret cursor encoding, reuse it with different filters, or assume it provides a transactional snapshot across concurrent writes/deletes.
+- `GET /v1/schedules` accepts strict `enabled=true|false`.
+- `GET /v1/runs` accepts `schedule_id`, `status`, and `target_kind`.
+- `GET /v1/schedules/{id}/runs` accepts `status` and `target_kind`.
+- Status filters accept `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
+- Target filters accept `http`, `shell`, and `workflow`.
 
-- `schedule_id=<id>` - filter by schedule (only on `/v1/runs`).
-- `status=<status>` - filter by run status. Accepted values are `pending`, `claimed`, `running`, `succeeded`, `failed`, `retry_scheduled`, `dead_lettered`, `cancelled`, and `skipped`.
-- `target_kind=http|shell|workflow` - filter by typed target kind.
+Filters combine with AND, match exactly and are case-sensitive. Invalid enabled/status/target filters return `400 bad_request`. Receipt lists use the `items` envelope but are not cursor-paginated.
 
-Filters are combined with AND. `enabled`, `status`, and `target_kind` are validated strictly by the handler and reject invalid values with `400 bad_request`. Matching is exact and case-sensitive.
+## Schedule and run semantics
 
-## Content Types
+- Create returns `201` and the full schedule. PUT returns `200`, preserves schedule ID/history, and replaces the definition; omitted optional fields use create defaults. PATCH changes provided fields only, including individual policy/retry fields.
+- Pause prevents new planned occurrences. It does not cancel existing work. Resume computes the next slot from the current time and does not replay the paused period.
+- Manual trigger requires a non-empty reason and creates a distinct occurrence. It does not move the regular cadence or override executor policy.
+- Event delivery returns `201` on first delivery and `200` for an identical replay. A different payload for the same schedule/source/event identity returns `409`. Pruned event history returns `410`, preserving replay protection.
+- Preview validates a draft without storing or executing it and returns up to five timezone-aware slots.
+- Delete removes the schedule and its runs, receipts, leases, dead letters, remote checkpoints, and event deduplication records. Request audit history remains. Deletion is not remote cancellation; stop and reconcile work first.
+- A run represents one attempt. A retry creates another run with the same `occurrence_key` and a greater `attempt`. Failed attempts remain terminal.
+- Remote reconciliation observes existing remote work and appends evidence. It neither submits new work nor rewrites the original local terminal outcome.
 
-- Request bodies must be `application/json`.
-- Responses are `application/json` except `/v1/metrics` which returns `text/plain; version=0.0.4` (Prometheus exposition format).
+See [Run states](public/run-states.md), [Policies](public/policies.md), and [Automation](public/automation.md) for execution and remote-job contracts. A durable occurrence identity does not imply exactly-once side effects at a remote provider.
 
-## Endpoint Semantics
+## Probes and operational output
 
-### Schedule CRUD
+- `GET /healthz`: `200` with `{ "ok": true }` while the process serves requests.
+- `GET /readyz`: `200` with `{ "ok": true, "storage": "ok" }` when storage is reachable; `503` with `{ "ok": false, "storage": "error" }` otherwise.
+- `GET /v1/status`: JSON operational status; it can return an application error if storage cannot be inspected.
+- `GET /v1/metrics`: Prometheus text, not JSON. Metrics and status are observations, not execution-time guarantees.
 
-| Method                      | Path                                                                                                               | Semantics |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- |
-| `POST /v1/schedules`        | Create. Returns `201` with the full schedule on success. Defaults are applied for omitted policy and retry fields. |
-| `GET /v1/schedules/{id}`    | Read. Returns `200` with the full schedule including computed `next_run_at`.                                       |
-| `PUT /v1/schedules/{id}`    | Full replacement. All fields are required (same validation as create). Returns `200`.                              |
-| `PATCH /v1/schedules/{id}`  | Partial update. Only provided fields are changed. Returns `200`.                                                   |
-| `DELETE /v1/schedules/{id}` | Delete. Cascades to runs, leases, receipts, and dead letters. Returns `200` with `{"deleted": true, "id": "..."}`. |
+## Creation defaults
 
-### Schedule Actions
-
-| Method             | Path                                                                                                                                                                              | Semantics |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `POST .../pause`   | Sets `enabled=false`, records `paused_at`. Returns `200` with `{id, paused_at, enabled}`.                                                                                         |
-| `POST .../resume`  | Sets `enabled=true`, clears `paused_at`, recomputes `next_run_at`. Returns `200` with `{id, paused_at, enabled, next_run_at}`.                                                    |
-| `POST .../trigger` | Creates a manual run with `manual:{run_id}` occurrence key. Requires `{"reason": "..."}` in body. Returns `200` with `{run_id, schedule_id, occurrence_key, status, created_at}`. |
-
-### Run Inspection
-
-| Method                       | Path                                                                                                                  | Semantics |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------- |
-| `GET /v1/runs/{id}`          | Returns the full run record including result fields, receipts, attempt history, and dead-letter details when present. |
-| `GET /v1/runs/{id}/receipts` | Returns execution receipts (stdout, stderr, HTTP response, workflow result).                                          |
-
-### Operational
-
-| Method            | Path                                                                                                                                | Semantics |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `GET /healthz`    | Always returns `{"ok": true}`. Use for liveness probes.                                                                             |
-| `GET /readyz`     | Returns `{"ok": bool, "storage": "ok\|error"}`. Use for readiness probes.                                                           |
-| `GET /v1/status`  | Returns full operational status: scheduler state, worker counts, run counts, next-due schedule information, and dead-letter counts. |
-| `GET /v1/metrics` | Prometheus text metrics, including `runs_due`, `runs_retry_queued`, `dead_letters_total`, and `claimed_but_expired_total`.          |
-
-## Default Policy Values
-
-When creating a schedule, omitted policy and retry fields receive these defaults:
+Omitted policy/retry fields receive:
 
 ```json
 {
@@ -133,4 +106,4 @@ When creating a schedule, omitted policy and retry fields receive these defaults
 }
 ```
 
-Note: `max_attempts: 0` means no retries by default. Set to a positive integer to enable retry behavior.
+`max_attempts` counts total attempts including the first. Values `0` and `1` allow no retry. Use `max_attempts > 1` with `strategy: exponential` for retries; `strategy: none` disables retries. Set important policy values explicitly in operator manifests. Changing a documented default is a breaking compatibility change after 1.0.

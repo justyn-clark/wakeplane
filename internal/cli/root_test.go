@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -221,6 +223,118 @@ func TestExportScheduleManifestIsImportCompatible(t *testing.T) {
 	}
 	if got.Retry != retry {
 		t.Fatalf("expected retry %+v, got %+v", retry, got.Retry)
+	}
+}
+
+func TestExportScheduleManifestFollowsAllPages(t *testing.T) {
+	var requestedCursors []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/schedules" {
+			if got := r.URL.Query().Get("limit"); got != "1000" {
+				t.Errorf("expected limit 1000, got %q", got)
+			}
+			cursor := r.URL.Query().Get("cursor")
+			requestedCursors = append(requestedCursors, cursor)
+			var page domain.ListResponse[domain.ScheduleSummary]
+			switch cursor {
+			case "":
+				next := "page+2/="
+				page.Items = []domain.ScheduleSummary{{ID: "sch_first"}}
+				page.NextCursor = &next
+			case "page+2/=":
+				next := "page3"
+				page.Items = []domain.ScheduleSummary{{ID: "sch_second"}}
+				page.NextCursor = &next
+			case "page3":
+				page.Items = []domain.ScheduleSummary{{ID: "sch_third"}}
+			default:
+				t.Errorf("unexpected cursor %q", cursor)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(page)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(domain.Schedule{
+			Name: r.URL.Path[len("/v1/schedules/"):],
+			Target: domain.TargetSpec{
+				Kind: domain.TargetKindShell, Command: "/bin/echo", Args: []string{"export"},
+			},
+		})
+	}))
+	defer server.Close()
+
+	manifest, err := exportScheduleManifest(server.URL)
+	if err != nil {
+		t.Fatalf("exportScheduleManifest returned error: %v", err)
+	}
+	if len(manifest.Schedules) != 3 {
+		t.Fatalf("expected all 3 schedules, got %d", len(manifest.Schedules))
+	}
+	for i, name := range []string{"sch_first", "sch_second", "sch_third"} {
+		if got := manifest.Schedules[i]; got.Name != name || got.Target.Command != "/bin/echo" {
+			t.Fatalf("schedule %d was not exported with its full definition: %+v", i, got)
+		}
+	}
+	if !slices.Equal(requestedCursors, []string{"", "page+2/=", "page3"}) {
+		t.Fatalf("unexpected requested pages: %v", requestedCursors)
+	}
+}
+
+func TestExportScheduleManifestRejectsIncompletePagination(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		status int
+		cursor string
+	}{
+		{name: "later page fails", status: http.StatusInternalServerError},
+		{name: "cursor repeats", status: http.StatusOK, cursor: "next"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/v1/schedules" {
+					_ = json.NewEncoder(w).Encode(domain.Schedule{Name: "first-page-definition"})
+					return
+				}
+				cursor := "next"
+				if r.URL.Query().Get("cursor") != "" {
+					w.WriteHeader(test.status)
+					cursor = test.cursor
+				}
+				_ = json.NewEncoder(w).Encode(domain.ListResponse[domain.ScheduleSummary]{
+					Items: []domain.ScheduleSummary{{ID: "sch_first"}}, NextCursor: &cursor,
+				})
+			}))
+			defer server.Close()
+
+			manifest, err := exportScheduleManifest(server.URL)
+			if err == nil {
+				t.Fatal("expected incomplete export to fail")
+			}
+			if len(manifest.Schedules) != 0 {
+				t.Fatalf("failed export returned partial definitions: %+v", manifest)
+			}
+		})
+	}
+}
+
+func TestReadAndDeleteCommandsRejectMalformedAddress(t *testing.T) {
+	for _, args := range [][]string{
+		{"schedule", "list"},
+		{"schedule", "get", "sch_test"},
+		{"schedule", "delete", "sch_test"},
+		{"run", "list"},
+		{"run", "get", "run_test"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			cmd := NewRootCmd("test")
+			cmd.SetOut(&bytes.Buffer{})
+			cmd.SetErr(&bytes.Buffer{})
+			cmd.SetArgs(append([]string{"--addr", "://bad"}, args...))
+			if err := cmd.Execute(); err == nil {
+				t.Fatal("expected malformed address to return an error")
+			}
+		})
 	}
 }
 

@@ -4,7 +4,7 @@
 
 **Wakeplane supports single-operator bearer authentication when configured, but it does not provide RBAC or multi-tenant access control.**
 
-This page covers the published `v0.3.0-beta.3` beta. The legacy `v0.2.0-beta.1` has no built-in authentication: setting `WAKEPLANE_AUTH_TOKEN` does not protect that older binary. Use `v0.3.0-beta.3` for the controls described here, and check [Install](install.md) before upgrading.
+This page covers the stable `v1.0.0` release. The legacy `v0.2.0-beta.1` has no built-in authentication: setting `WAKEPLANE_AUTH_TOKEN` does not protect that older binary. Use `v1.0.0` for the controls described here, and check [Install](install.md) before upgrading.
 
 This is a deliberate and explicit constraint in the current release line. Every operator who deploys Wakeplane must understand what this means:
 

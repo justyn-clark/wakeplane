@@ -124,3 +124,7 @@ This work stays behind the store boundary. Scheduler, dispatcher, run ledger, po
 - [SQLite Audit](../sqlite-audit.md) - complete inventory of SQLite-specific assumptions
 - [Storage Interface](../storage-interface.md) - full store method contract and dialect seam design
 - [Storage Portability](../storage-portability.md) - portability summary and implementation order
+
+## Timestamp comparisons and capacity
+
+Wakeplane compares UTC timestamp instants consistently across legacy fractional-second encodings. Query-time normalization preserves existing stored history without a data migration. Temporal expressions do not directly use the old raw-text timestamp indexes; status and identity indexes remain available. The supported deployment is a bounded single-operator installation, not an arbitrary throughput guarantee. Check due-work backlog, query latency, disk growth and runner capacity for your own workload before increasing volume.

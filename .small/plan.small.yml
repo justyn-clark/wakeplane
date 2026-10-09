@@ -206,5 +206,5 @@ tasks:
     title: Improve readable ASCII email and Discord notification presentation
     status: completed
   - id: task-76
-    title: Finalize stable 1.0 contracts and release verification
-    status: in_progress
+    title: Finalize stable 1.0 contracts and release source verification
+    status: completed

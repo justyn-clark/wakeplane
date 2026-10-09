@@ -1,12 +1,12 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Stable 1.0 contracts and correctness fixes in progress. Production automatic delivery, actual backup/restore and human receipt proven; no calendar wait. Final source checks and public release publication remain."
+summary: "Stable v1.0.0 source and public archives published and verified. Supported standalone single-operator contracts defined; pre-1.0 correctness fixes and all candidate/release checks pass. No mandatory calendar wait."
 resume:
   current_task_id: task-76
   next_steps:
-    - Complete timestamp query comparisons without rewriting legacy rows; run final race/Postgres/lint/docs checks and packaging.
-    - Publish reviewed 1.0 source, verify downloadable archives/checksums and matching documentation before stable completion.
-    - Keep production schedules, credentials and historical skipped occurrence unchanged. Actual provider proof is recorded under production-acceptance-2026-10-08; no extra send or deployment required for this release review.
+    - For subsequent changes preserve the stable contract and release discipline; v1.0.0 tag7748083 and all3 public archive checksums/native smoke checks passed.
+    - Documentation parity/publication is handled by wakeplane.dev PR10 and the operational receipts. Verify current live pages and installer before making deployment claims.
+    - Railway remains on its healthy existing deployment; a stable runtime rollout is separate. Preserve schedules, credentials, history and backup boundaries. Normal-cadence observation is informational rather than a release gate.
 links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

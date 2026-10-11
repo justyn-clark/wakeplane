@@ -1,6 +1,6 @@
 # Contributing
 
-Wakeplane is a pre-stable scheduling control plane in its public beta line. Contributions are welcome within the project scope defined below.
+Wakeplane is a scheduling control plane with a stable 1.0 release. Contributions are welcome within the project scope defined below. See the [developer guide](docs/development.md) for source builds and console development.
 
 ## Project scope
 
@@ -46,7 +46,7 @@ Write clear, factual commit messages. Present tense. No fluff. Describe what cha
 
 ## Versioning
 
-Wakeplane follows [Semantic Versioning](https://semver.org/). During `0.x`, minor versions may include breaking changes to the API, CLI, or storage schema. See [docs/release.md](docs/release.md) for release discipline.
+Wakeplane follows [Semantic Versioning](https://semver.org/). The [stable contract](docs/public/stable-contract.md) defines the 1.x compatibility scope and exclusions. See [docs/release.md](docs/release.md) for release discipline.
 
 ## Code of conduct
 

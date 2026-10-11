@@ -20,7 +20,7 @@ Install on macOS or Linux:
 
 ```sh
 curl -fsSL https://wakeplane.dev/install.sh | sh
-wakeplane serve
+WAKEPLANE_HTTP_ADDR=127.0.0.1:8080 wakeplane serve
 ```
 
 Open `http://127.0.0.1:8080/console/`. Follow the [quickstart](docs/public/quickstart.md) to create your first schedule. For archives, checksums, Windows source builds, and `go install`, see [installation](docs/public/install.md).

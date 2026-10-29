@@ -27,7 +27,7 @@ Open `http://127.0.0.1:8080/console/`. Follow the [quickstart](docs/public/quick
 
 Wakeplane 1.0 supports a single operator on a trusted network. Bearer authentication is available; RBAC and multi-tenancy are not. See the [security guidance](SECURITY.md) before hosting and the [stable contract](docs/public/stable-contract.md) for compatibility and limits.
 
-[![Wakeplane production setup](docs/media/production-2026-10/railway.png)](docs/public/in-production.md)
+<a href="docs/public/in-production.md"><img src="docs/media/production-2026-10/railway.png" alt="Wakeplane production setup" width="480" /></a>
 
 [See Wakeplane in production](docs/public/in-production.md) - real setups, delivery evidence and a short walkthrough.
 

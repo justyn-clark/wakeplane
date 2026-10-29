@@ -1,13 +1,10 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Stable v1.0.0 source and public archives published and verified. Supported standalone single-operator contracts defined; pre-1.0 correctness fixes and all candidate/release checks pass. No mandatory calendar wait."
+summary: "Privacy-safe production case study and media prepared locally; publication awaits design review."
 resume:
-  current_task_id: task-76
+  current_task_id: task-79
   next_steps:
-    - For subsequent changes preserve the stable contract and release discipline; v1.0.0 tag7748083 and all3 public archive checksums/native smoke checks passed.
-    - Documentation parity/publication is handled by wakeplane.dev PR10 and the operational receipts. Verify current live pages and installer before making deployment claims.
-    - Railway remains on its healthy existing deployment; a stable runtime rollout is separate. Preserve schedules, credentials, history and backup boundaries. Normal-cadence observation is informational rather than a release gate.
+    - Review two mockups in original workspace artifacts/public-site-2026-10-29/mockups before publishing. Recommended production story; compact gallery is alternate.
+    - Source branch codex/public-production-gallery. Site branch codex/production-gallery lives at original workspace artifacts/public-site-2026-10-29/site. Preserve original dirty beta checkout.
+    - All source/site media bytes and local site checks pass. Runtime code unchanged; no new release tag needed for documentation. No public push or deployment performed.
 links: []
-replayId:
-  value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182
-  source: auto

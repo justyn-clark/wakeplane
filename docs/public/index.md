@@ -2,7 +2,11 @@
 
 Wakeplane is a durable scheduling control plane for long-running systems. These docs describe the stable `v1.0.0` release. See [Install](install.md) for downloads and [Status](status.md) for release expectations.
 
-> **Beta:** public release discipline and downloadable artifacts are in place. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
+**Deployment scope:** public releases include downloadable artifacts and checksums. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
+
+[![Wakeplane production setup](../media/production-2026-10/railway.png)](in-production.md)
+
+[See Wakeplane in production](in-production.md) - hosted reports, local work, actual delivery and a short walkthrough. Captured October 26, 2026.
 
 ## Start here
 
@@ -66,7 +70,7 @@ The `v1.0.0` source includes the following capabilities. The legacy `v0.2.0-beta
 - Metrics, health, readiness, and status endpoints
 - Structured shutdown and drain logging
 
-## Beta constraints
+## Deployment constraints
 
 Release discipline includes:
 

@@ -91,16 +91,13 @@ An October 19 article-preview failure remains in the ledger. October 26 succeede
 </figure>
 
 <section class="production-system">
-<div class="production-section-heading">
-
 ## System design
 
-The deployments share Wakeplane's scheduling core. Cloud reports and local activity have separate execution and storage boundaries. The cloud runner does not receive the Mac's private activity or article inputs.
+Railway runs the hosted reports. The Mac Mini runs local scripts. Both use Wakeplane, with separate execution and storage.
 
-</div>
 <figure>
 <img src="../media/production-2026-10/architecture.png" alt="Hosted and local deployment boundaries" width="1200" height="675" />
-<figcaption>Two deployments, one scheduling core. Application behavior stays in executors and adapters.</figcaption>
+<figcaption>The cloud runner does not receive the Mac's private activity or article inputs. Application behavior stays in executors and adapters.</figcaption>
 </figure>
 </section>
 

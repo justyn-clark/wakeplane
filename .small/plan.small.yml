@@ -220,3 +220,6 @@ tasks:
   - id: task-82
     title: Reduce production table and evidence image scale
     status: completed
+  - id: task-83
+    title: Rebuild system design section as a coherent reading column
+    status: in_progress

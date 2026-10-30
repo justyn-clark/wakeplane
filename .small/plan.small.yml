@@ -222,4 +222,4 @@ tasks:
     status: completed
   - id: task-83
     title: Rebuild system design section as a coherent reading column
-    status: in_progress
+    status: completed

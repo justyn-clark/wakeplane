@@ -214,3 +214,6 @@ tasks:
   - id: task-80
     title: Apply selected production story design with existing theme controls
     status: completed
+  - id: task-81
+    title: Correct production evidence alignment using Design A
+    status: in_progress

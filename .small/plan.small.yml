@@ -223,3 +223,6 @@ tasks:
   - id: task-83
     title: Rebuild system design section as a coherent reading column
     status: completed
+  - id: task-84
+    title: Match ledger and architecture image widths
+    status: completed

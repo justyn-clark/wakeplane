@@ -1,10 +1,10 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Privacy-safe production case study and media prepared locally; publication awaits design review."
+summary: "Selected production story design implemented and checked in Light, Dark and Auto modes; local branches ready."
 resume:
-  current_task_id: task-79
+  current_task_id: task-80
   next_steps:
-    - Review two mockups in original workspace artifacts/public-site-2026-10-29/mockups before publishing. Recommended production story; compact gallery is alternate.
+    - User selected production story. Implemented theme-aware layout and mobile native picker. Current screenshots and receipt in artifacts/production-theme-2026-10-29; original mockups are historical previews.
     - Source branch codex/public-production-gallery. Site branch codex/production-gallery lives at original workspace artifacts/public-site-2026-10-29/site. Preserve original dirty beta checkout.
     - All source/site media bytes and local site checks pass. Runtime code unchanged; no new release tag needed for documentation. No public push or deployment performed.
 links: []

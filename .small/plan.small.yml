@@ -213,4 +213,4 @@ tasks:
     status: completed
   - id: task-80
     title: Apply selected production story design with existing theme controls
-    status: in_progress
+    status: completed

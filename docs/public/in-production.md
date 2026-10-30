@@ -3,18 +3,24 @@
 <div class="production-hero">
 <div class="production-intro">
 
-<p class="production-kicker">Operator case study</p>
+<div class="production-kicker">Operator case study</div>
 
 ## Scheduled work. Recorded outcomes.
 
 Reports on Railway. Local scripts on a Mac Mini. Actual runs and delivered notifications.
 
 <div class="production-actions">
-<a class="production-button production-primary" href="#watch-the-workflow">Watch the walkthrough</a>
-<a class="production-button" href="../media/production-2026-10/case-study.pdf">Read the case study</a>
+
+[Watch the walkthrough](#watch-the-workflow)
+[Read the case study](../media/production-2026-10/case-study.pdf)
+
 </div>
 
-<p class="production-caption">Captured October 26, 2026. Original UI, cropped and masked for privacy.</p>
+<div class="production-caption">
+
+Captured October 26, 2026. Original UI, cropped and masked for privacy.
+
+</div>
 
 </div>
 <figure>

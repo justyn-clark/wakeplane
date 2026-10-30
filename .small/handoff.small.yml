@@ -1,9 +1,10 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Design A evidence alignment corrected and verified on desktop/mobile; local branches ready."
+summary: "Production evidence scale reduced on the rebuilt local preview; local source/site branches ready."
 resume:
-  current_task_id: task-81
+  current_task_id: task-82
   next_steps:
+    - "Latest task82: ledger capped38rem and diagram48rem with balanced centering; tighter schedule table. Actual local server rebuilt and Brave desktop inspected. Latest screenshots/receipt artifacts/production-scale-2026-10-29 supersede earlier large-image previews."
     - User requested Design A alignment fixes. Corrected panels, table, full-width figures, system header and companion columns. Latest receipt/screenshots artifacts/production-layout-2026-10-29; earlier lower-section previews are superseded.
     - Source branch codex/public-production-gallery. Site branch codex/production-gallery lives at original workspace artifacts/public-site-2026-10-29/site. Preserve original dirty beta checkout.
     - All source/site media bytes and local site checks pass. Runtime code unchanged; no new release tag needed for documentation. No public push or deployment performed.

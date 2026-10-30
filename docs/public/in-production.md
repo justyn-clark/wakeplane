@@ -1,10 +1,33 @@
 # Wakeplane in production
 
-A scheduling control plane in use: hosted reports on Railway, local work on a Mac Mini, and delivery to Discord and Gmail.
+<div class="production-hero">
+<div class="production-intro">
 
-Captured October 26, 2026. This is a dated operator case study, not a live status dashboard. Screenshots are cropped and masked for privacy; the visible product UI and recorded outcomes are unchanged.
+<p class="production-kicker">Operator case study</p>
 
-![Wakeplane daemon, runner and Postgres on Railway](../media/production-2026-10/railway.png)
+## Scheduled work. Recorded outcomes.
+
+Reports on Railway. Local scripts on a Mac Mini. Actual runs and delivered notifications.
+
+<div class="production-actions">
+<a class="production-button production-primary" href="#watch-the-workflow">Watch the walkthrough</a>
+<a class="production-button" href="../media/production-2026-10/case-study.pdf">Read the case study</a>
+</div>
+
+<p class="production-caption">Captured October 26, 2026. Original UI, cropped and masked for privacy.</p>
+
+</div>
+<figure>
+<img src="../media/production-2026-10/railway.png" alt="Wakeplane daemon, runner and Postgres on Railway" width="1570" height="1010" />
+<figcaption>Railway / Daemon, runner and Postgres with persistent volumes.</figcaption>
+</figure>
+</div>
+
+<div class="production-facts">
+<div><strong>1.0.0</strong><span>Verified on hosted and local daemons</span></div>
+<div><strong>Two environments</strong><span>Private Railway service and local Mac</span></div>
+<div><strong>Actual delivery</strong><span>Discord readback and Gmail INBOX</span></div>
+</div>
 
 ## Watch the workflow
 
@@ -15,6 +38,9 @@ Captured October 26, 2026. This is a dated operator case study, not a live statu
 
 The recording shows existing run history, schedule inspection, the production services and a delivered report. It uses actual browser samples with their original timing. No jobs were triggered for the demonstration.
 
+<div class="production-columns">
+<section>
+
 ## Hosted reports
 
 The Railway deployment separates the Wakeplane daemon, Postgres and the automation runner. The database and runner use persistent volumes. The services run privately; notification delivery belongs to the runner.
@@ -23,24 +49,30 @@ Repository reports run at 9 AM Pacific on weekdays. A release digest runs Monday
 
 ![An actual scheduled repository report delivered to Discord](../media/production-2026-10/discord.png)
 
-Provider acceptance, an actual message and inbox placement are separate kinds of evidence. They are recorded separately in this case.
+Provider acceptance, an actual message and inbox placement were checked separately. This is a dated case study, not a live status dashboard.
+
+</section>
+<section class="production-panel">
 
 ## Local work stays local
 
 Four existing jobs moved from OpenClaw cron and launchd calendars to Wakeplane. Existing Python and Hermes scripts still do the work; launchd supervises the daemon and SQLite holds its run history. Human approval still controls article publication.
 
-| Job | Schedule in America/Los_Angeles |
-| --- | --- |
-| Docs drift | Weekdays at 08:45 |
-| Activity ingest | Daily at 20:15 |
-| Article preview | Mondays at 08:30 |
-| Preview watchdog | Mondays at 09:45 |
-
-![Actual local run outcomes and attempt counts](../media/production-2026-10/ledger.png)
+| Job              | Schedule in America/Los_Angeles |
+| ---------------- | ------------------------------- |
+| Docs drift       | Weekdays at 08:45               |
+| Activity ingest  | Daily at 20:15                  |
+| Article preview  | Mondays at 08:30                |
+| Preview watchdog | Mondays at 09:45                |
 
 Each migrated job prevents overlap, runs once if late, permits one concurrent execution and allows one attempt. The old schedule owners were disabled during cutover.
 
 An October 19 article-preview failure remains in the ledger. October 26 succeeded. The scheduler records the outcome; article quality and permission to publish remain operator decisions.
+
+</section>
+</div>
+
+![Actual local run outcomes and attempt counts](../media/production-2026-10/ledger.png)
 
 ## System design
 
@@ -48,11 +80,15 @@ An October 19 article-preview failure remains in the ledger. October 26 succeede
 
 The deployments share Wakeplane's scheduling core. The cloud report runner does not receive the Mac's private activity or article inputs. Application behavior stays in executors and adapters.
 
+<section class="production-companions">
+
 ## Companion integrations
 
 Pi Durable Android and native desktop integrations are private previews. Android companion reads of Wakeplane 1.0.0 were verified with native approval, request correlation and no schedule mutations. The Android image is an emulator fixture; physical-phone acceptance is separate. The selected desktop companion still needed Wakeplane configuration when inspected.
 
 ![Pi Durable Android schedule-policy screen, emulator preview](../media/production-2026-10/android-preview.png)
+
+</section>
 
 ## Run your own
 

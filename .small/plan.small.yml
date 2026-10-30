@@ -211,3 +211,6 @@ tasks:
   - id: task-79
     title: Add privacy-safe production case study and shared media
     status: completed
+  - id: task-80
+    title: Apply selected production story design with existing theme controls
+    status: in_progress

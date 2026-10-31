@@ -1,12 +1,18 @@
 small_version: "1.0.0"
 owner: agent
-summary: "Stable v1.0.0 source and public archives published and verified. Supported standalone single-operator contracts defined; pre-1.0 correctness fixes and all candidate/release checks pass. No mandatory calendar wait."
+summary: "System design hierarchy rebuilt in local preview; source/site branches ready."
 resume:
-  current_task_id: task-76
+  current_task_id: task-87
   next_steps:
-    - For subsequent changes preserve the stable contract and release discipline; v1.0.0 tag7748083 and all3 public archive checksums/native smoke checks passed.
-    - Documentation parity/publication is handled by wakeplane.dev PR10 and the operational receipts. Verify current live pages and installer before making deployment claims.
-    - Railway remains on its healthy existing deployment; a stable runtime rollout is separate. Preserve schedules, credentials, history and backup boundaries. Normal-cadence observation is informational rather than a release gate.
+    - "Latest task87: refreshed dated announcement ZIP artifacts/public-launch-2026-10-30 in original workspace uses same nine approved media files. Source README links docs/production-evidence.md (media and runnable example index). Receipt artifacts/announcement-cleanup-2026-10-30. Source/site publication and live URL verification remain before social posting; nothing pushed or published."
+    - "Latest task86: ledger screenshot and System design now share max-width60rem, centered and responsive. Local preview rebuilt. Supersedes earlier38rem ledger notes. No deployment."
+    - "Latest task85: user explicitly requested System design max-width60rem; applied and local preview rebuilt. Supersedes task84 equal width for this section. Ledger remains38rem. No deployment."
+    - "Latest task84: ledger screenshot and architecture diagram share the same centered38rem maximum width; preserves natural aspect ratio. Local preview rebuilt. Supersedes task83 width48rem. No deployment."
+    - "Latest task83 supersedes earlier split system header. Heading, short introduction and diagram now share one centered48rem column. Brave desktop and440x956mobile inspected; lint/build/parity/2068links PASS. Latest evidence artifacts/system-design-layout-2026-10-29. Local only; no public push/deploy."
+    - "Latest task82: ledger capped38rem and diagram48rem with balanced centering; tighter schedule table. Actual local server rebuilt and Brave desktop inspected. Latest screenshots/receipt artifacts/production-scale-2026-10-29 supersede earlier large-image previews."
+    - User requested Design A alignment fixes. Corrected panels, table, full-width figures, system header and companion columns. Latest receipt/screenshots artifacts/production-layout-2026-10-29; earlier lower-section previews are superseded.
+    - Source branch codex/public-production-gallery. Site branch codex/production-gallery lives at original workspace artifacts/public-site-2026-10-29/site. Preserve original dirty beta checkout.
+    - All source/site media bytes and local site checks pass. Runtime code unchanged; no new release tag needed for documentation. No public push or deployment performed.
 links: []
 replayId:
   value: c15998994a643c1c1030ff25eccdcc2bce4ca22f05f429bce47bfef57105c182

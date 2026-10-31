@@ -208,3 +208,30 @@ tasks:
   - id: task-76
     title: Finalize stable 1.0 contracts and release source verification
     status: completed
+  - id: task-79
+    title: Add privacy-safe production case study and shared media
+    status: completed
+  - id: task-80
+    title: Apply selected production story design with existing theme controls
+    status: completed
+  - id: task-81
+    title: Correct production evidence alignment using Design A
+    status: completed
+  - id: task-82
+    title: Reduce production table and evidence image scale
+    status: completed
+  - id: task-83
+    title: Rebuild system design section as a coherent reading column
+    status: completed
+  - id: task-84
+    title: Match ledger and architecture image widths
+    status: completed
+  - id: task-85
+    title: Set requested system design maximum width
+    status: completed
+  - id: task-86
+    title: Match ledger image to requested 60rem width
+    status: completed
+  - id: task-87
+    title: Refresh announcement media and repository discovery links
+    status: completed

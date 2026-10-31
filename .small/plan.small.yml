@@ -226,3 +226,6 @@ tasks:
   - id: task-84
     title: Match ledger and architecture image widths
     status: completed
+  - id: task-85
+    title: Set requested system design maximum width
+    status: completed

@@ -2,8 +2,9 @@ small_version: "1.0.0"
 owner: agent
 summary: "System design hierarchy rebuilt in local preview; source/site branches ready."
 resume:
-  current_task_id: task-85
+  current_task_id: task-86
   next_steps:
+    - "Latest task86: ledger screenshot and System design now share max-width60rem, centered and responsive. Local preview rebuilt. Supersedes earlier38rem ledger notes. No deployment."
     - "Latest task85: user explicitly requested System design max-width60rem; applied and local preview rebuilt. Supersedes task84 equal width for this section. Ledger remains38rem. No deployment."
     - "Latest task84: ledger screenshot and architecture diagram share the same centered38rem maximum width; preserves natural aspect ratio. Local preview rebuilt. Supersedes task83 width48rem. No deployment."
     - "Latest task83 supersedes earlier split system header. Heading, short introduction and diagram now share one centered48rem column. Brave desktop and440x956mobile inspected; lint/build/parity/2068links PASS. Latest evidence artifacts/system-design-layout-2026-10-29. Local only; no public push/deploy."

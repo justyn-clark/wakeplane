@@ -37,6 +37,7 @@ Wakeplane 1.0 supports a single operator on a trusted network. Bearer authentica
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Schedules and execution | [Schedules](docs/public/schedules.md), [policies](docs/public/policies.md), [run history](docs/public/run-states.md)       |
 | Assistants and reports  | [Automation](docs/public/automation.md), [recipes](docs/public/recipes.md)                                                 |
+| Production examples     | [Case study](docs/public/in-production.md), [visuals and runnable examples](docs/production-evidence.md)                   |
 | API and command line    | [REST API](docs/public/api.md), [CLI](docs/public/cli.md)                                                                  |
 | Hosting and storage     | [Hosting](docs/public/hosting.md), [storage and migration](docs/public/storage.md), [deployment adapters](infra/README.md) |
 | Operations              | [Runbook](docs/public/runbook.md), [release status](docs/public/status.md)                                                 |

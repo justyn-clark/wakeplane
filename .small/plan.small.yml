@@ -232,3 +232,6 @@ tasks:
   - id: task-86
     title: Match ledger image to requested 60rem width
     status: completed
+  - id: task-87
+    title: Refresh announcement media and repository discovery links
+    status: completed

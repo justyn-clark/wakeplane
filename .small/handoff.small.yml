@@ -2,8 +2,9 @@ small_version: "1.0.0"
 owner: agent
 summary: "System design hierarchy rebuilt in local preview; source/site branches ready."
 resume:
-  current_task_id: task-86
+  current_task_id: task-87
   next_steps:
+    - "Latest task87: refreshed dated announcement ZIP artifacts/public-launch-2026-10-30 in original workspace uses same nine approved media files. Source README links docs/production-evidence.md (media and runnable example index). Receipt artifacts/announcement-cleanup-2026-10-30. Source/site publication and live URL verification remain before social posting; nothing pushed or published."
     - "Latest task86: ledger screenshot and System design now share max-width60rem, centered and responsive. Local preview rebuilt. Supersedes earlier38rem ledger notes. No deployment."
     - "Latest task85: user explicitly requested System design max-width60rem; applied and local preview rebuilt. Supersedes task84 equal width for this section. Ledger remains38rem. No deployment."
     - "Latest task84: ledger screenshot and architecture diagram share the same centered38rem maximum width; preserves natural aspect ratio. Local preview rebuilt. Supersedes task83 width48rem. No deployment."

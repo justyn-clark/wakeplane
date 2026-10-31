@@ -1,6 +1,6 @@
 # Wakeplane
 
-[![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml/badge.svg)](https://github.com/justyn-clark/wakeplane/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Go version](https://img.shields.io/github/go-mod/go-version/justyn-clark/wakeplane)](go.mod) [![Stable release](https://img.shields.io/github/v/release/justyn-clark/wakeplane?label=stable)](https://github.com/justyn-clark/wakeplane/releases/latest)
 
 Wakeplane schedules work, records each occurrence durably, and tracks what happened. Run it locally or as a private service with SQLite or Postgres.
 

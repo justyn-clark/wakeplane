@@ -1,6 +1,6 @@
 # Wakeplane Docs
 
-Wakeplane is a durable scheduling control plane for long-running systems. These docs describe the stable `v1.0.0` release. See [Install](install.md) for downloads and [Status](status.md) for release expectations.
+Wakeplane is a durable scheduling control plane for long-running systems. These docs describe the stable `v1.0.1` release. See [Install](install.md) for downloads and [Status](status.md) for release expectations.
 
 **Deployment scope:** public releases include downloadable artifacts and checksums. Security posture is single-operator and trusted-network-oriented: bearer-token auth is available for `/v1/...`, but there is no RBAC or multi-tenancy. SQLite remains the default local mode, with Postgres available as the production backend. See [Security](security.md) and [Status](status.md).
 
@@ -58,7 +58,7 @@ Wakeplane is a durable scheduling control plane for long-running systems. These 
 
 ## Current scope
 
-The `v1.0.0` source includes the following capabilities. The legacy `v0.2.0-beta.1` binaries provide the older SQLite scheduler and basic CLI/API. They do not include the later authentication, request audit, receipt limits, retention, Postgres, console, status command, schedule update/export/import commands, MCP, event delivery, or tracked jobs. See [Install](install.md) for the available build paths; setting `WAKEPLANE_AUTH_TOKEN` cannot protect an older binary without authentication support.
+The `v1.0.1` source includes the following capabilities. The legacy `v0.2.0-beta.1` binaries provide the older SQLite scheduler and basic CLI/API. They do not include the later authentication, request audit, receipt limits, retention, Postgres, console, status command, schedule update/export/import commands, MCP, event delivery, or tracked jobs. See [Install](install.md) for the available build paths; setting `WAKEPLANE_AUTH_TOKEN` cannot protect an older binary without authentication support.
 
 - Single-process Go daemon and CLI
 - SQLite-first storage with embedded migrations and a verified Postgres backend

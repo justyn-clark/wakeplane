@@ -4,7 +4,7 @@
 
 Wakeplane schedules work, records each occurrence durably, and tracks what happened. Run it locally or as a private service with SQLite or Postgres.
 
-[Documentation](https://wakeplane.dev) · [Download v1.0.0](https://github.com/justyn-clark/wakeplane/releases/tag/v1.0.0) · [Release notes](docs/public/releases/v1.0.0.md)
+[Documentation](https://wakeplane.dev) · [Download v1.0.1](https://github.com/justyn-clark/wakeplane/releases/tag/v1.0.1) · [Release notes](docs/public/releases/v1.0.1.md)
 
 ## What it does
 

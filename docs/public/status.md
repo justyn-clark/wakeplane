@@ -4,7 +4,7 @@ Wakeplane's release status describes supported scope and evidence, rather than a
 
 ## Current public state
 
-Wakeplane `v1.0.0` is the stable single-operator release line for the standalone daemon, CLI, REST API, and MCP tools described in [Stable contract](stable-contract.md). It includes tracked automation, native notification formatting, deployment adapters, and the pre-1.0 correctness fixes documented in the [release notes](releases/v1.0.0.md). Use [Install](install.md) for versioned archives and checksums.
+Wakeplane `v1.0.1` is the current stable single-operator release for the standalone daemon, CLI, REST API, and MCP tools described in [Stable contract](stable-contract.md). It includes tracked automation, native notification formatting, deployment adapters, and the pre-1.0 correctness fixes documented in the [v1.0.0 release notes](releases/v1.0.0.md). The [v1.0.1 patch](releases/v1.0.1.md) adds an index for normalized run-history ordering. Use [Install](install.md) for versioned archives and checksums.
 
 The legacy `v0.2.0-beta.1` lacks built-in auth, request audit, receipt/retention controls, Postgres, the operator console, and newer automation/operator routes. Setting `WAKEPLANE_AUTH_TOKEN` does not protect that older binary. Use a current release and follow [Install](install.md) and [Security](security.md).
 

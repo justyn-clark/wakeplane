@@ -238,3 +238,6 @@ tasks:
   - id: task-88
     title: Preserve normalized run-history index for fresh and existing databases
     status: completed
+  - id: task-89
+    title: Publish verified run-history performance patch release
+    status: in_progress

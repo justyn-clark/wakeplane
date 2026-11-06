@@ -235,3 +235,6 @@ tasks:
   - id: task-87
     title: Refresh announcement media and repository discovery links
     status: completed
+  - id: task-88
+    title: Preserve normalized run-history index for fresh and existing databases
+    status: completed

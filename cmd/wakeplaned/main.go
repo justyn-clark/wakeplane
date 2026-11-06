@@ -14,7 +14,7 @@ import (
 	"github.com/justyn-clark/wakeplane/internal/cli"
 )
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 func main() {
 	if err := cli.NewRootCmd(version).Execute(); err != nil {

@@ -2,11 +2,11 @@
 
 Use one of these supported install paths for Wakeplane. The canonical repository is [github.com/justyn-clark/wakeplane](https://github.com/justyn-clark/wakeplane).
 
-> **Operator warning:** the published `v1.0.0` supports single-operator bearer authentication when configured, with no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
+> **Operator warning:** the published `v1.0.1` supports single-operator bearer authentication when configured, with no RBAC or multi-tenancy. Bind it to localhost, a trusted subnet, VPN, Tailscale, or a reverse-proxied private network.
 
-The release-download and `go install` commands below pin the published release, `v1.0.0`. It includes bearer authentication, Postgres, the console, MCP assistant access, event delivery, and tracked external jobs. Verify the resulting version before following the current API and operator guides.
+The release-download and `go install` commands below pin the published release, `v1.0.1`. It includes bearer authentication, Postgres, the console, MCP assistant access, event delivery, and tracked external jobs. Verify the resulting version before following the current API and operator guides.
 
-The legacy `v0.2.0-beta.1` lacks built-in authentication, request audit, configurable receipt limits, terminal-run retention, Postgres, the console, the `status` command, schedule update/export/import, and the new automation interfaces. Environment settings do not add these controls to an older binary. Back up your database before upgrading; see the [release notes](releases/v1.0.0.md) for compatibility and rollback limits, and the [Stable Contract](stable-contract.md) for supported upgrades.
+The legacy `v0.2.0-beta.1` lacks built-in authentication, request audit, configurable receipt limits, terminal-run retention, Postgres, the console, the `status` command, schedule update/export/import, and the new automation interfaces. Environment settings do not add these controls to an older binary. Back up your database before upgrading; see the [release notes](releases/v1.0.1.md) for compatibility and rollback limits, and the [Stable Contract](stable-contract.md) for supported upgrades.
 
 ## Option 1: GitHub Releases
 
@@ -18,22 +18,22 @@ For the fastest path on macOS or Linux:
 curl -fsSL https://wakeplane.dev/install.sh | sh
 ```
 
-By default, this installs `wakeplane` and `wakeplaned` to `~/.local/bin`. Override with `INSTALL_DIR=/usr/local/bin` or pin a version with `WAKEPLANE_VERSION=v1.0.0`.
+By default, this installs `wakeplane` and `wakeplaned` to `~/.local/bin`. Override with `INSTALL_DIR=/usr/local/bin` or pin a version with `WAKEPLANE_VERSION=v1.0.1`.
 
-Published for `v1.0.0`:
+Published for `v1.0.1`:
 
-- `wakeplane_1.0.0_darwin_arm64.tar.gz`
-- `wakeplane_1.0.0_linux_amd64.tar.gz`
-- `wakeplane_1.0.0_linux_arm64.tar.gz`
+- `wakeplane_1.0.1_darwin_arm64.tar.gz`
+- `wakeplane_1.0.1_linux_amd64.tar.gz`
+- `wakeplane_1.0.1_linux_arm64.tar.gz`
 - `checksums.txt`
 
 Example verification flow:
 
 ```bash
-curl -fsSLO https://github.com/justyn-clark/wakeplane/releases/download/v1.0.0/wakeplane_1.0.0_linux_amd64.tar.gz
-curl -fsSLO https://github.com/justyn-clark/wakeplane/releases/download/v1.0.0/checksums.txt
-grep 'wakeplane_1.0.0_linux_amd64.tar.gz' checksums.txt | sha256sum -c -
-tar -xzf wakeplane_1.0.0_linux_amd64.tar.gz
+curl -fsSLO https://github.com/justyn-clark/wakeplane/releases/download/v1.0.1/wakeplane_1.0.1_linux_amd64.tar.gz
+curl -fsSLO https://github.com/justyn-clark/wakeplane/releases/download/v1.0.1/checksums.txt
+grep 'wakeplane_1.0.1_linux_amd64.tar.gz' checksums.txt | sha256sum -c -
+tar -xzf wakeplane_1.0.1_linux_amd64.tar.gz
 ./wakeplane version
 ```
 
@@ -44,8 +44,8 @@ Each archive contains `wakeplane`, `wakeplaned`, and the separate example `autom
 The repo currently declares `go 1.25.0` in `go.mod`.
 
 ```bash
-go install github.com/justyn-clark/wakeplane/cmd/wakeplane@v1.0.0
-go install github.com/justyn-clark/wakeplane/cmd/wakeplaned@v1.0.0
+go install github.com/justyn-clark/wakeplane/cmd/wakeplane@v1.0.1
+go install github.com/justyn-clark/wakeplane/cmd/wakeplaned@v1.0.1
 wakeplane version
 ```
 
